@@ -109,4 +109,4 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
-config :trento, :api_key_authentication, enabled: false
+config :trento, :api_key_authentication, enabled: true

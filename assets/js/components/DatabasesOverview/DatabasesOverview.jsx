@@ -8,25 +8,19 @@ import DatabaseItemOverview from './DatabaseItemOverview';
 import Tags from '@components/Tags';
 import { addTagToDatabase, removeTagFromDatabase } from '@state/databases';
 
-import { logError } from '@lib/log';
+import { axiosPost, axiosDelete } from '@lib/network';
 import { ComponentHealthSummary } from '@components/HealthSummary';
 
 const byDatabase = (id) => (instance) => instance.sap_system_id === id;
 
 const addTag = (tag, sapSystemId) => {
-  axios
-    .post(`/api/databases/${sapSystemId}/tags`, {
-      value: tag,
-    })
-    .catch((error) => {
-      logError('Error posting tag: ', error);
-    });
+  axiosPost(`/api/databases/${sapSystemId}/tags`, {
+    value: tag,
+  });
 };
 
 const removeTag = (tag, sapSystemId) => {
-  axios.delete(`/api/databases/${sapSystemId}/tags/${tag}`).catch((error) => {
-    logError('Error deleting tag: ', error);
-  });
+  axiosDelete(`/api/databases/${sapSystemId}/tags/${tag}`);
 };
 
 const DatabasesOverview = () => {
