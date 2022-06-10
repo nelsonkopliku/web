@@ -45,7 +45,7 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
       filtered_attrs = transform_nil_lists(attrs)
 
       primitive
-      |> cast(filtered_attrs, [:id, :type, :class, :provider])
+      |> cast(filtered_attrs, fields())
       |> cast_embed(:operations, with: &operations_changeset/2)
       |> cast_embed(:instance_attributes, with: &instance_attributes_changeset/2)
       |> validate_required_fields(@required_fields)
@@ -113,9 +113,13 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
       |> validate_required_fields([:id])
     end
 
-    defp transform_nil_lists(%{"groups" => groups} = attrs) do
+    defp transform_nil_lists(
+           %{"groups" => groups, "primitives" => primitives, "clones" => clones} = attrs
+         ) do
       attrs
       |> Map.put("groups", ListHelper.to_list(groups))
+      |> Map.put("primitives", ListHelper.to_list(primitives))
+      |> Map.put("clones", ListHelper.to_list(clones))
     end
   end
 

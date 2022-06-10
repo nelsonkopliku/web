@@ -86,18 +86,7 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Crmmon do
 
     def changeset(crmmon_resource, attrs) do
       crmmon_resource
-      |> cast(attrs, [
-        :id,
-        :role,
-        :agent,
-        :active,
-        :failed,
-        :blocked,
-        :managed,
-        :orphaned,
-        :failure_ignored,
-        :nodes_running_on
-      ])
+      |> cast(attrs, fields())
       |> cast_embed(:node, with: &resource_node_changeset/2)
       |> validate_required_fields(@required_fields)
     end
@@ -267,8 +256,9 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Crmmon do
     |> validate_required_fields([:name, :value])
   end
 
-  defp transform_nil_lists(%{"groups" => groups} = attrs) do
+  defp transform_nil_lists(%{"groups" => groups, "clones" => clones} = attrs) do
     attrs
     |> Map.put("groups", ListHelper.to_list(groups))
+    |> Map.put("clones", ListHelper.to_list(clones))
   end
 end
