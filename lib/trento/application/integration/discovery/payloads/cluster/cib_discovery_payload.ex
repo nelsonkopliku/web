@@ -130,6 +130,14 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
   deftype do
     embeds_one :configuration, Configuration do
       embeds_one :resources, CibResources
+
+      embeds_one :crm_config, CrmConfig do
+        embeds_many :cluster_properties, ClusterProperties, primary_key: false do
+          field :id, :string
+          field :name, :string
+          field :value, :string
+        end
+      end
     end
   end
 
@@ -144,6 +152,20 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
     configuration
     |> cast(attrs, [])
     |> cast_embed(:resources)
+    |> cast_embed(:crm_config, with: &crm_config_changeset/2)
     |> validate_required_fields([:resources])
+  end
+
+  def crm_config_changeset(crm_config, attrs) do
+    crm_config
+    |> cast(attrs, [])
+    |> cast_embed(:cluster_properties, with: &cluster_properties_changeset/2)
+    |> validate_required_fields([:cluster_properties])
+  end
+
+  def cluster_properties_changeset(cluster_properties, attrs) do
+    cluster_properties
+    |> cast(attrs, [:id, :name, :value])
+    |> validate_required_fields([:id, :name, :value])
   end
 end
