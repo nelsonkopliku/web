@@ -82,6 +82,10 @@ defmodule Trento.Integration.Discovery.ClusterPolicy do
     }
   end
 
+  defp parse_cluster_details(_) do
+    nil
+  end
+
   defp parse_cluster_nodes(
          %{
            provider: provider,
