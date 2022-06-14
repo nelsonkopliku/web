@@ -256,10 +256,13 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Crmmon do
     |> validate_required_fields([:name, :value])
   end
 
-  defp transform_nil_lists(%{"groups" => groups, "clones" => clones} = attrs) do
+  defp transform_nil_lists(
+         %{"groups" => groups, "clones" => clones, "resources" => resources} = attrs
+       ) do
     attrs
     |> Map.put("groups", ListHelper.to_list(groups))
     |> Map.put("clones", ListHelper.to_list(clones))
+    |> Map.put("resources", ListHelper.to_list(resources))
   end
 
   defp transform_nil_lists(attrs), do: attrs
