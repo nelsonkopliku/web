@@ -42,10 +42,10 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
     end
 
     def changeset(primitive, attrs) do
-      filtered_attrs = transform_nil_lists(attrs)
+      transformed_attrs = transform_nil_lists(attrs)
 
       primitive
-      |> cast(filtered_attrs, fields())
+      |> cast(transformed_attrs, fields())
       |> cast_embed(:operations, with: &operations_changeset/2)
       |> cast_embed(:instance_attributes, with: &instance_attributes_changeset/2)
       |> validate_required_fields(@required_fields)
@@ -89,10 +89,10 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
     end
 
     def changeset(cib_resources, attrs) do
-      filtered_attrs = transform_nil_lists(attrs)
+      transformed_attrs = transform_nil_lists(attrs)
 
       cib_resources
-      |> cast(filtered_attrs, [])
+      |> cast(transformed_attrs, [])
       |> cast_embed(:primitives)
       |> cast_embed(:clones, with: &clones_changeset/2)
       |> cast_embed(:groups, with: &groups_changeset/2)

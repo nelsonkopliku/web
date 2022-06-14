@@ -200,10 +200,10 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Crmmon do
   end
 
   def changeset(crmmon, attrs) do
-    filtered_attrs = transform_nil_lists(attrs)
+    transformed_attrs = transform_nil_lists(attrs)
 
     crmmon
-    |> cast(filtered_attrs, [:version])
+    |> cast(transformed_attrs, [:version])
     |> cast_embed(:summary)
     |> cast_embed(:resources)
     |> cast_embed(:groups, with: &groups_changeset/2)

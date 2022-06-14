@@ -17,10 +17,10 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Sbd do
   end
 
   def changeset(sbd, attrs) do
-    filtered_attrs = transform_nil_lists(attrs)
+    transformed_attrs = transform_nil_lists(attrs)
 
     sbd
-    |> cast(filtered_attrs, [:config])
+    |> cast(transformed_attrs, [:config])
     |> cast_embed(:devices, with: &devices_changeset/2)
     |> validate_required_fields(@required_fields)
   end
