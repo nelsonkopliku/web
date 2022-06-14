@@ -261,4 +261,6 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Crmmon do
     |> Map.put("groups", ListHelper.to_list(groups))
     |> Map.put("clones", ListHelper.to_list(clones))
   end
+
+  defp transform_nil_lists(attrs), do: attrs
 end

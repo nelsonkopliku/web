@@ -41,6 +41,8 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
       |> Map.put("instance_attributes", ListHelper.to_list(instance_attributes))
     end
 
+    defp transform_nil_lists(attrs), do: attrs
+
     def changeset(primitive, attrs) do
       transformed_attrs = transform_nil_lists(attrs)
 
@@ -121,6 +123,8 @@ defmodule Trento.Integration.Discovery.ClusterDiscoveryPayload.Cib do
       |> Map.put("primitives", ListHelper.to_list(primitives))
       |> Map.put("clones", ListHelper.to_list(clones))
     end
+
+    defp transform_nil_lists(attrs), do: attrs
   end
 
   @required_fields [:configuration]
