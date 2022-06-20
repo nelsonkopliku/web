@@ -10,7 +10,7 @@ We get several benefits from this approach:
 - The development of new best practices gets streamlined through a common definition that allows to firestart shared efforts.
 
 ## Facts
-Fact declaration and gathering revolves all around the concept of _gatherer_. Gatherers are functions directly built inside the interpretation level of the language, and reflect the various types of informations that the platform can discover on the hosts, and on a given cluster. Examples include (but are not limited to) installed packages, open ports, and configuration files' content. Gathered facts can be matched against values inside expectations, using the name that we give them inside the fact declaration.
+Fact declaration and gathering revolves all around the concept of _gatherer_. Gatherers are functions directly built inside the interpretation level of the language, and reflect the various types of information that the platform can discover on the hosts, and on a given cluster. Examples include (but are not limited to) installed packages, open ports, and configuration files' content. Gathered facts can be matched against values inside expectations, using the name that we give them inside the fact declaration.
 
 A fact gathering declaration contains:
 
