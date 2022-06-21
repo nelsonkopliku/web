@@ -15,7 +15,7 @@ Fact declaration and gathering revolves all around the concept of _gatherer_. Ga
 A fact gathering declaration contains:
 
 - The fact name;
-- The function used to gather the fact;
+- The pre-defined gatherer function used for this fact;
 - The parameter that said function declaration accepts.
 
 ## Expectations
