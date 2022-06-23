@@ -2,7 +2,7 @@ site_name: 'Trento Documentation'
 
 nav:
   - Home: index.md
-    - Features: features.md
+  - Features: features.md
 
 plugins:
   - techdocs-core
