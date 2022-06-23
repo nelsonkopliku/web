@@ -14,3 +14,19 @@ spec:
   type: other
   lifecycle: unknown
   owner: guests
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: petstore
+  description: The petstore API
+  tags:
+    - store
+    - rest
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: team-c
+  definition:
+    $text: http://demo.trento-project.io/api/openapi
