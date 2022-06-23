@@ -1,1 +1,7 @@
-site_name: Trento Documentation
+site_name: 'Trento Documentation'
+
+nav:
+  - Home: index.md
+
+plugins:
+  - techdocs-core

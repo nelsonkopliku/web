@@ -5,7 +5,7 @@ metadata:
   annotations:
     github.com/project-slug: nelsonkopliku/web
     backstage.io/adr-location: adr
-    backstage.io/techdocs-ref: dir:.docs
+    backstage.io/techdocs-ref: dir:.
   links:
     - url: https://dashboard.example.com
       title: My Dashboard
