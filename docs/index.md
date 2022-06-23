@@ -2,7 +2,7 @@
 
 An open cloud-native web console improving on the work day of SAP Applications administrators.
 
-# Introduction
+## Introduction
 
 _Trento_ is a comprehensive cloud-native, distributed monitoring solution.
 
@@ -23,16 +23,16 @@ See the [architecture document](./docs/architecture/trento-architecture.md) for 
 
 > Being the project in development, all of the above might be subject to change!
 
-# Support
+## Support
 
 Please only report bugs via [GitHub issues](https://github.com/trento-project/web/issues);
 for any other inquiry or topic use [GitHub discussion](https://github.com/trento-project/trento/discussions).
 
-# Contributing
+## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-# License
+## License
 
 Copyright 2021-2022 SUSE LLC
 
