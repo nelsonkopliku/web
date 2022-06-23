@@ -4,6 +4,7 @@ metadata:
   name: web
   annotations:
     github.com/project-slug: nelsonkopliku/web
+    backstage.io/adr-location: adr
 spec:
   type: other
   lifecycle: unknown
