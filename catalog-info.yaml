@@ -5,6 +5,10 @@ metadata:
   annotations:
     github.com/project-slug: nelsonkopliku/web
     backstage.io/adr-location: adr
+  links:
+    - url: https://dashboard.example.com
+      title: My Dashboard
+      icon: dashboard
 spec:
   type: other
   lifecycle: unknown
