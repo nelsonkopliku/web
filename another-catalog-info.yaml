@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: web
+  annotations:
+    github.com/project-slug: nelsonkopliku/webx
+    backstage.io/adr-location: adr
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://dashboard.example.com
+      title: My DashboardX
+      icon: dashboard
+spec:
+  type: other
+  lifecycle: unknown
+  owner: guests
