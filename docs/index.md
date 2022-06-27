@@ -4,7 +4,7 @@ An open cloud-native web console improving on the work day of SAP Applications a
 
 ## Introduction
 
-_Trento_ is a comprehensive cloud-native, distributed monitoring solution.
+_Trento_ is a comprehensive cloud-native, distributed monitoring solution!
 
 It's made by three main components:
 
