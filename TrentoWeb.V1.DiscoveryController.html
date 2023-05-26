@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.29.0">
-    <meta name="project" content="Trento Web v1.2.0">
+    <meta name="project" content="Trento Web v2.0.0">
 
-    <title>TrentoWeb.V1.DiscoveryController — Trento Web v1.2.0</title>
+    <title>TrentoWeb.V1.DiscoveryController — Trento Web v2.0.0</title>
     <link rel="stylesheet" href="dist/html-elixir-2YOS5DIE.css" />
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
-    <script src="dist/sidebar_items-B6FCE26C.js"></script>
+    <script src="dist/sidebar_items-8AB6E5DE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -71,7 +71,7 @@
 Trento Web
       </a>
       <strong class="sidebar-projectVersion" translate="no">
-        v1.2.0
+        v2.0.0
       </strong>
     </div>
     <ul class="sidebar-listNav">
@@ -107,7 +107,7 @@ Trento Web
     </a>
 
   <span translate="no">TrentoWeb.V1.DiscoveryController</span> 
-  <small class="app-vsn" translate="no">(Trento Web v1.2.0)</small>
+  <small class="app-vsn" translate="no">(Trento Web v2.0.0)</small>
 
 </h1>
 
@@ -129,7 +129,31 @@ Trento Web
 
       <div class="summary-row">
         <div class="summary-signature">
-          <a href="#collect/2" translate="no">collect(conn, event)</a>
+          <a href="#collect/2" translate="no">collect(conn, _)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#open_api_operation/1" translate="no">open_api_operation(action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#shared_security/0" translate="no">shared_security()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#shared_tags/0" translate="no">shared_tags()</a>
 
         </div>
 
@@ -156,9 +180,31 @@ Functions
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">collect(conn, event)</h1>
+    <h1 class="signature" translate="no">collect(conn, _)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/discovery_controller.ex#L9" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/discovery_controller.ex#L23" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="open_api_operation/1">
+
+  <div class="detail-header">
+    <a href="#open_api_operation/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">open_api_operation(action)</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/discovery_controller.ex#L12" class="view-source" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -170,9 +216,53 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> collect(<a href="https://hexdocs.pm/plug/1.13.6/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="https://hexdocs.pm/plug/1.13.6/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> open_api_operation(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/open_api_spex/3.12.0/OpenApiSpex.Operation.html#t:t/0">OpenApiSpex.Operation.t</a>()</pre>
 
       </div>
+
+
+  </section>
+</section>
+<section class="detail" id="shared_security/0">
+
+  <div class="detail-header">
+    <a href="#shared_security/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shared_security()</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/discovery_controller.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="shared_tags/0">
+
+  <div class="detail-header">
+    <a href="#shared_tags/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shared_tags()</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/discovery_controller.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
 
 
   </section>

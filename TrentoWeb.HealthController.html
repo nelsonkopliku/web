@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.29.0">
-    <meta name="project" content="Trento Web v1.2.0">
+    <meta name="project" content="Trento Web v2.0.0">
 
-    <title>Trento.Messaging.Mapper — Trento Web v1.2.0</title>
+    <title>TrentoWeb.HealthController — Trento Web v2.0.0</title>
     <link rel="stylesheet" href="dist/html-elixir-2YOS5DIE.css" />
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
-    <script src="dist/sidebar_items-B6FCE26C.js"></script>
+    <script src="dist/sidebar_items-8AB6E5DE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -71,7 +71,7 @@
 Trento Web
       </a>
       <strong class="sidebar-projectVersion" translate="no">
-        v1.2.0
+        v2.0.0
       </strong>
     </div>
     <ul class="sidebar-listNav">
@@ -101,20 +101,16 @@ Trento Web
 </button>
 
 
-    <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/messaging/mapper.ex#L1" title="View Source" class="view-source" rel="help">
+    <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L1" title="View Source" class="view-source" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Trento.Messaging.Mapper</span> 
-  <small class="app-vsn" translate="no">(Trento Web v1.2.0)</small>
+  <span translate="no">TrentoWeb.HealthController</span> 
+  <small class="app-vsn" translate="no">(Trento Web v2.0.0)</small>
 
 </h1>
 
-
-  <section id="moduledoc">
-<p>Maps domain structures to integration events.</p>
-  </section>
 
 
   <section id="summary" class="details-list">
@@ -133,7 +129,39 @@ Trento Web
 
       <div class="summary-row">
         <div class="summary-signature">
-          <a href="#to_execution_requested/5" translate="no">to_execution_requested(execution_id, group_id, provider, targets, selected_checks)</a>
+          <a href="#health/2" translate="no">health(conn, _)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#open_api_operation/1" translate="no">open_api_operation(action)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#ready/2" translate="no">ready(conn, _)</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#shared_security/0" translate="no">shared_security()</a>
+
+        </div>
+
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-signature">
+          <a href="#shared_tags/0" translate="no">shared_tags()</a>
 
         </div>
 
@@ -153,16 +181,110 @@ Trento Web
 Functions
     </h1>
     <div class="functions-list">
-<section class="detail" id="to_execution_requested/5">
+<section class="detail" id="health/2">
 
   <div class="detail-header">
-    <a href="#to_execution_requested/5" class="detail-link" title="Link to this function">
+    <a href="#health/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">to_execution_requested(execution_id, group_id, provider, targets, selected_checks)</h1>
+    <h1 class="signature" translate="no">health(conn, _)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/messaging/mapper.ex#L11" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L36" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="open_api_operation/1">
+
+  <div class="detail-header">
+    <a href="#open_api_operation/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">open_api_operation(action)</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L12" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> open_api_operation(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/open_api_spex/3.12.0/OpenApiSpex.Operation.html#t:t/0">OpenApiSpex.Operation.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="ready/2">
+
+  <div class="detail-header">
+    <a href="#ready/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">ready(conn, _)</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L21" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="shared_security/0">
+
+  <div class="detail-header">
+    <a href="#shared_security/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shared_security()</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L1" class="view-source" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="shared_tags/0">
+
+  <div class="detail-header">
+    <a href="#shared_tags/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">shared_tags()</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/health_controller.ex#L1" class="view-source" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

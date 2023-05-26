@@ -5,14 +5,14 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.29.0">
-    <meta name="project" content="Trento Web v1.2.0">
+    <meta name="project" content="Trento Web v2.0.0">
 
-    <title>Trento.Tags — Trento Web v1.2.0</title>
+    <title>Trento.Tags — Trento Web v2.0.0</title>
     <link rel="stylesheet" href="dist/html-elixir-2YOS5DIE.css" />
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
-    <script src="dist/sidebar_items-B6FCE26C.js"></script>
+    <script src="dist/sidebar_items-8AB6E5DE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -71,7 +71,7 @@
 Trento Web
       </a>
       <strong class="sidebar-projectVersion" translate="no">
-        v1.2.0
+        v2.0.0
       </strong>
     </div>
     <ul class="sidebar-listNav">
@@ -107,7 +107,7 @@ Trento Web
     </a>
 
   <span translate="no">Trento.Tags</span> 
-  <small class="app-vsn" translate="no">(Trento Web v1.2.0)</small>
+  <small class="app-vsn" translate="no">(Trento Web v2.0.0)</small>
 
 </h1>
 
@@ -238,8 +238,8 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> add_tag(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/ecto/3.8.4/Ecto.UUID.html#t:t/0">Ecto.UUID.t</a>(), <a href="#t:taggable_resource/0">taggable_resource</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ecto/3.8.4/Ecto.Schema.html#t:t/0">Ecto.Schema.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> add_tag(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.UUID.html#t:t/0">Ecto.UUID.t</a>(), <a href="#t:taggable_resource/0">taggable_resource</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Schema.html#t:t/0">Ecto.Schema.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
@@ -255,7 +255,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">delete_tag(value, resource_id)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/application/usecases/tags/tags.ex#L41" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/application/usecases/tags/tags.ex#L31" class="view-source" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -267,7 +267,7 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> delete_tag(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/ecto/3.8.4/Ecto.UUID.html#t:t/0">Ecto.UUID.t</a>()) :: :ok | :not_found</pre>
+          <pre translate="no"><span class="attribute">@spec</span> delete_tag(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.UUID.html#t:t/0">Ecto.UUID.t</a>()) :: :ok | {:error, :not_found}</pre>
 
       </div>
 
