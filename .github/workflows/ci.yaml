@@ -455,6 +455,46 @@ jobs:
           name: e2e-screenshots
           path: test/e2e/cypress/screenshots/
 
+  api-bc-check:
+    name: API backward compatibility check
+    needs: [elixir-deps]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+      - name: Retrieve Cached Dependencies
+        uses: actions/cache@v3
+        id: mix-cache
+        with:
+          path: |
+            deps
+            _build/test
+            priv/plts
+          key: ${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
+      - name: Generate current openapi.json
+        run: mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.V1.ApiSpec current-spec.json
+      - name: Checkout to previous commit
+        run: git checkout HEAD^
+      - name: Generate previous openapi.json
+        run: mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.V1.ApiSpec previous-spec.json
+      - name: "Find difference between OpenAPI specifications"
+        id: diff_state
+        uses: swimmwatch/openapi-diff-action@v1.0.1
+        with:
+          old-spec: "previous-spec.json"
+          new-spec: "current-spec.json"
+          json: "out.json"
+          markdown: "out.md"
+      - name: "Print difference state"
+        run: |
+          echo "Current state: ${{steps.diff_state.outputs.state}}."
+
   build-and-push-container-images:
     name: Build and push container images
     runs-on: ubuntu-latest
