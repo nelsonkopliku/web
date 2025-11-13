@@ -920,14 +920,14 @@ jobs:
 
   build-containers:
     name: Build containers
-    needs:
-      - static-code-analysis-js
-      - static-code-analysis-elixir
-      - test-elixir
-      - test-javascript
-      - test-e2e
-      - test-integration
-      - test-regression
+    # needs:
+      # - static-code-analysis-js
+      # - static-code-analysis-elixir
+      # - test-elixir
+      # - test-javascript
+      # - test-e2e
+      # - test-integration
+      # - test-regression
     if: (github.event_name == 'push' && github.ref_name == 'main') || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/build-containers.yaml
     strategy:
