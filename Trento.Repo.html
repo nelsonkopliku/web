@@ -4,20 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.29.0">
-    <meta name="project" content="Trento Web v2.1.0">
+    <meta name="generator" content="ExDoc v0.34.2">
+    <meta name="project" content="Trento Web v2.5.0">
 
-    <title>Trento.Repo — Trento Web v2.1.0</title>
-    <link rel="stylesheet" href="dist/html-elixir-2YOS5DIE.css" />
+
+    <title>Trento.Repo — Trento Web v2.5.0</title>
+    <link rel="stylesheet" href="dist/html-elixir-F2VRIOKR.css" />
+
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-X7YVL3G2.js"></script>
-    <script src="dist/sidebar_items-5C01AB8E.js"></script>
-
-      <script src="docs_config.js"></script>
-
-    <script async src="dist/html-XN2TSG4M.js"></script>
-
+    <script src="dist/handlebars.templates-K7URE6B4.js"></script>
+    <script src="dist/sidebar_items-01D61B53.js"></script>
+    <script src="docs_config.js"></script>
+    <script async src="dist/html-YIPIRHGU.js"></script>
 
   </head>
   <body data-type="modules" class="page-module">
@@ -35,559 +34,616 @@
       } catch (error) { }
     </script>
 
-<div class="main">
+<div class="body-wrapper">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.svg" alt="Trento Web" class="sidebar-projectImage">
-      </a>
+        <a href="api-reference.html" class="sidebar-projectImage">
+          <img src="assets/logo.svg" alt="Trento Web" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="api-reference.html" class="sidebar-projectName" translate="no">
 Trento Web
-      </a>
-      <strong class="sidebar-projectVersion" translate="no">
-        v2.1.0
-      </strong>
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v2.5.0
+        </div>
+      </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">GUIDES</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Info
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list" class="sidebar-fullList"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
-  <div class="content-outer">
-    <div id="content" class="content-inner">
 
-<h1>
-<button class="settings display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of Trento Web</span>
+            <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          </label>
+          <button type="submit" class="search-button" aria-label="Submit Search">
+            <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+          </button>
+          <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+            <i class="ri-close-line ri-lg" title="Cancel search"></i>
+          </button>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" title="View Source" class="icon-action" rel="help">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+    <span translate="no">Trento.Repo</span> 
+    <small class="app-vsn" translate="no">(Trento Web v2.5.0)</small>
+
+  </h1>
 
 
-    <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" title="View Source" class="view-source" rel="help">
-      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-      <span class="sr-only">View Source</span>
-    </a>
-
-  <span translate="no">Trento.Repo</span> 
-  <small class="app-vsn" translate="no">(Trento Web v2.1.0)</small>
-
-</h1>
-
-
+</div>
 
   <section id="summary" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
       </a>
-      Summary
+      <span class="text">Summary</span>
     </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
 
-  <div class="summary-functions summary">
-    <h2>
-      <a href="#functions">Functions</a>
-    </h2>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#aggregate/3" translate="no">aggregate(queryable, aggregate, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#aggregate/3" data-no-tooltip translate="no">aggregate(queryable, aggregate, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#aggregate/4" translate="no">aggregate(queryable, aggregate, field, opts)</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#all/2" translate="no">all(queryable, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#aggregate/4" data-no-tooltip translate="no">aggregate(queryable, aggregate, field, opts)</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#checked_out?/0" translate="no">checked_out?()</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#checkout/2" translate="no">checkout(fun, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all/2" data-no-tooltip translate="no">all(queryable, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#child_spec/1" translate="no">child_spec(opts)</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#config/0" translate="no">config()</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all_by/3" data-no-tooltip translate="no">all_by(queryable, clauses, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#default_options/1" translate="no">default_options(operation)</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:all_by/3"><code class="inline">Ecto.Repo.all_by/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#delete/2" translate="no">delete(struct, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete/2"><code class="inline">Ecto.Repo.delete/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#checked_out?/0" data-no-tooltip translate="no">checked_out?()</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#delete!/2" translate="no">delete!(struct, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete!/2"><code class="inline">Ecto.Repo.delete!/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#delete_all/2" translate="no">delete_all(queryable, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete_all/2"><code class="inline">Ecto.Repo.delete_all/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#checkout/2" data-no-tooltip translate="no">checkout(fun, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#disconnect_all/2" translate="no">disconnect_all(interval, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that forces all connections in the
-pool to disconnect within the given interval.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#exists?/2" translate="no">exists?(queryable, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#child_spec/1" data-no-tooltip translate="no">child_spec(opts)</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#explain/3" translate="no">explain(operation, queryable, opts \\ [])</a>
+    </div>
 
-        </div>
-
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes an EXPLAIN statement or similar
-depending on the adapter to obtain statistics for the given query.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#config/0" data-no-tooltip translate="no">config()</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#get/3" translate="no">get(queryable, id, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#get!/3" translate="no">get!(queryable, id, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#default_options/1" data-no-tooltip translate="no">default_options(operation)</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#get_by/3" translate="no">get_by(queryable, clauses, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#get_by!/3" translate="no">get_by!(queryable, clauses, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete/2" data-no-tooltip translate="no">delete(struct, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#get_dynamic_repo/0" translate="no">get_dynamic_repo()</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete/2"><code class="inline">Ecto.Repo.delete/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#in_transaction?/0" translate="no">in_transaction?()</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:in_transaction?/0"><code class="inline">Ecto.Repo.in_transaction?/0</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete!/2" data-no-tooltip translate="no">delete!(struct, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#insert/2" translate="no">insert(struct, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete!/2"><code class="inline">Ecto.Repo.delete!/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert/2"><code class="inline">Ecto.Repo.insert/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#insert!/2" translate="no">insert!(struct, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert!/2"><code class="inline">Ecto.Repo.insert!/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_all/2" data-no-tooltip translate="no">delete_all(queryable, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#insert_all/3" translate="no">insert_all(schema_or_source, entries, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete_all/2"><code class="inline">Ecto.Repo.delete_all/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_all/3"><code class="inline">Ecto.Repo.insert_all/3</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#insert_or_update/2" translate="no">insert_or_update(changeset, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_or_update/2"><code class="inline">Ecto.Repo.insert_or_update/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#disconnect_all/2" data-no-tooltip translate="no">disconnect_all(interval, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#insert_or_update!/2" translate="no">insert_or_update!(changeset, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Forces all connections in the repo pool to disconnect within the given interval.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_or_update!/2"><code class="inline">Ecto.Repo.insert_or_update!/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#load/2" translate="no">load(schema_or_types, data)</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#exists?/2" data-no-tooltip translate="no">exists?(queryable, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#one/2" translate="no">one(queryable, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#one!/2" translate="no">one!(queryable, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#explain/3" data-no-tooltip translate="no">explain(operation, queryable, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#preload/3" translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Executes an EXPLAIN statement or similar for the given query according to its kind and the
+adapter in the given repository.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#prepare_query/3" translate="no">prepare_query(operation, query, opts)</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get/3" data-no-tooltip translate="no">get(queryable, id, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#put_dynamic_repo/1" translate="no">put_dynamic_repo(dynamic)</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#query/3" translate="no">query(sql, params \\ [], opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given query.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get!/3" data-no-tooltip translate="no">get!(queryable, id, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#query!/3" translate="no">query!(sql, params \\ [], opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given query.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#query_many/3" translate="no">query_many(sql, params \\ [], opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given multi-result query.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_by/3" data-no-tooltip translate="no">get_by(queryable, clauses, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#query_many!/3" translate="no">query_many!(sql, params \\ [], opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that executes the given multi-result query.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#reload/2" translate="no">reload(queryable, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_by!/3" data-no-tooltip translate="no">get_by!(queryable, clauses, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#reload!/2" translate="no">reload!(queryable, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#rollback/1" translate="no">rollback(value)</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_dynamic_repo/0" data-no-tooltip translate="no">get_dynamic_repo()</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#start_link/1" translate="no">start_link(opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#stop/1" translate="no">stop(timeout \\ 5000)</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#in_transaction?/0" data-no-tooltip translate="no">in_transaction?()</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#stream/2" translate="no">stream(queryable, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:in_transaction?/0"><code class="inline">Ecto.Repo.in_transaction?/0</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#to_sql/2" translate="no">to_sql(operation, queryable)</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>A convenience function for SQL-based repositories that translates the given query to SQL.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert/2" data-no-tooltip translate="no">insert(struct, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#transaction/2" translate="no">transaction(fun_or_multi, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert/2"><code class="inline">Ecto.Repo.insert/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:transaction/2"><code class="inline">Ecto.Repo.transaction/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#update/2" translate="no">update(struct, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update/2"><code class="inline">Ecto.Repo.update/2</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert!/2" data-no-tooltip translate="no">insert!(struct, opts \\ [])</a>
 
       </div>
 
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#update!/2" translate="no">update!(struct, opts \\ [])</a>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert!/2"><code class="inline">Ecto.Repo.insert!/2</code></a>.</p></div>
 
-        </div>
+    </div>
 
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update!/2"><code class="inline">Ecto.Repo.update!/2</code></a>.</p></div>
-
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-signature">
-          <a href="#update_all/3" translate="no">update_all(queryable, updates, opts \\ [])</a>
-
-        </div>
-
-          <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update_all/3"><code class="inline">Ecto.Repo.update_all/3</code></a>.</p></div>
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_all/3" data-no-tooltip translate="no">insert_all(schema_or_source, entries, opts \\ [])</a>
 
       </div>
 
-  </div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_all/3"><code class="inline">Ecto.Repo.insert_all/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_or_update/2" data-no-tooltip translate="no">insert_or_update(changeset, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_or_update/2"><code class="inline">Ecto.Repo.insert_or_update/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#insert_or_update!/2" data-no-tooltip translate="no">insert_or_update!(changeset, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_or_update!/2"><code class="inline">Ecto.Repo.insert_or_update!/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#load/2" data-no-tooltip translate="no">load(schema_or_types, data)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#one/2" data-no-tooltip translate="no">one(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#one!/2" data-no-tooltip translate="no">one!(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#preload/3" data-no-tooltip translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#prepare_query/3" data-no-tooltip translate="no">prepare_query(operation, query, opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#prepare_transaction/2" data-no-tooltip translate="no">prepare_transaction(fun_or_multi, opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:prepare_transaction/2"><code class="inline">Ecto.Repo.prepare_transaction/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_dynamic_repo/1" data-no-tooltip translate="no">put_dynamic_repo(dynamic)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#query/3" data-no-tooltip translate="no">query(sql, params \\ [], opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Runs a custom SQL query.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#query!/3" data-no-tooltip translate="no">query!(sql, params \\ [], opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Same as <a href="#query/3"><code class="inline">query/3</code></a> but returns result directly without <code class="inline">:ok</code> tuple
+and raises on invalid queries</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#query_many/3" data-no-tooltip translate="no">query_many(sql, params \\ [], opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Runs a custom SQL query that returns multiple results on the given repo.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#query_many!/3" data-no-tooltip translate="no">query_many!(sql, params \\ [], opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Same as <code class="inline">query_many/4</code> but returns result directly without <code class="inline">:ok</code> tuple
+and raises on invalid queries</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reload/2" data-no-tooltip translate="no">reload(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#reload!/2" data-no-tooltip translate="no">reload!(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rollback/1" data-no-tooltip translate="no">rollback(value)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#start_link/1" data-no-tooltip translate="no">start_link(opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#stop/1" data-no-tooltip translate="no">stop(timeout \\ 5000)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#stream/2" data-no-tooltip translate="no">stream(queryable, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_sql/2" data-no-tooltip translate="no">to_sql(operation, queryable)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Converts the given query to SQL according to its kind and the
+adapter in the given repository.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#transact/2" data-no-tooltip translate="no">transact(fun_or_multi, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:transact/2"><code class="inline">Ecto.Repo.transact/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#transaction/2" data-no-tooltip translate="no">transaction(fun_or_multi, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:transaction/2"><code class="inline">Ecto.Repo.transaction/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update/2" data-no-tooltip translate="no">update(struct, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update/2"><code class="inline">Ecto.Repo.update/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update!/2" data-no-tooltip translate="no">update!(struct, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update!/2"><code class="inline">Ecto.Repo.update!/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_all/3" data-no-tooltip translate="no">update_all(queryable, updates, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update_all/3"><code class="inline">Ecto.Repo.update_all/3</code></a>.</p></div>
+
+    </div>
+
+</div>
 
   </section>
 
@@ -596,9 +652,8 @@ depending on the adapter to obtain statistics for the given query.</p></div>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
       </a>
-Functions
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="aggregate/3">
@@ -606,13 +661,13 @@ Functions
     <span id="aggregate/2"></span>
 
   <div class="detail-header">
-    <a href="#aggregate/3" class="detail-link" title="Link to this function">
+    <a href="#aggregate/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">aggregate(queryable, aggregate, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -622,19 +677,19 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="aggregate/4">
 
   <div class="detail-header">
-    <a href="#aggregate/4" class="detail-link" title="Link to this function">
+    <a href="#aggregate/4" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">aggregate(queryable, aggregate, field, opts)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -644,7 +699,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="all/2">
@@ -652,13 +707,13 @@ Functions
     <span id="all/1"></span>
 
   <div class="detail-header">
-    <a href="#all/2" class="detail-link" title="Link to this function">
+    <a href="#all/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">all(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -668,19 +723,43 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="all_by/3">
+
+    <span id="all_by/2"></span>
+
+  <div class="detail-header">
+    <a href="#all_by/3" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">all_by(queryable, clauses, opts \\ [])</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:all_by/3"><code class="inline">Ecto.Repo.all_by/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="checked_out?/0">
 
   <div class="detail-header">
-    <a href="#checked_out?/0" class="detail-link" title="Link to this function">
+    <a href="#checked_out?/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">checked_out?()</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -690,7 +769,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="checkout/2">
@@ -698,13 +777,13 @@ Functions
     <span id="checkout/1"></span>
 
   <div class="detail-header">
-    <a href="#checkout/2" class="detail-link" title="Link to this function">
+    <a href="#checkout/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">checkout(fun, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -714,19 +793,19 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#child_spec/1" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">child_spec(opts)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -742,13 +821,13 @@ Functions
 <section class="detail" id="config/0">
 
   <div class="detail-header">
-    <a href="#config/0" class="detail-link" title="Link to this function">
+    <a href="#config/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">config()</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -758,19 +837,19 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="default_options/1">
 
   <div class="detail-header">
-    <a href="#default_options/1" class="detail-link" title="Link to this function">
+    <a href="#default_options/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">default_options(operation)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -780,7 +859,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="delete/2">
@@ -788,13 +867,13 @@ Functions
     <span id="delete/1"></span>
 
   <div class="detail-header">
-    <a href="#delete/2" class="detail-link" title="Link to this function">
+    <a href="#delete/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -804,7 +883,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete/2"><code class="inline">Ecto.Repo.delete/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete/2"><code class="inline">Ecto.Repo.delete/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="delete!/2">
@@ -812,13 +891,13 @@ Functions
     <span id="delete!/1"></span>
 
   <div class="detail-header">
-    <a href="#delete!/2" class="detail-link" title="Link to this function">
+    <a href="#delete!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete!(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -828,7 +907,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete!/2"><code class="inline">Ecto.Repo.delete!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete!/2"><code class="inline">Ecto.Repo.delete!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="delete_all/2">
@@ -836,13 +915,13 @@ Functions
     <span id="delete_all/1"></span>
 
   <div class="detail-header">
-    <a href="#delete_all/2" class="detail-link" title="Link to this function">
+    <a href="#delete_all/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">delete_all(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -852,7 +931,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:delete_all/2"><code class="inline">Ecto.Repo.delete_all/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:delete_all/2"><code class="inline">Ecto.Repo.delete_all/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="disconnect_all/2">
@@ -860,13 +939,13 @@ Functions
     <span id="disconnect_all/1"></span>
 
   <div class="detail-header">
-    <a href="#disconnect_all/2" class="detail-link" title="Link to this function">
+    <a href="#disconnect_all/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">disconnect_all(interval, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -876,8 +955,22 @@ Functions
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that forces all connections in the
-pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#disconnect_all/3"><code class="inline">Ecto.Adapters.SQL.disconnect_all/3</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> disconnect_all(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), opts :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: :ok</pre>
+
+      </div>
+
+<p>Forces all connections in the repo pool to disconnect within the given interval.</p><p>Once this function is called, the pool will disconnect all of its connections
+as they are checked in or as they are pinged. Checked in connections will be
+randomly disconnected within the given time interval. Pinged connections are
+immediately disconnected - as they are idle (according to <code class="inline">:idle_interval</code>).</p><p>If the connection has a backoff configured (which is the case by default),
+disconnecting means an attempt at a new connection will be done immediately
+after, without starting a new process for each connection. However, if backoff
+has been disabled, the connection process will terminate. In such cases,
+disconnecting all connections may cause the pool supervisor to restart
+depending on the max_restarts/max_seconds configuration of the pool,
+so you will want to set those carefully.</p>
   </section>
 </section>
 <section class="detail" id="exists?/2">
@@ -885,13 +978,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="exists?/1"></span>
 
   <div class="detail-header">
-    <a href="#exists?/2" class="detail-link" title="Link to this function">
+    <a href="#exists?/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">exists?(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -901,7 +994,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="explain/3">
@@ -909,13 +1002,13 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
     <span id="explain/2"></span>
 
   <div class="detail-header">
-    <a href="#explain/3" class="detail-link" title="Link to this function">
+    <a href="#explain/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">explain(operation, queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -925,8 +1018,57 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes an EXPLAIN statement or similar
-depending on the adapter to obtain statistics for the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#explain/4"><code class="inline">Ecto.Adapters.SQL.explain/4</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> explain(
+  :all | :update_all | :delete_all,
+  <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Queryable.html#t:t/0">Ecto.Queryable.t</a>(),
+  opts :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
+) ::
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | <a href="https://hexdocs.pm/elixir/Exception.html#t:t/0">Exception.t</a>() | [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]</pre>
+
+      </div>
+
+<p>Executes an EXPLAIN statement or similar for the given query according to its kind and the
+adapter in the given repository.</p><h2 id="explain/3-examples" class="section-heading">
+  <a href="#explain/3-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="c1"># Postgres</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="0789389691-1">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="nc">Post</span><span class="p" data-group-id="0789389691-1">)</span><span class="w">
+</span><span class="s">&quot;Seq Scan on posts p0  (cost=0.00..12.12 rows=1 width=443)&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Ecto.Adapters.SQL</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="0789389691-2">(</span><span class="nc">Repo</span><span class="p">,</span><span class="w"> </span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="nc">Post</span><span class="p" data-group-id="0789389691-2">)</span><span class="w">
+</span><span class="s">&quot;Seq Scan on posts p0  (cost=0.00..12.12 rows=1 width=443)&quot;</span><span class="w">
+
+</span><span class="c1"># MySQL</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="0789389691-3">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="p" data-group-id="0789389691-4">(</span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">Post</span><span class="p">,</span><span class="w"> </span><span class="ss">where</span><span class="p">:</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;title&quot;</span><span class="p" data-group-id="0789389691-4">)</span><span class="p" data-group-id="0789389691-3">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="0789389691-5">(</span><span class="p" data-group-id="0789389691-5">)</span><span class="w">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">select_type</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">partitions</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">possible_keys</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">key</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="n">key_len</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">ref</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">filtered</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Extra</span><span class="w">       </span><span class="o">|</span><span class="w">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
+</span><span class="o">|</span><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">SIMPLE</span><span class="w">      </span><span class="o">|</span><span class="w"> </span><span class="n">p0</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nc">NULL</span><span class="w">       </span><span class="o">|</span><span class="w"> </span><span class="nc">ALL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="nc">NULL</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nc">NULL</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">NULL</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nc">NULL</span><span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="mf">100.0</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Using</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
+
+</span><span class="c1"># Shared opts</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="0789389691-6">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="nc">Post</span><span class="p">,</span><span class="w"> </span><span class="ss">analyze</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w"> </span><span class="ss">timeout</span><span class="p">:</span><span class="w"> </span><span class="mi">20_000</span><span class="p" data-group-id="0789389691-6">)</span><span class="w">
+</span><span class="s">&quot;Seq Scan on posts p0  (cost=0.00..11.70 rows=170 width=443) (actual time=0.013..0.013 rows=0 loops=1)</span><span class="se">\n</span><span class="s">Planning Time: 0.031 ms</span><span class="se">\n</span><span class="s">Execution Time: 0.021 ms&quot;</span></code></pre><p>It's safe to execute it for updates and deletes, no data change will be committed:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="8424042201-1">(</span><span class="nc">Repo</span><span class="p">,</span><span class="w"> </span><span class="ss">:update_all</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="p" data-group-id="8424042201-2">(</span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">Post</span><span class="p">,</span><span class="w"> </span><span class="ss">update</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8424042201-3">[</span><span class="ss">set</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8424042201-4">[</span><span class="ss">title</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;new title&quot;</span><span class="p" data-group-id="8424042201-4">]</span><span class="p" data-group-id="8424042201-3">]</span><span class="p" data-group-id="8424042201-2">)</span><span class="p" data-group-id="8424042201-1">)</span><span class="w">
+</span><span class="s">&quot;Update on posts p0  (cost=0.00..11.70 rows=170 width=449)</span><span class="se">\n</span><span class="s">  -&gt;  Seq Scan on posts p0  (cost=0.00..11.70 rows=170 width=449)&quot;</span></code></pre><p>This function is also available under the repository with name <code class="inline">explain</code>:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">explain</span><span class="p" data-group-id="3260866064-1">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="p" data-group-id="3260866064-2">(</span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">Post</span><span class="p">,</span><span class="w"> </span><span class="ss">where</span><span class="p">:</span><span class="w"> </span><span class="n">p</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;title&quot;</span><span class="p" data-group-id="3260866064-2">)</span><span class="p" data-group-id="3260866064-1">)</span><span class="w">
+</span><span class="s">&quot;Seq Scan on posts p0  (cost=0.00..12.12 rows=1 width=443)</span><span class="se">\n</span><span class="s">  Filter: ((title)::text = &#39;title&#39;::text)&quot;</span></code></pre><h3 id="explain/3-options" class="section-heading">
+  <a href="#explain/3-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h3>
+<p>Built-in adapters support passing <code class="inline">opts</code> to the EXPLAIN statement according to the following:</p><table><thead><tr><th style="text-align: left;">Adapter</th><th style="text-align: left;">Supported opts</th></tr></thead><tbody><tr><td style="text-align: left;">Postgrex</td><td style="text-align: left;"><code class="inline">analyze</code>, <code class="inline">verbose</code>, <code class="inline">costs</code>, <code class="inline">settings</code>, <code class="inline">buffers</code>, <code class="inline">timing</code>, <code class="inline">summary</code>, <code class="inline">format</code>, <code class="inline">plan</code></td></tr><tr><td style="text-align: left;">MyXQL</td><td style="text-align: left;"><code class="inline">format</code></td></tr></tbody></table><p>All options except <code class="inline">format</code> are boolean valued and default to <code class="inline">false</code>.</p><p>The allowed <code class="inline">format</code> values are <code class="inline">:map</code>, <code class="inline">:yaml</code>, and <code class="inline">:text</code>:</p><ul><li><code class="inline">:map</code> is the deserialized JSON encoding.</li><li><code class="inline">:yaml</code> and <code class="inline">:text</code> return the result as a string.</li></ul><p>The built-in adapters support the following formats:</p><ul><li>Postgrex: <code class="inline">:map</code>, <code class="inline">:yaml</code> and <code class="inline">:text</code></li><li>MyXQL: <code class="inline">:map</code> and <code class="inline">:text</code></li></ul><p>The <code class="inline">:plan</code> option in Postgrex can take the values <code class="inline">:custom</code> or <code class="inline">:fallback_generic</code>. When <code class="inline">:custom</code>
+is specified, the explain plan generated will consider the specific values of the query parameters
+that are supplied. When using <code class="inline">:fallback_generic</code>, the specific values of the query parameters will
+be ignored. <code class="inline">:fallback_generic</code> does not use PostgreSQL's built-in support for a generic explain
+plan (available as of PostgreSQL 16), but instead uses a special implementation that works for PostgreSQL
+versions 12 and above. Defaults to <code class="inline">:custom</code>.</p><p>Any other value passed to <code class="inline">opts</code> will be forwarded to the underlying adapter query function, including
+shared Repo options such as <code class="inline">:timeout</code>. Non built-in adapters may have specific behaviour and you should
+consult their documentation for more details.</p><p>For version compatibility, please check your database's documentation:</p><ul><li><em>Postgrex</em>: <a href="https://www.postgresql.org/docs/current/sql-explain.html">PostgreSQL doc</a>.</li><li><em>MyXQL</em>: <a href="https://dev.mysql.com/doc/refman/8.0/en/explain.html">MySQL doc</a>.</li></ul>
   </section>
 </section>
 <section class="detail" id="get/3">
@@ -934,13 +1076,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="get/2"></span>
 
   <div class="detail-header">
-    <a href="#get/3" class="detail-link" title="Link to this function">
+    <a href="#get/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get(queryable, id, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -950,7 +1092,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get!/3">
@@ -958,13 +1100,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="get!/2"></span>
 
   <div class="detail-header">
-    <a href="#get!/3" class="detail-link" title="Link to this function">
+    <a href="#get!/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get!(queryable, id, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -974,7 +1116,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by/3">
@@ -982,13 +1124,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="get_by/2"></span>
 
   <div class="detail-header">
-    <a href="#get_by/3" class="detail-link" title="Link to this function">
+    <a href="#get_by/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_by(queryable, clauses, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -998,7 +1140,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by!/3">
@@ -1006,13 +1148,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="get_by!/2"></span>
 
   <div class="detail-header">
-    <a href="#get_by!/3" class="detail-link" title="Link to this function">
+    <a href="#get_by!/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_by!(queryable, clauses, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1022,19 +1164,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_dynamic_repo/0">
 
   <div class="detail-header">
-    <a href="#get_dynamic_repo/0" class="detail-link" title="Link to this function">
+    <a href="#get_dynamic_repo/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">get_dynamic_repo()</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1044,19 +1186,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="in_transaction?/0">
 
   <div class="detail-header">
-    <a href="#in_transaction?/0" class="detail-link" title="Link to this function">
+    <a href="#in_transaction?/0" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">in_transaction?()</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1066,7 +1208,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:in_transaction?/0"><code class="inline">Ecto.Repo.in_transaction?/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:in_transaction?/0"><code class="inline">Ecto.Repo.in_transaction?/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert/2">
@@ -1074,13 +1216,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="insert/1"></span>
 
   <div class="detail-header">
-    <a href="#insert/2" class="detail-link" title="Link to this function">
+    <a href="#insert/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1090,7 +1232,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert/2"><code class="inline">Ecto.Repo.insert/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert/2"><code class="inline">Ecto.Repo.insert/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert!/2">
@@ -1098,13 +1240,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="insert!/1"></span>
 
   <div class="detail-header">
-    <a href="#insert!/2" class="detail-link" title="Link to this function">
+    <a href="#insert!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert!(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1114,7 +1256,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert!/2"><code class="inline">Ecto.Repo.insert!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert!/2"><code class="inline">Ecto.Repo.insert!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert_all/3">
@@ -1122,13 +1264,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="insert_all/2"></span>
 
   <div class="detail-header">
-    <a href="#insert_all/3" class="detail-link" title="Link to this function">
+    <a href="#insert_all/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert_all(schema_or_source, entries, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1138,7 +1280,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_all/3"><code class="inline">Ecto.Repo.insert_all/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_all/3"><code class="inline">Ecto.Repo.insert_all/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert_or_update/2">
@@ -1146,13 +1288,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="insert_or_update/1"></span>
 
   <div class="detail-header">
-    <a href="#insert_or_update/2" class="detail-link" title="Link to this function">
+    <a href="#insert_or_update/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert_or_update(changeset, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1162,7 +1304,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_or_update/2"><code class="inline">Ecto.Repo.insert_or_update/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_or_update/2"><code class="inline">Ecto.Repo.insert_or_update/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert_or_update!/2">
@@ -1170,13 +1312,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="insert_or_update!/1"></span>
 
   <div class="detail-header">
-    <a href="#insert_or_update!/2" class="detail-link" title="Link to this function">
+    <a href="#insert_or_update!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">insert_or_update!(changeset, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1186,19 +1328,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:insert_or_update!/2"><code class="inline">Ecto.Repo.insert_or_update!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:insert_or_update!/2"><code class="inline">Ecto.Repo.insert_or_update!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="load/2">
 
   <div class="detail-header">
-    <a href="#load/2" class="detail-link" title="Link to this function">
+    <a href="#load/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">load(schema_or_types, data)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1208,7 +1350,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one/2">
@@ -1216,13 +1358,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="one/1"></span>
 
   <div class="detail-header">
-    <a href="#one/2" class="detail-link" title="Link to this function">
+    <a href="#one/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">one(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1232,7 +1374,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one!/2">
@@ -1240,13 +1382,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="one!/1"></span>
 
   <div class="detail-header">
-    <a href="#one!/2" class="detail-link" title="Link to this function">
+    <a href="#one!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">one!(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1256,7 +1398,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="preload/3">
@@ -1264,13 +1406,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="preload/2"></span>
 
   <div class="detail-header">
-    <a href="#preload/3" class="detail-link" title="Link to this function">
+    <a href="#preload/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">preload(struct_or_structs_or_nil, preloads, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1280,19 +1422,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="prepare_query/3">
 
   <div class="detail-header">
-    <a href="#prepare_query/3" class="detail-link" title="Link to this function">
+    <a href="#prepare_query/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">prepare_query(operation, query, opts)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1302,19 +1444,41 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="prepare_transaction/2">
+
+  <div class="detail-header">
+    <a href="#prepare_transaction/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">prepare_transaction(fun_or_multi, opts)</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:prepare_transaction/2"><code class="inline">Ecto.Repo.prepare_transaction/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="put_dynamic_repo/1">
 
   <div class="detail-header">
-    <a href="#put_dynamic_repo/1" class="detail-link" title="Link to this function">
+    <a href="#put_dynamic_repo/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">put_dynamic_repo(dynamic)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1324,7 +1488,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="query/3">
@@ -1334,13 +1498,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="query/2"></span>
 
   <div class="detail-header">
-    <a href="#query/3" class="detail-link" title="Link to this function">
+    <a href="#query/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1350,7 +1514,34 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#query/4"><code class="inline">Ecto.Adapters.SQL.query/4</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> query(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">iodata</a>(), <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_params/0">Ecto.Adapters.SQL.query_params</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_result/0">Ecto.Adapters.SQL.query_result</a>()} | {:error, <a href="https://hexdocs.pm/elixir/Exception.html#t:t/0">Exception.t</a>()}</pre>
+
+      </div>
+
+<p>Runs a custom SQL query.</p><p>If the query was successful, it will return an <code class="inline">:ok</code> tuple containing
+a map with at least two keys:</p><ul><li><code class="inline">:num_rows</code> - the number of rows affected</li><li><code class="inline">:rows</code> - the result set as a list. <code class="inline">nil</code> may be returned
+instead of the list if the command does not yield any row
+as result (but still yields the number of affected rows,
+like a <code class="inline">delete</code> command without returning would)</li></ul><h2 id="query/3-options" class="section-heading">
+  <a href="#query/3-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h2>
+<ul><li><code class="inline">:log</code> - When false, does not log the query</li><li><code class="inline">:timeout</code> - Execute request timeout, accepts: <code class="inline">:infinity</code> (default: <code class="inline">15000</code>);</li></ul><h2 id="query/3-examples" class="section-heading">
+  <a href="#query/3-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">query</span><span class="p" data-group-id="4389491530-1">(</span><span class="s">&quot;SELECT $1::integer + $2&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4389491530-2">[</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="4389491530-2">]</span><span class="p" data-group-id="4389491530-1">)</span><span class="w">
+</span><span class="p" data-group-id="4389491530-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4389491530-4">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4389491530-5">[</span><span class="p" data-group-id="4389491530-6">[</span><span class="mi">42</span><span class="p" data-group-id="4389491530-6">]</span><span class="p" data-group-id="4389491530-5">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4389491530-4">}</span><span class="p" data-group-id="4389491530-3">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Ecto.Adapters.SQL</span><span class="o">.</span><span class="n">query</span><span class="p" data-group-id="4389491530-7">(</span><span class="nc">MyRepo</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SELECT $1::integer + $2&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4389491530-8">[</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="4389491530-8">]</span><span class="p" data-group-id="4389491530-7">)</span><span class="w">
+</span><span class="p" data-group-id="4389491530-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4389491530-10">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4389491530-11">[</span><span class="p" data-group-id="4389491530-12">[</span><span class="mi">42</span><span class="p" data-group-id="4389491530-12">]</span><span class="p" data-group-id="4389491530-11">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="4389491530-10">}</span><span class="p" data-group-id="4389491530-9">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="query!/3">
@@ -1360,13 +1551,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="query!/2"></span>
 
   <div class="detail-header">
-    <a href="#query!/3" class="detail-link" title="Link to this function">
+    <a href="#query!/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query!(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1376,7 +1567,15 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#query!/4"><code class="inline">Ecto.Adapters.SQL.query!/4</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> query!(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">iodata</a>(), <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_params/0">Ecto.Adapters.SQL.query_params</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_result/0">Ecto.Adapters.SQL.query_result</a>()</pre>
+
+      </div>
+
+<p>Same as <a href="#query/3"><code class="inline">query/3</code></a> but returns result directly without <code class="inline">:ok</code> tuple
+and raises on invalid queries</p>
   </section>
 </section>
 <section class="detail" id="query_many/3">
@@ -1386,13 +1585,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="query_many/2"></span>
 
   <div class="detail-header">
-    <a href="#query_many/3" class="detail-link" title="Link to this function">
+    <a href="#query_many/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query_many(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1402,7 +1601,34 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given multi-result query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#query_many/4"><code class="inline">Ecto.Adapters.SQL.query_many/4</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> query_many(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">iodata</a>(), <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_params/0">Ecto.Adapters.SQL.query_params</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, [<a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_result/0">Ecto.Adapters.SQL.query_result</a>()]} | {:error, <a href="https://hexdocs.pm/elixir/Exception.html#t:t/0">Exception.t</a>()}</pre>
+
+      </div>
+
+<p>Runs a custom SQL query that returns multiple results on the given repo.</p><p>In case of success, it must return an <code class="inline">:ok</code> tuple containing a list of
+maps with at least two keys:</p><ul><li><p><code class="inline">:num_rows</code> - the number of rows affected</p></li><li><p><code class="inline">:rows</code> - the result set as a list. <code class="inline">nil</code> may be returned
+instead of the list if the command does not yield any row
+as result (but still yields the number of affected rows,
+like a <code class="inline">delete</code> command without returning would)</p></li></ul><h2 id="query_many/3-options" class="section-heading">
+  <a href="#query_many/3-options" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Options</span>
+</h2>
+<ul><li><code class="inline">:log</code> - When false, does not log the query</li><li><code class="inline">:timeout</code> - Execute request timeout, accepts: <code class="inline">:infinity</code> (default: <code class="inline">15000</code>);</li></ul><h2 id="query_many/3-examples" class="section-heading">
+  <a href="#query_many/3-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">query_many</span><span class="p" data-group-id="3552302040-1">(</span><span class="s">&quot;SELECT $1; SELECT $2;&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-2">[</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="3552302040-2">]</span><span class="p" data-group-id="3552302040-1">)</span><span class="w">
+</span><span class="p" data-group-id="3552302040-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-4">[</span><span class="p" data-group-id="3552302040-5">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3552302040-6">[</span><span class="p" data-group-id="3552302040-7">[</span><span class="mi">40</span><span class="p" data-group-id="3552302040-7">]</span><span class="p" data-group-id="3552302040-6">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3552302040-5">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-8">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3552302040-9">[</span><span class="p" data-group-id="3552302040-10">[</span><span class="mi">2</span><span class="p" data-group-id="3552302040-10">]</span><span class="p" data-group-id="3552302040-9">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3552302040-8">}</span><span class="p" data-group-id="3552302040-4">]</span><span class="p" data-group-id="3552302040-3">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Ecto.Adapters.SQL</span><span class="o">.</span><span class="n">query_many</span><span class="p" data-group-id="3552302040-11">(</span><span class="nc">MyRepo</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SELECT $1; SELECT $2;&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-12">[</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p" data-group-id="3552302040-12">]</span><span class="p" data-group-id="3552302040-11">)</span><span class="w">
+</span><span class="p" data-group-id="3552302040-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-14">[</span><span class="p" data-group-id="3552302040-15">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3552302040-16">[</span><span class="p" data-group-id="3552302040-17">[</span><span class="mi">40</span><span class="p" data-group-id="3552302040-17">]</span><span class="p" data-group-id="3552302040-16">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3552302040-15">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3552302040-18">%{</span><span class="ss">rows</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3552302040-19">[</span><span class="p" data-group-id="3552302040-20">[</span><span class="mi">2</span><span class="p" data-group-id="3552302040-20">]</span><span class="p" data-group-id="3552302040-19">]</span><span class="p">,</span><span class="w"> </span><span class="ss">num_rows</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3552302040-18">}</span><span class="p" data-group-id="3552302040-14">]</span><span class="p" data-group-id="3552302040-13">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="query_many!/3">
@@ -1412,13 +1638,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="query_many!/2"></span>
 
   <div class="detail-header">
-    <a href="#query_many!/3" class="detail-link" title="Link to this function">
+    <a href="#query_many!/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">query_many!(sql, params \\ [], opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1428,7 +1654,16 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given multi-result query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#query_many!/4"><code class="inline">Ecto.Adapters.SQL.query_many!/4</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> query_many!(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">iodata</a>(), <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_params/0">Ecto.Adapters.SQL.query_params</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: [
+  <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_result/0">Ecto.Adapters.SQL.query_result</a>()
+]</pre>
+
+      </div>
+
+<p>Same as <code class="inline">query_many/4</code> but returns result directly without <code class="inline">:ok</code> tuple
+and raises on invalid queries</p>
   </section>
 </section>
 <section class="detail" id="reload/2">
@@ -1436,13 +1671,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="reload/1"></span>
 
   <div class="detail-header">
-    <a href="#reload/2" class="detail-link" title="Link to this function">
+    <a href="#reload/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">reload(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1452,7 +1687,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="reload!/2">
@@ -1460,13 +1695,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="reload!/1"></span>
 
   <div class="detail-header">
-    <a href="#reload!/2" class="detail-link" title="Link to this function">
+    <a href="#reload!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">reload!(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1476,19 +1711,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="rollback/1">
 
   <div class="detail-header">
-    <a href="#rollback/1" class="detail-link" title="Link to this function">
+    <a href="#rollback/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">rollback(value)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1504,7 +1739,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
       </div>
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -1512,13 +1747,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="start_link/0"></span>
 
   <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">start_link(opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1528,7 +1763,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stop/1">
@@ -1536,13 +1771,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="stop/0"></span>
 
   <div class="detail-header">
-    <a href="#stop/1" class="detail-link" title="Link to this function">
+    <a href="#stop/1" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">stop(timeout \\ 5000)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1552,7 +1787,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stream/2">
@@ -1560,13 +1795,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="stream/1"></span>
 
   <div class="detail-header">
-    <a href="#stream/2" class="detail-link" title="Link to this function">
+    <a href="#stream/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">stream(queryable, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1576,19 +1811,19 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="to_sql/2">
 
   <div class="detail-header">
-    <a href="#to_sql/2" class="detail-link" title="Link to this function">
+    <a href="#to_sql/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">to_sql(operation, queryable)</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L1" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1598,7 +1833,53 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that translates the given query to SQL.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.9.2/Ecto.Adapters.SQL.html#to_sql/3"><code class="inline">Ecto.Adapters.SQL.to_sql/3</code></a> for more information.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> to_sql(:all | :update_all | :delete_all, <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Queryable.html#t:t/0">Ecto.Queryable.t</a>()) ::
+  {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/ecto_sql/3.13.2/Ecto.Adapters.SQL.html#t:query_params/0">Ecto.Adapters.SQL.query_params</a>()}</pre>
+
+      </div>
+
+<p>Converts the given query to SQL according to its kind and the
+adapter in the given repository.</p><h2 id="to_sql/2-examples" class="section-heading">
+  <a href="#to_sql/2-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<p>The examples below are meant for reference. Each adapter will
+return a different result:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">to_sql</span><span class="p" data-group-id="3010536706-1">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="nc">Post</span><span class="p" data-group-id="3010536706-1">)</span><span class="w">
+</span><span class="p" data-group-id="3010536706-2">{</span><span class="s">&quot;SELECT p.id, p.title, p.inserted_at, p.created_at FROM posts as p&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3010536706-3">[</span><span class="p" data-group-id="3010536706-3">]</span><span class="p" data-group-id="3010536706-2">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyRepo</span><span class="o">.</span><span class="n">to_sql</span><span class="p" data-group-id="3010536706-4">(</span><span class="ss">:update_all</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="p" data-group-id="3010536706-5">(</span><span class="n">p</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nc">Post</span><span class="p">,</span><span class="w"> </span><span class="ss">update</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3010536706-6">[</span><span class="ss">set</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3010536706-7">[</span><span class="ss">title</span><span class="p">:</span><span class="w"> </span><span class="o">^</span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="3010536706-7">]</span><span class="p" data-group-id="3010536706-6">]</span><span class="p" data-group-id="3010536706-5">)</span><span class="p" data-group-id="3010536706-4">)</span><span class="w">
+</span><span class="p" data-group-id="3010536706-8">{</span><span class="s">&quot;UPDATE posts AS p SET title = $1&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3010536706-9">[</span><span class="s">&quot;hello&quot;</span><span class="p" data-group-id="3010536706-9">]</span><span class="p" data-group-id="3010536706-8">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Ecto.Adapters.SQL</span><span class="o">.</span><span class="n">to_sql</span><span class="p" data-group-id="3010536706-10">(</span><span class="ss">:all</span><span class="p">,</span><span class="w"> </span><span class="nc">MyRepo</span><span class="p">,</span><span class="w"> </span><span class="nc">Post</span><span class="p" data-group-id="3010536706-10">)</span><span class="w">
+</span><span class="p" data-group-id="3010536706-11">{</span><span class="s">&quot;SELECT p.id, p.title, p.inserted_at, p.created_at FROM posts as p&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3010536706-12">[</span><span class="p" data-group-id="3010536706-12">]</span><span class="p" data-group-id="3010536706-11">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="transact/2">
+
+    <span id="transact/1"></span>
+
+  <div class="detail-header">
+    <a href="#transact/2" class="detail-link" data-no-tooltip title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">transact(fun_or_multi, opts \\ [])</h1>
+
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:transact/2"><code class="inline">Ecto.Repo.transact/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="transaction/2">
@@ -1606,13 +1887,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="transaction/1"></span>
 
   <div class="detail-header">
-    <a href="#transaction/2" class="detail-link" title="Link to this function">
+    <a href="#transaction/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">transaction(fun_or_multi, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1622,7 +1903,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:transaction/2"><code class="inline">Ecto.Repo.transaction/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:transaction/2"><code class="inline">Ecto.Repo.transaction/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="update/2">
@@ -1630,13 +1911,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="update/1"></span>
 
   <div class="detail-header">
-    <a href="#update/2" class="detail-link" title="Link to this function">
+    <a href="#update/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">update(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1646,7 +1927,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update/2"><code class="inline">Ecto.Repo.update/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update/2"><code class="inline">Ecto.Repo.update/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="update!/2">
@@ -1654,13 +1935,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="update!/1"></span>
 
   <div class="detail-header">
-    <a href="#update!/2" class="detail-link" title="Link to this function">
+    <a href="#update!/2" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">update!(struct, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1670,7 +1951,7 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update!/2"><code class="inline">Ecto.Repo.update!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update!/2"><code class="inline">Ecto.Repo.update!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="update_all/3">
@@ -1678,13 +1959,13 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
     <span id="update_all/2"></span>
 
   <div class="detail-header">
-    <a href="#update_all/3" class="detail-link" title="Link to this function">
+    <a href="#update_all/3" class="detail-link" data-no-tooltip title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">update_all(queryable, updates, opts \\ [])</h1>
 
-      <a href="https://github.com/trento-project/web/blob/main/lib/trento/infrastructure/repo.ex#L2" class="view-source" rel="help" title="View Source">
+      <a href="https://github.com/trento-project/web/blob/main/lib/trento/repo.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -1694,28 +1975,40 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.9.4/Ecto.Repo.html#c:update_all/3"><code class="inline">Ecto.Repo.update_all/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.13.2/Ecto.Repo.html#c:update_all/3"><code class="inline">Ecto.Repo.update_all/3</code></a>.</p>
   </section>
 </section>
 
     </div>
   </section>
 
-      <footer class="footer">
+    <footer class="footer">
+      <p>
 
-        <p>
-          Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.0) for the
+        <span class="line">
+          <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+            Search HexDocs
+          </button>
 
-            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+            <a href="Trento Web.epub" title="ePub version">
+              Download ePub version
+            </a>
 
-        </p>
-      </footer>
-    </div>
+        </span>
+      </p>
+
+      <p class="built-using">
+        Built using
+        <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.34.2) for the
+
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+      </p>
+
+    </footer>
   </div>
-</section>
+</main>
 </div>
-
 
   </body>
 </html>
