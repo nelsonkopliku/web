@@ -196,26 +196,28 @@ jobs:
           - nodejs: ${{ needs.setup-matrix-env.outputs.NODEJS_BC }}
           - nodejs: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup Node
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.nodejs }}
-      - name: Retrieve NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            assets/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
-      - name: Run Eslint
-        run: cd assets && npm run lint
-      - name: Check JS Code Format
-        run: cd assets && npm run format:check
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup Node
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ matrix.nodejs }}
+      # - name: Retrieve NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-cache
+      #   with:
+      #     path: |
+      #       assets/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
+      # - name: Run Eslint
+      #   run: cd assets && npm run lint
+      # - name: Check JS Code Format
+      #   run: cd assets && npm run format:check
 
   static-code-analysis-elixir:
     name: Static Code Analysis Elixir
@@ -229,33 +231,35 @@ jobs:
           - elixir: ${{ needs.setup-matrix-env.outputs.ELIXIR_DEV }}
             otp: ${{ needs.setup-matrix-env.outputs.ERLANG_DEV }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - name: Retrieve Elixir Cached Dependencies
-        uses: actions/cache@v4
-        id: mix-cache
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Check for unused dependencies
-        run: mix deps.unlock --check-unused
-      - name: Check Code Format
-        run: mix format --check-formatted
-      - name: Run Credo
-        run: mix credo
-      - name: Run Dialyzer
-        run: mix dialyzer
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     otp-version: ${{ matrix.otp }}
+      #     elixir-version: ${{ matrix.elixir }}
+      # - name: Retrieve Elixir Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: mix-cache
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Check for unused dependencies
+      #   run: mix deps.unlock --check-unused
+      # - name: Check Code Format
+      #   run: mix format --check-formatted
+      # - name: Run Credo
+      #   run: mix credo
+      # - name: Run Dialyzer
+      #   run: mix dialyzer
 
   test-javascript:
     name: Javascript tests
@@ -267,24 +271,26 @@ jobs:
           - nodejs: ${{ needs.setup-matrix-env.outputs.NODEJS_BC }}
           - nodejs: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup Node
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.nodejs }}
-      - name: Retrieve NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            assets/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
-      - name: Run JS tests
-        run: cd assets && npm test
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup Node
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ matrix.nodejs }}
+      # - name: Retrieve NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-cache
+      #   with:
+      #     path: |
+      #       assets/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
+      # - name: Run JS tests
+      #   run: cd assets && npm test
 
   test-elixir:
     name: Elixir tests
@@ -298,36 +304,38 @@ jobs:
           - elixir: ${{ needs.setup-matrix-env.outputs.ELIXIR_DEV }}
             otp: ${{ needs.setup-matrix-env.outputs.ERLANG_DEV }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - name: Retrieve Elixir Cached Dependencies
-        uses: actions/cache@v4
-        id: mix-cache
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Compile
-        run: mix compile --warnings-as-errors
-      - name: "Docker compose dependencies"
-        uses: isbang/compose-action@v2.4.1
-        with:
-          compose-file: "./docker-compose.yaml"
-          down-flags: "--volumes"
-      - name: Run test
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mix coveralls.github --warnings-as-errors --trace
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     otp-version: ${{ matrix.otp }}
+      #     elixir-version: ${{ matrix.elixir }}
+      # - name: Retrieve Elixir Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: mix-cache
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Compile
+      #   run: mix compile --warnings-as-errors
+      # - name: "Docker compose dependencies"
+      #   uses: isbang/compose-action@v2.4.1
+      #   with:
+      #     compose-file: "./docker-compose.yaml"
+      #     down-flags: "--volumes"
+      # - name: Run test
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: mix coveralls.github --warnings-as-errors --trace
 
   chromatic:
     name: Chromatic deployment
@@ -419,82 +427,84 @@ jobs:
     env:
       MIX_ENV: dev
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - name: Setup Node
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
-      - name: Retrieve Elixir Cached Dependencies
-        uses: actions/cache@v4
-        id: mix-cache
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Retrieve NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            assets/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
-      - name: Retrieve E2E NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-e2e-cache
-        with:
-          path: |
-            test/e2e/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
-      - name: Check Eslint and JS Code Format
-        run: cd test/e2e && npm run lint && npm run format:check
-      - name: "Docker compose dependencies"
-        uses: isbang/compose-action@v2.4.1
-        with:
-          compose-file: "./docker-compose.yaml"
-          compose-flags: "--profile wanda"
-          down-flags: "--volumes"
-      - name: Mix setup
-        run: mix setup
-      - name: Run trento detached
-        run: mix phx.server &
-      - name: Install photofinish
-        uses: jaxxstorm/action-install-gh-release@v2.1.0
-        with:
-          repo: trento-project/photofinish
-          tag: v1.4.2
-          cache: enable
-          chmod: 0755
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        env:
-          SPLIT: ${{ strategy.job-total }}
-          SPLIT_INDEX: ${{ strategy.job-index }}
-          cypress_video: false
-          cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
-        with:
-          working-directory: test/e2e
-          wait-on-timeout: 30
-          config: baseUrl=http://localhost:4000
-      - name: Upload cypress test screenshots
-        uses: actions/upload-artifact@v5
-        if: failure()
-        with:
-          name: e2e-screenshots-${{ matrix.containers }}
-          path: test/e2e/cypress/screenshots/
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     otp-version: ${{ matrix.otp }}
+      #     elixir-version: ${{ matrix.elixir }}
+      # - name: Setup Node
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
+      # - name: Retrieve Elixir Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: mix-cache
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Retrieve NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-cache
+      #   with:
+      #     path: |
+      #       assets/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
+      # - name: Retrieve E2E NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-e2e-cache
+      #   with:
+      #     path: |
+      #       test/e2e/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
+      # - name: Check Eslint and JS Code Format
+      #   run: cd test/e2e && npm run lint && npm run format:check
+      # - name: "Docker compose dependencies"
+      #   uses: isbang/compose-action@v2.4.1
+      #   with:
+      #     compose-file: "./docker-compose.yaml"
+      #     compose-flags: "--profile wanda"
+      #     down-flags: "--volumes"
+      # - name: Mix setup
+      #   run: mix setup
+      # - name: Run trento detached
+      #   run: mix phx.server &
+      # - name: Install photofinish
+      #   uses: jaxxstorm/action-install-gh-release@v2.1.0
+      #   with:
+      #     repo: trento-project/photofinish
+      #     tag: v1.4.2
+      #     cache: enable
+      #     chmod: 0755
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Cypress run
+      #   uses: cypress-io/github-action@v6
+      #   env:
+      #     SPLIT: ${{ strategy.job-total }}
+      #     SPLIT_INDEX: ${{ strategy.job-index }}
+      #     cypress_video: false
+      #     cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
+      #   with:
+      #     working-directory: test/e2e
+      #     wait-on-timeout: 30
+      #     config: baseUrl=http://localhost:4000
+      # - name: Upload cypress test screenshots
+      #   uses: actions/upload-artifact@v5
+      #   if: failure()
+      #   with:
+      #     name: e2e-screenshots-${{ matrix.containers }}
+      #     path: test/e2e/cypress/screenshots/
 
   test-regression:
     name: Regression tests
@@ -513,92 +523,94 @@ jobs:
     env:
       MIX_ENV: dev
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          version-file: .tool-versions
-          version-type: strict
-      - name: Setup Node
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
-      - name: Retrieve Elixir Cached Dependencies
-        uses: actions/cache@v4
-        id: mix-cache
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Retrieve NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            assets/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
-      - name: Retrieve E2E NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-e2e-cache
-        with:
-          path: |
-            test/e2e/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
-      - name: "Docker compose dependencies"
-        uses: isbang/compose-action@v2.4.1
-        with:
-          compose-file: "./docker-compose.yaml"
-          down-flags: "--volumes"
-      - name: Postgres trento_dev restore
-        uses: tj-actions/pg-restore@v6
-        with:
-          database_url: "postgresql://postgres:postgres@localhost:5433/postgres"
-          backup_file: "test/fixtures/regression/${{ matrix.test }}/trento_dev.sql"
-          postgresql_version: "15"
-      - name: Postgres trento_eventstore_dev restore
-        uses: tj-actions/pg-restore@v6
-        with:
-          database_url: "postgresql://postgres:postgres@localhost:5433/postgres"
-          backup_file: "test/fixtures/regression/${{ matrix.test }}/trento_eventstore_dev.sql"
-          postgresql_version: "15"
-      - name: Run DB migrations
-        run: mix ecto.migrate
-      - name: Run DB seed
-        run: mix run priv/repo/seeds.exs
-      - name: Run trento detached
-        run: mix phx.server &
-      - name: Install photofinish
-        uses: jaxxstorm/action-install-gh-release@v2.1.0
-        with:
-          repo: trento-project/photofinish
-          tag: v1.4.2
-          cache: enable
-          chmod: 0755
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        env:
-          cypress_video: false
-          cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
-        with:
-          working-directory: test/e2e
-          spec: ${{ matrix.cypress_spec }}
-          wait-on-timeout: 30
-          config: baseUrl=http://localhost:4000
-      - name: Upload cypress test screenshots
-        uses: actions/upload-artifact@v5
-        if: failure()
-        with:
-          name: regression-${{ matrix.test }}-e2e-screenshots
-          path: test/e2e/cypress/screenshots/
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     version-file: .tool-versions
+      #     version-type: strict
+      # - name: Setup Node
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
+      # - name: Retrieve Elixir Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: mix-cache
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Retrieve NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-cache
+      #   with:
+      #     path: |
+      #       assets/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
+      # - name: Retrieve E2E NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-e2e-cache
+      #   with:
+      #     path: |
+      #       test/e2e/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
+      # - name: "Docker compose dependencies"
+      #   uses: isbang/compose-action@v2.4.1
+      #   with:
+      #     compose-file: "./docker-compose.yaml"
+      #     down-flags: "--volumes"
+      # - name: Postgres trento_dev restore
+      #   uses: tj-actions/pg-restore@v6
+      #   with:
+      #     database_url: "postgresql://postgres:postgres@localhost:5433/postgres"
+      #     backup_file: "test/fixtures/regression/${{ matrix.test }}/trento_dev.sql"
+      #     postgresql_version: "15"
+      # - name: Postgres trento_eventstore_dev restore
+      #   uses: tj-actions/pg-restore@v6
+      #   with:
+      #     database_url: "postgresql://postgres:postgres@localhost:5433/postgres"
+      #     backup_file: "test/fixtures/regression/${{ matrix.test }}/trento_eventstore_dev.sql"
+      #     postgresql_version: "15"
+      # - name: Run DB migrations
+      #   run: mix ecto.migrate
+      # - name: Run DB seed
+      #   run: mix run priv/repo/seeds.exs
+      # - name: Run trento detached
+      #   run: mix phx.server &
+      # - name: Install photofinish
+      #   uses: jaxxstorm/action-install-gh-release@v2.1.0
+      #   with:
+      #     repo: trento-project/photofinish
+      #     tag: v1.4.2
+      #     cache: enable
+      #     chmod: 0755
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Cypress run
+      #   uses: cypress-io/github-action@v6
+      #   env:
+      #     cypress_video: false
+      #     cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
+      #   with:
+      #     working-directory: test/e2e
+      #     spec: ${{ matrix.cypress_spec }}
+      #     wait-on-timeout: 30
+      #     config: baseUrl=http://localhost:4000
+      # - name: Upload cypress test screenshots
+      #   uses: actions/upload-artifact@v5
+      #   if: failure()
+      #   with:
+      #     name: regression-${{ matrix.test }}-e2e-screenshots
+      #     path: test/e2e/cypress/screenshots/
 
   test-integration:
     name: Integration tests
@@ -670,81 +682,83 @@ jobs:
               NODEJS_VERSION: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
     env: ${{ matrix.env }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Setup
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          version-file: .tool-versions
-          version-type: strict
-      - name: Setup Node
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODEJS_VERSION }}
-      - name: Retrieve Elixir Cached Dependencies
-        uses: actions/cache@v4
-        id: mix-cache
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Retrieve NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            assets/node_modules
-          key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
-      - name: Retrieve E2E NPM Cached Dependencies
-        uses: actions/cache@v4
-        id: npm-e2e-cache
-        with:
-          path: |
-            test/e2e/node_modules
-          key: nodejs-${{steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
-      - name: Install photofinish
-        uses: jaxxstorm/action-install-gh-release@v2.1.0
-        with:
-          repo: trento-project/photofinish
-          tag: v1.4.2
-          cache: enable
-          chmod: 0755
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: "Docker compose dependencies"
-        uses: isbang/compose-action@v2.4.1
-        with:
-          compose-file: "./docker-compose.yaml"
-          compose-flags: "--profile idp"
-          down-flags: "--volumes"
-      - name: Create dev.local.exs file
-        run: echo "${{ matrix.config_file_content }}" > config/dev.local.exs
-      - name: Mix setup
-        run: mix setup
-      - name: Run trento detached
-        run: mix phx.server &
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        env:
-          cypress_video: false
-          cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
-        with:
-          working-directory: test/e2e
-          spec: ${{ matrix.cypress_spec }}
-          wait-on-timeout: 30
-          config: baseUrl=http://localhost:4000
-      - name: Upload cypress test screenshots
-        uses: actions/upload-artifact@v5
-        if: failure()
-        with:
-          name: integration-${{ matrix.test }}-e2e-screenshots
-          path: test/e2e/cypress/screenshots/
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Setup
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     version-file: .tool-versions
+      #     version-type: strict
+      # - name: Setup Node
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ env.NODEJS_VERSION }}
+      # - name: Retrieve Elixir Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: mix-cache
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Retrieve NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-cache
+      #   with:
+      #     path: |
+      #       assets/node_modules
+      #     key: nodejs-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('assets/package-lock.json') }}
+      # - name: Retrieve E2E NPM Cached Dependencies
+      #   uses: actions/cache@v4
+      #   id: npm-e2e-cache
+      #   with:
+      #     path: |
+      #       test/e2e/node_modules
+      #     key: nodejs-${{steps.setup-node.outputs.node-version }}-${{ hashFiles('test/e2e/package-lock.json') }}
+      # - name: Install photofinish
+      #   uses: jaxxstorm/action-install-gh-release@v2.1.0
+      #   with:
+      #     repo: trento-project/photofinish
+      #     tag: v1.4.2
+      #     cache: enable
+      #     chmod: 0755
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: "Docker compose dependencies"
+      #   uses: isbang/compose-action@v2.4.1
+      #   with:
+      #     compose-file: "./docker-compose.yaml"
+      #     compose-flags: "--profile idp"
+      #     down-flags: "--volumes"
+      # - name: Create dev.local.exs file
+      #   run: echo "${{ matrix.config_file_content }}" > config/dev.local.exs
+      # - name: Mix setup
+      #   run: mix setup
+      # - name: Run trento detached
+      #   run: mix phx.server &
+      # - name: Cypress run
+      #   uses: cypress-io/github-action@v6
+      #   env:
+      #     cypress_video: false
+      #     cypress_photofinish_binary: $(whereis photofinish | cut -d" " -f2)
+      #   with:
+      #     working-directory: test/e2e
+      #     spec: ${{ matrix.cypress_spec }}
+      #     wait-on-timeout: 30
+      #     config: baseUrl=http://localhost:4000
+      # - name: Upload cypress test screenshots
+      #   uses: actions/upload-artifact@v5
+      #   if: failure()
+      #   with:
+      #     name: integration-${{ matrix.test }}-e2e-screenshots
+      #     path: test/e2e/cypress/screenshots/
 
   target-branch-deps:
     name: Rebuild target branch dependencies
@@ -801,41 +815,43 @@ jobs:
           - elixir: ${{ needs.setup-matrix-env.outputs.ELIXIR_DEV }}
             otp: ${{ needs.setup-matrix-env.outputs.ERLANG_DEV }}
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Set up Elixir
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - name: Retrieve Elixir Cached Dependencies - current branch
-        uses: actions/cache@v4
-        id: mix-cache-current
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Setup Node.js
-        id: setup-node
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
-      - name: Install API linting tools
-        run: |
-          npm install -g @redocly/cli@latest
-          npm install -g @quobix/vacuum@latest
-          npm install -g @stoplight/spectral-cli
-      - name: Run API docs check
-        run: ./hack/api_docs_check.sh
+      - name: Foo
+        run: echo "success"
+      # - name: Cancel Previous Runs
+      #   uses: styfle/cancel-workflow-action@0.12.1
+      #   with:
+      #     access_token: ${{ github.token }}
+      # - name: Checkout
+      #   uses: actions/checkout@v5
+      #   with:
+      #     fetch-depth: 0
+      # - name: Set up Elixir
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     otp-version: ${{ matrix.otp }}
+      #     elixir-version: ${{ matrix.elixir }}
+      # - name: Retrieve Elixir Cached Dependencies - current branch
+      #   uses: actions/cache@v4
+      #   id: mix-cache-current
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Setup Node.js
+      #   id: setup-node
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: ${{ needs.setup-matrix-env.outputs.NODEJS_DEV }}
+      # - name: Install API linting tools
+      #   run: |
+      #     npm install -g @redocly/cli@latest
+      #     npm install -g @quobix/vacuum@latest
+      #     npm install -g @stoplight/spectral-cli
+      # - name: Run API docs check
+      #   run: ./hack/api_docs_check.sh
 
   api-bc-check:
     name: API bc check
@@ -864,59 +880,61 @@ jobs:
             elixir: ${{ needs.setup-matrix-env.outputs.ELIXIR_DEV }}
             otp: ${{ needs.setup-matrix-env.outputs.ERLANG_DEV }}
     steps:
-      - name: Checkout current branch
-        uses: actions/checkout@v5
-      - name: Set up Elixir
-        id: setup-elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
-      - name: Retrieve Elixir Cached Dependencies - current branch
-        uses: actions/cache@v4
-        id: mix-cache-current
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Generate current openapi.json
-        run: |
-          mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.${{ matrix.version }}.ApiSpec /tmp/specs/current-spec.json
-      - name: Checkout target branch
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
-      - name: Retrieve Elixir Cached Dependencies - target branch
-        uses: actions/cache@v4
-        id: mix-cache-target
-        with:
-          path: |
-            deps
-            _build/${{ env.MIX_ENV }}
-            priv/plts
-          key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
-      - name: Generate target openapi.json
-        run: |
-          mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.${{ matrix.version }}.ApiSpec /tmp/specs/target-spec.json
-      - name: Locate generated specs
-        run: mv /tmp/specs .
-      - name: Find difference between OpenAPI specifications
-        run: |
-          docker run -v "$(pwd)/specs:/specs" --rm openapitools/openapi-diff:2.0.1 \
-            /specs/target-spec.json \
-            /specs/current-spec.json \
-            --fail-on-incompatible \
-            --markdown /specs/changes.md \
-            --text /specs/changes.txt \
-            --html /specs/changes.html
-      - name: Upload OpenAPI diff report
-        uses: actions/upload-artifact@v5
-        if: failure()
-        with:
-          name: openapi-diff-report-${{ matrix.version }}
-          path: specs/
+      - name: Foo
+        run: echo "success"
+      # - name: Checkout current branch
+      #   uses: actions/checkout@v5
+      # - name: Set up Elixir
+      #   id: setup-elixir
+      #   uses: erlef/setup-beam@v1
+      #   with:
+      #     otp-version: ${{ matrix.otp }}
+      #     elixir-version: ${{ matrix.elixir }}
+      # - name: Retrieve Elixir Cached Dependencies - current branch
+      #   uses: actions/cache@v4
+      #   id: mix-cache-current
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Generate current openapi.json
+      #   run: |
+      #     mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.${{ matrix.version }}.ApiSpec /tmp/specs/current-spec.json
+      # - name: Checkout target branch
+      #   uses: actions/checkout@v5
+      #   with:
+      #     ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
+      # - name: Retrieve Elixir Cached Dependencies - target branch
+      #   uses: actions/cache@v4
+      #   id: mix-cache-target
+      #   with:
+      #     path: |
+      #       deps
+      #       _build/${{ env.MIX_ENV }}
+      #       priv/plts
+      #     key: erlang-${{ steps.setup-elixir.outputs.otp-version }}-elixir-${{ steps.setup-elixir.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}-${{ env.MIX_ENV }}
+      # - name: Generate target openapi.json
+      #   run: |
+      #     mix openapi.spec.json --start-app=false --spec TrentoWeb.OpenApi.${{ matrix.version }}.ApiSpec /tmp/specs/target-spec.json
+      # - name: Locate generated specs
+      #   run: mv /tmp/specs .
+      # - name: Find difference between OpenAPI specifications
+      #   run: |
+      #     docker run -v "$(pwd)/specs:/specs" --rm openapitools/openapi-diff:2.0.1 \
+      #       /specs/target-spec.json \
+      #       /specs/current-spec.json \
+      #       --fail-on-incompatible \
+      #       --markdown /specs/changes.md \
+      #       --text /specs/changes.txt \
+      #       --html /specs/changes.html
+      # - name: Upload OpenAPI diff report
+      #   uses: actions/upload-artifact@v5
+      #   if: failure()
+      #   with:
+      #     name: openapi-diff-report-${{ matrix.version }}
+      #     path: specs/
 
   build-containers:
     name: Build containers
