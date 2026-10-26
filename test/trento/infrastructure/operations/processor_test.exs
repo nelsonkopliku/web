@@ -36,6 +36,27 @@ defmodule Trento.Infrastructure.Operations.AMQP.ProcessorTest do
       :ok
     end
 
+    test "should log the refusal of a scheduled request when another operation runs" do
+      %{operation_id: operation_id} =
+        operation_completed =
+        build(:operation_completed_with_failed_request_v1, error: :ALREADY_RUNNING)
+
+      %{schedule_id: schedule_id} = insert(:scheduled_run, operation_id: operation_id)
+
+      message = %GenRMQ.Message{
+        payload: Contracts.to_event(operation_completed),
+        attributes: %{},
+        channel: nil
+      }
+
+      assert :ok = Processor.process(message)
+
+      assert %ActivityLog{
+               actor: "system",
+               metadata: %{"reason" => "already_running", "correlation_id" => ^schedule_id}
+             } = Repo.get_by!(ActivityLog, type: "scheduled_operation_request_failed")
+    end
+
     test "should process OperationStarted and broadcast to the socket" do
       operation_id = UUID.uuid4()
       group_id = UUID.uuid4()

@@ -92,6 +92,27 @@ defmodule Trento.ActivityLog.QueueEventParserTest do
                })
     end
 
+    test "should correlate the completion of a scheduled request to its schedule" do
+      %{operation_id: operation_id} =
+        operation_completed =
+        build(:operation_completed_v1, operation_type: "hostreboot@v1")
+
+      %{schedule_id: schedule_id, target_id: host_id} =
+        insert(:scheduled_run, operation_id: operation_id)
+
+      context = %{queue_event: operation_completed}
+
+      assert "system" == QueueEventParser.get_activity_actor(:operation_completed, context)
+
+      assert %{
+               correlation_id: ^schedule_id,
+               schedule_id: ^schedule_id,
+               host_id: ^host_id,
+               operation_id: ^operation_id,
+               operation: :reboot
+             } = QueueEventParser.get_activity_metadata(:operation_completed, context)
+    end
+
     test "should add error details if the operation failed" do
       %{
         operation_id: operation_id,
