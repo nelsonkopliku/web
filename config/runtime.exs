@@ -225,29 +225,18 @@ if config_env() in [:prod, :demo] do
       interval: Trento.ChecksScheduling.Interval.from_env!(checks_interval)
   end
 
-  # Until checks run per target, a number of minutes up to 59 still drives the cron jobs
+  # Until checks run per target, a number of minutes up to 59 still drives the checks job
   checks_cron_minutes =
     case Integer.parse(checks_interval || "") do
       {minutes, ""} when minutes in 1..59 -> minutes
       _ -> 5
     end
 
-  config :trento, Trento.Scheduler,
-    jobs: [
-      # Runs every five minutes by default
-      clusters_checks_execution: [
-        schedule: "*/#{checks_cron_minutes} * * * *"
-      ],
-      hosts_checks_execution: [
-        schedule: "*/#{checks_cron_minutes} * * * *"
-      ],
-      prune_discovery_events: [
-        schedule: System.get_env("PRUNE_EVENTS_INTERVAL", "0 0 * * *"),
-        task:
-          {Trento.Discovery, :prune_discovery_events,
-           ["PRUNE_EVENTS_OLDER_THAN" |> System.get_env("10") |> String.to_integer()]}
-      ]
-    ]
+  config :trento, :checks_execution_cron, "*/#{checks_cron_minutes} * * * *"
+
+  config :trento, :discovery_events_pruning,
+    schedule: System.get_env("PRUNE_EVENTS_INTERVAL", "0 0 * * *"),
+    older_than: "PRUNE_EVENTS_OLDER_THAN" |> System.get_env("10") |> String.to_integer()
 
   config :trento,
     api_key_authentication_enabled: System.get_env("ENABLE_API_KEY", "true") == "true"
