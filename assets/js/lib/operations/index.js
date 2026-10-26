@@ -123,6 +123,48 @@ export const getOperationInternalName = (operation) =>
 export const getOperationResourceType = (operation) =>
   get(OPERATION_RESOURCE_TYPES, operation, 'unknown');
 
+const INSTANCE_TYPE_LABELS = {
+  all: 'All',
+  abap: 'ABAP',
+  j2ee: 'J2EE',
+  scs: 'ASCS/SCS',
+  enqrep: 'ENQREP',
+};
+
+const describeTimeout = (seconds) => {
+  if (seconds % 60 !== 0) return `${seconds} seconds`;
+
+  const minutes = seconds / 60;
+  return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+};
+
+const paramDescriptions = [
+  [
+    'maintenance',
+    (maintenance) => `Maintenance: ${maintenance ? 'on' : 'off'}`,
+  ],
+  ['resource_id', (resourceID) => `Resource: ${resourceID}`],
+  ['node_id', (nodeID) => `Node: ${nodeID}`],
+  [
+    'instance_type',
+    (instanceType) =>
+      `Instances: ${get(INSTANCE_TYPE_LABELS, instanceType, instanceType)}`,
+  ],
+  ['instance_number', (instanceNumber) => `Instance: ${instanceNumber}`],
+  ['site', (site) => `Site: ${site}`],
+  ['timeout', (timeout) => `Timeout: ${describeTimeout(timeout)}`],
+];
+
+/**
+ * Options of an operation as stored with its schedule, for example
+ * "Instances: ABAP, Timeout: 5 minutes". Empty when there are none.
+ */
+export const describeOperationParams = (params = {}) =>
+  paramDescriptions
+    .filter(([key]) => params[key] !== undefined && params[key] !== null)
+    .map(([key, describe]) => describe(params[key]))
+    .join(', ');
+
 export const operationSucceeded = (result) =>
   ['UPDATED', 'NOT_UPDATED'].includes(result);
 
