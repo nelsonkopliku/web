@@ -511,4 +511,59 @@ defmodule TrentoWeb.OpenApi.V1.Schema.Platform do
       struct?: false
     )
   end
+
+  defmodule ChecksExecutionSettings do
+    @moduledoc false
+
+    alias Trento.ChecksScheduling.Interval
+
+    OpenApiSpex.schema(
+      %{
+        title: "ChecksExecutionSettingsV1",
+        description:
+          "Global interval of the periodic checks executions. When enforced from the environment (CHECKS_INTERVAL) it cannot be changed.",
+        type: :object,
+        additionalProperties: false,
+        properties: %{
+          interval: %Schema{
+            type: :string,
+            enum: Interval.values(),
+            description: "Checks execution interval, or disabled"
+          },
+          enforced_from_env: %Schema{
+            type: :boolean,
+            description: "Whether the interval is set by the CHECKS_INTERVAL environment variable"
+          }
+        },
+        required: [:interval, :enforced_from_env],
+        example: %{interval: "15m", enforced_from_env: false}
+      },
+      struct?: false
+    )
+  end
+
+  defmodule UpdateChecksExecutionSettingsRequest do
+    @moduledoc false
+
+    alias Trento.ChecksScheduling.Interval
+
+    OpenApiSpex.schema(
+      %{
+        title: "UpdateChecksExecutionSettingsRequestV1",
+        description: "New global checks execution interval",
+        type: :object,
+        additionalProperties: false,
+        properties: %{
+          interval: %Schema{
+            type: :string,
+            enum: Interval.values(),
+            description: "Checks execution interval, or disabled"
+          }
+        },
+        required: [:interval],
+        example: %{interval: "1h"}
+      },
+      struct?: false
+    )
+  end
 end

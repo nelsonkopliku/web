@@ -8,6 +8,7 @@ defmodule Trento.Settings.PolicyTest do
   alias Trento.Settings.ActivityLogSettings
   alias Trento.Settings.AlertingSettings
   alias Trento.Settings.ApiKeySettings
+  alias Trento.Settings.ChecksExecutionSettings
   alias Trento.Settings.SmlmSettings
 
   alias Trento.Settings.Policy
@@ -69,6 +70,37 @@ defmodule Trento.Settings.PolicyTest do
     test "should not allow updating activity logs settings if the user has no abilities" do
       user = %User{abilities: []}
       refute Policy.authorize(:update_activity_log_settings, user, ActivityLogSettings)
+    end
+  end
+
+  describe "checks execution settings authorization" do
+    test "should allow updating the checks execution settings with all:all or all:checks_execution_settings" do
+      for ability <- [
+            %Ability{name: "all", resource: "all"},
+            %Ability{name: "all", resource: "checks_execution_settings"}
+          ] do
+        user = %User{abilities: [ability]}
+
+        assert Policy.authorize(
+                 :update_checks_execution_settings,
+                 user,
+                 ChecksExecutionSettings
+               )
+      end
+    end
+
+    test "should allow getting the checks execution settings with default abilities" do
+      assert Policy.authorize(:get_checks_execution_settings, %User{}, ChecksExecutionSettings)
+    end
+
+    test "should not allow updating the checks execution settings with other abilities" do
+      for abilities <- [[%Ability{name: "other", resource: "other"}], []] do
+        refute Policy.authorize(
+                 :update_checks_execution_settings,
+                 %User{abilities: abilities},
+                 ChecksExecutionSettings
+               )
+      end
     end
   end
 
