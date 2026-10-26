@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { networkClient } from '@lib/network';
-import { abilityFactory, userFactory } from '@lib/test-utils/factories';
+import {
+  abilityFactory,
+  checksExecutionSettingsFactory,
+  userFactory,
+} from '@lib/test-utils/factories';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
@@ -64,6 +68,12 @@ export default {
       const axiosMock = new MockAdapter(networkClient);
       axiosMock.onGet('/settings/smlm').reply(404);
       axiosMock.onGet('/settings/alerting').reply(404);
+      axiosMock
+        .onGet('/settings/checks_execution')
+        .reply(200, checksExecutionSettingsFactory.build({ interval: '15m' }));
+      axiosMock
+        .onPut('/settings/checks_execution')
+        .reply((config) => [200, JSON.parse(config.data)]);
       axiosMock
         .onGet('/settings/api_key')
         .reply(200, { generated_api_key: null, expire_at: null });
