@@ -66,6 +66,8 @@ defmodule Trento.ActivityLog.SeverityLevel do
     "heartbeat_failed" => :warning,
     "host_checks_health_changed" => @health_condition_warn_if_unknown,
     "host_checks_selected" => :warning,
+    "host_checks_frequency_changed" => :info,
+    "cluster_checks_frequency_changed" => :info,
     "host_checks_execution_request" => :info,
     "host_cleanup_requested" => :warning,
     "host_deregistered" => :warning,

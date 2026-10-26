@@ -37,6 +37,8 @@ defmodule Trento.ActivityLog.ActivityCatalogTest do
         :cluster_checks_execution_request,
         :host_checks_selected,
         :host_checks_execution_request,
+        :host_checks_frequency_changed,
+        :cluster_checks_frequency_changed,
         :host_cleanup_requested,
         :sap_system_cleanup_requested,
         :database_cleanup_requested,
