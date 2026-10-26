@@ -3,7 +3,7 @@
 
 import React from 'react';
 
-import { act, screen } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -13,6 +13,7 @@ import {
   renderWithRouter,
 } from '@lib/test-utils';
 import { softwareUpdatesSettingsFactory } from '@lib/test-utils/factories/softwareUpdatesSettings';
+import { checksExecutionSettingsFactory } from '@lib/test-utils/factories';
 import { networkClient } from '@lib/network';
 import { formatDateOnly } from '@lib/timezones';
 import MockAdapter from 'axios-mock-adapter';
@@ -376,6 +377,128 @@ describe('Settings Page', () => {
       expect(screen.getByLabelText('alerting-enabled')).toHaveTextContent(
         'Enabled'
       );
+    });
+  });
+
+  describe('Check Execution Section', () => {
+    const settingsURL = '/api/v1/settings/checks_execution';
+
+    const renderSettingsPage = async (state = defaultInitialState) => {
+      const [StatefulSettings] = withState(<SettingsPage />, state);
+
+      await act(async () => {
+        renderWithRouter(StatefulSettings);
+      });
+    };
+
+    it('should render a loading box while fetching the settings', async () => {
+      axiosMock.onGet(settingsURL).reply(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve([200, {}]), 5000);
+          })
+      );
+
+      await renderSettingsPage();
+
+      expect(
+        screen.getByText('Loading Check Execution Settings...')
+      ).toBeVisible();
+    });
+
+    it('should render a connection error and fetch the settings again', async () => {
+      const user = userEvent.setup();
+      axiosMock
+        .onGet(settingsURL)
+        .replyOnce(500)
+        .onGet(settingsURL)
+        .reply(200, checksExecutionSettingsFactory.build({ interval: '6h' }));
+
+      await renderSettingsPage();
+
+      expect(
+        screen.getByText(
+          'Unable to load Check Execution Settings. Please try reloading this section.'
+        )
+      ).toBeVisible();
+
+      await user.click(screen.getByRole('button', { name: 'Reload' }));
+
+      expect(
+        await screen.findByLabelText('checks-execution-frequency')
+      ).toHaveTextContent('Every 6 hours');
+    });
+
+    it('should change the frequency and close the modal', async () => {
+      const user = userEvent.setup();
+      axiosMock
+        .onGet(settingsURL)
+        .reply(200, checksExecutionSettingsFactory.build({ interval: '5m' }));
+      axiosMock
+        .onPut(settingsURL, { interval: '1h' })
+        .reply(200, checksExecutionSettingsFactory.build({ interval: '1h' }));
+
+      await renderSettingsPage();
+
+      const section = screen
+        .getByText('Check Execution')
+        .closest('div.container');
+      expect(
+        within(section).getByLabelText('checks-execution-frequency')
+      ).toHaveTextContent('Every 5 minutes');
+
+      await user.click(
+        within(section).getByRole('button', { name: 'Edit Settings' })
+      );
+      const modal = screen.getByRole('dialog');
+      await user.click(within(modal).getByText('Minutes'));
+      await user.click(within(modal).getByRole('option', { name: 'Hours' }));
+      await user.click(
+        within(modal).getByRole('button', { name: 'Save Settings' })
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+      expect(
+        screen.getByLabelText('checks-execution-frequency')
+      ).toHaveTextContent('Every hour');
+    });
+
+    it('should keep the modal open with the error of a refused change', async () => {
+      const user = userEvent.setup();
+      axiosMock
+        .onGet(settingsURL)
+        .reply(200, checksExecutionSettingsFactory.build({ interval: '5m' }));
+      axiosMock.onPut(settingsURL).reply(422, {
+        errors: [
+          {
+            title: 'Invalid value',
+            detail: 'is invalid',
+            source: { pointer: '/interval' },
+          },
+        ],
+      });
+
+      await renderSettingsPage();
+
+      const section = screen
+        .getByText('Check Execution')
+        .closest('div.container');
+      await user.click(
+        within(section).getByRole('button', { name: 'Edit Settings' })
+      );
+      await user.click(
+        within(screen.getByRole('dialog')).getByRole('button', {
+          name: 'Save Settings',
+        })
+      );
+
+      expect(await screen.findByText('Is invalid')).toBeVisible();
+      expect(screen.getByRole('dialog')).toBeVisible();
+      expect(
+        screen.getByLabelText('checks-execution-frequency')
+      ).toHaveTextContent('Every 5 minutes');
     });
   });
 });
