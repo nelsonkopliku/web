@@ -28,6 +28,14 @@ defmodule Trento.Scheduling.Recurrence do
 
   @type frequency :: :daily | :weekly | :monthly | :yearly | nil
 
+  @frequencies [:daily, :weekly, :monthly, :yearly]
+
+  @doc """
+  The frequencies of a periodic recurrence.
+  """
+  @spec frequencies() :: [atom()]
+  def frequencies, do: @frequencies
+
   @type t :: %{
           required(:starts_at) => DateTime.t(),
           required(:timezone) => String.t(),
