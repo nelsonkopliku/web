@@ -11,6 +11,7 @@ import {
   STORAGE_OPERATION_DISCLAIMER_KEY,
   waiveOperationDisclaimer,
   resetOperationDisclaimer,
+  describeOperationParams,
 } from '.';
 
 describe('operations', () => {
@@ -133,4 +134,25 @@ describe('operations disclaimer', () => {
     waiveOperationDisclaimer();
     expect(shouldShowOperationDisclaimer()).toBe(false);
   });
+});
+
+describe('operation params', () => {
+  it.each`
+    params                                           | description
+    ${{}}                                            | ${''}
+    ${undefined}                                     | ${''}
+    ${{ maintenance: true }}                         | ${'Maintenance: on'}
+    ${{ maintenance: false, resource_id: 'rsc_ip' }} | ${'Maintenance: off, Resource: rsc_ip'}
+    ${{ maintenance: true, node_id: 'node01' }}      | ${'Maintenance: on, Node: node01'}
+    ${{ instance_type: 'abap', timeout: 300 }}       | ${'Instances: ABAP, Timeout: 5 minutes'}
+    ${{ instance_type: 'all', timeout: 60 }}         | ${'Instances: All, Timeout: 1 minute'}
+    ${{ host_id: 'host-id', instance_number: '00' }} | ${'Instance: 00'}
+    ${{ instance_number: '01', timeout: 90 }}        | ${'Instance: 01, Timeout: 90 seconds'}
+    ${{ site: 'NBG', timeout: 600 }}                 | ${'Site: NBG, Timeout: 10 minutes'}
+  `(
+    'should describe the operation params as "$description"',
+    ({ params, description }) => {
+      expect(describeOperationParams(params)).toBe(description);
+    }
+  );
 });
