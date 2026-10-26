@@ -6,7 +6,7 @@ defmodule TrentoWeb.V1.SapSystemController do
   use OpenApiSpex.ControllerSpecs
   use Trento.AI.ControllerSpecs
 
-  alias Trento.Repo
+  alias Trento.Operations.Targets
 
   alias Trento.SapSystems
 
@@ -289,19 +289,8 @@ defmodule TrentoWeb.V1.SapSystemController do
           host_id: host_id,
           instance_number: inst_number
         }
-      }) do
-    instances = SapSystems.get_application_instances_by_id(sap_system_id)
-
-    instances
-    |> Enum.find(fn
-      %{host_id: ^host_id, instance_number: ^inst_number} -> true
-      _ -> false
-    end)
-    |> Repo.preload(
-      sap_system: [:database, application_instances: fn _ -> instances end],
-      host: :cluster
-    )
-  end
+      }),
+      do: Targets.application_instance(sap_system_id, host_id, inst_number)
 
   def get_operation_instance(_), do: nil
 
@@ -309,11 +298,8 @@ defmodule TrentoWeb.V1.SapSystemController do
         params: %{
           id: sap_system_id
         }
-      }) do
-    sap_system_id
-    |> SapSystems.get_sap_system_by_id()
-    |> Repo.preload([:database_instances, [application_instances: [host: :cluster]]])
-  end
+      }),
+      do: Targets.sap_system(sap_system_id)
 
   def get_operation_system(_), do: nil
 

@@ -6,11 +6,10 @@ defmodule TrentoWeb.V1.ClusterController do
   use OpenApiSpex.ControllerSpecs
   use Trento.AI.ControllerSpecs
 
+  alias Trento.Operations.Targets
   alias Trento.Clusters
 
   alias Trento.Clusters.Projections.ClusterReadModel
-
-  alias Trento.Repo
 
   alias TrentoWeb.OpenApi.V1.Schema.{
     BadRequest,
@@ -289,33 +288,14 @@ defmodule TrentoWeb.V1.ClusterController do
         assigns: %{operation: operation},
         params: %{id: id}
       })
-      when operation in ClusterOperations.values() do
-    id
-    |> Clusters.get_cluster_by_id()
-    |> Repo.preload(:hosts)
-  end
+      when operation in ClusterOperations.values(),
+      do: Targets.cluster(id)
 
   def get_operation_cluster(%{
         assigns: %{operation: _},
         params: %{id: id, host_id: host_id}
-      }) do
-    id
-    |> Clusters.get_cluster_by_id()
-    |> Repo.preload(hosts: [:database_instances])
-    |> case do
-      nil ->
-        nil
-
-      %ClusterReadModel{hosts: []} ->
-        nil
-
-      %ClusterReadModel{hosts: hosts} = cluster ->
-        case Enum.any?(hosts, &(&1.id == host_id)) do
-          true -> cluster
-          false -> nil
-        end
-    end
-  end
+      }),
+      do: Targets.cluster_with_host(id, host_id)
 
   def get_operation_cluster(_), do: nil
 
