@@ -19,6 +19,7 @@ export * from './activityLog';
 export * from './activityLogsSettings';
 export * from './charts';
 export * from './operations';
+export * from './scheduling';
 export * from './settings';
 export * from './softwareUpdatesSettings';
 
