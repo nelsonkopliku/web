@@ -6,12 +6,13 @@ defmodule Trento.ChecksScheduling do
   Periodic checks executions of hosts and clusters.
 
   A target uses its own interval, or the global one of
-  `Trento.Settings.get_checks_execution_settings/0`.
+  `Trento.Settings.get_checks_execution_settings/0`. No periodic execution
+  runs while a maintenance window forbids checks executions on the target.
   """
 
   import Ecto.Query, only: [from: 2]
 
-  alias Trento.{Clusters, Hosts}
+  alias Trento.{Clusters, Hosts, MaintenanceWindows}
   alias Trento.ChecksScheduling.{Interval, TargetSchedule}
   alias Trento.Clusters.Projections.ClusterReadModel
   alias Trento.Hosts.Projections.HostReadModel
@@ -59,7 +60,8 @@ defmodule Trento.ChecksScheduling do
 
   @doc """
   Requests a checks execution for every host and cluster with selected checks
-  whose interval elapsed. An Oban cron job calls it every minute.
+  whose interval elapsed, unless a maintenance window forbids it. An Oban
+  cron job calls it every minute.
 
   When the previous execution of a target still runs, Wanda refuses the new
   request: executions do not pile up.
@@ -69,8 +71,10 @@ defmodule Trento.ChecksScheduling do
     now = date_service.utc_now()
     global_interval = Settings.get_checks_execution_settings().interval
     schedules = Map.new(Repo.all(TargetSchedule), &{&1.target_id, &1})
+    forbidden = MaintenanceWindows.forbidden_checks_targets(now)
 
     for {target_type, target_id} <- targets_with_checks(),
+        not MapSet.member?(forbidden, {Atom.to_string(target_type), target_id}),
         schedule = Map.get(schedules, target_id) || new_schedule(target_type, target_id),
         due?(schedule, global_interval, now) do
       request(target_type, target_id, now)
@@ -98,10 +102,18 @@ defmodule Trento.ChecksScheduling do
         nil
 
       minutes ->
-        case schedule.last_requested_at do
-          nil -> now
-          last -> Enum.max([DateTime.add(last, minutes, :minute), now], DateTime)
-        end
+        due =
+          case schedule.last_requested_at do
+            nil -> now
+            last -> Enum.max([DateTime.add(last, minutes, :minute), now], DateTime)
+          end
+
+        MaintenanceWindows.forbidden_until(
+          schedule.target_type,
+          schedule.target_id,
+          :checks_execution,
+          due
+        ) || due
     end
   end
 
