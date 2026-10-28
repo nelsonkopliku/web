@@ -47,7 +47,9 @@ defmodule Trento.ChecksSchedulingTest do
               effective_interval: "5m",
               global_interval: "5m",
               last_requested_at: nil,
-              next_execution_at: @now
+              next_execution_at: @now,
+              exception_window: nil,
+              in_exception_window: false
             }} == get_schedule(host_id)
   end
 
@@ -77,6 +79,80 @@ defmodule Trento.ChecksSchedulingTest do
 
   test "should refuse an interval that is not allowed", %{host_id: host_id} do
     assert {:error, %Ecto.Changeset{}} = put_schedule(host_id, %{interval: "7m"})
+  end
+
+  test "should plan the next execution after a one-time exception window", %{host_id: host_id} do
+    window = %{
+      starts_at: ~U[2026-11-02 09:30:00.000000Z],
+      timezone: "Etc/UTC",
+      duration_minutes: 120,
+      recurrence: nil
+    }
+
+    assert {:ok,
+            %{
+              exception_window: ^window,
+              in_exception_window: true,
+              next_execution_at: ~U[2026-11-02 11:30:00.000000Z]
+            }} = put_schedule(host_id, %{interval: nil, exception_window: window})
+  end
+
+  test "should know when a periodic exception window is active", %{host_id: host_id} do
+    window = %{
+      starts_at: ~U[2026-10-01 09:00:00.000000Z],
+      timezone: "Europe/Berlin",
+      duration_minutes: 180,
+      recurrence: %{frequency: "weekly", interval: 1, weekdays: [1]}
+    }
+
+    # Mondays from 11:00 to 14:00 in Berlin: 10:00 to 13:00 UTC once summer time is over
+    assert {:ok, %{in_exception_window: true, next_execution_at: ~U[2026-11-02 13:00:00.000000Z]}} =
+             put_schedule(host_id, %{interval: nil, exception_window: window})
+
+    stub(DateService.Mock, :utc_now, fn -> ~U[2026-11-03 10:00:00.000000Z] end)
+    assert {:ok, %{in_exception_window: false}} = get_schedule(host_id)
+  end
+
+  test "should keep the exception window when a change does not give one", %{host_id: host_id} do
+    window = %{
+      starts_at: ~U[2026-11-03 09:30:00.000000Z],
+      timezone: "Etc/UTC",
+      duration_minutes: 60,
+      recurrence: nil
+    }
+
+    {:ok, _} = put_schedule(host_id, %{interval: nil, exception_window: window})
+
+    assert {:ok, %{interval: "1h", exception_window: ^window}} =
+             put_schedule(host_id, %{interval: "1h"})
+
+    assert {:ok, %{exception_window: nil}} =
+             put_schedule(host_id, %{interval: "1h", exception_window: nil})
+  end
+
+  test "should refuse an invalid exception window", %{host_id: host_id} do
+    for attrs <- [
+          %{
+            interval: nil,
+            exception_window: %{
+              starts_at: ~U[2026-11-01 08:00:00.000000Z],
+              timezone: "Etc/UTC",
+              duration_minutes: 60,
+              recurrence: nil
+            }
+          },
+          %{
+            interval: nil,
+            exception_window: %{
+              starts_at: ~U[2026-11-03 08:00:00.000000Z],
+              timezone: "Etc/UTC",
+              duration_minutes: 0,
+              recurrence: nil
+            }
+          }
+        ] do
+      assert {:error, %Ecto.Changeset{}} = put_schedule(host_id, attrs)
+    end
   end
 
   test "should not find an unknown or deregistered target" do
