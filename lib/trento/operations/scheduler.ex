@@ -137,10 +137,20 @@ defmodule Trento.Operations.Scheduler do
     params = OperationParams.to_map(run.params)
 
     case Requests.request(target_type, run.target_id, operation, params, run.operation_id) do
-      {:ok, operation_id} -> {:requested, %{operation_id: operation_id}}
-      {:error, :forbidden, errors} -> {:failed, %{reason: :policies, errors: errors}}
-      {:error, :not_found} -> {:failed, %{reason: :target_not_found, errors: []}}
-      {:error, reason} -> {:not_sent, reason}
+      {:ok, operation_id} ->
+        {:requested, %{operation_id: operation_id}}
+
+      {:error, :forbidden, errors} ->
+        {:failed, %{reason: :policies, errors: errors}}
+
+      {:error, :maintenance_window, errors} ->
+        {:failed, %{reason: :maintenance_window, errors: errors}}
+
+      {:error, :not_found} ->
+        {:failed, %{reason: :target_not_found, errors: []}}
+
+      {:error, reason} ->
+        {:not_sent, reason}
     end
   end
 

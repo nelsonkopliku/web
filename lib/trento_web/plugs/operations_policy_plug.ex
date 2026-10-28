@@ -42,6 +42,9 @@ defmodule TrentoWeb.Plugs.OperationsPolicyPlug do
 
   import Plug.Conn
 
+  alias Trento.Operations.MaintenanceWindowsPolicy
+  alias Trento.Support.OperationsHelper
+
   @spec init() :: %{
           policy: module(),
           operation: fun(),
@@ -117,8 +120,17 @@ defmodule TrentoWeb.Plugs.OperationsPolicyPlug do
     end
   end
 
+  # The operation policies and the maintenance windows that cover the targets
+  # of the operation all tell why a request is forbidden.
   defp handle_permission(policy, operation, resource, params) do
-    case policy.authorize_operation(operation, resource, params) do
+    [
+      policy.authorize_operation(operation, resource, params),
+      resource
+      |> MaintenanceWindowsPolicy.targets(params)
+      |> MaintenanceWindowsPolicy.authorize()
+    ]
+    |> OperationsHelper.reduce_operation_authorizations()
+    |> case do
       :ok -> :ok
       {:error, errors} -> {:error, :forbidden, errors}
     end
