@@ -558,7 +558,11 @@ defmodule Trento.ActivityLog.ActivityCatalogTest do
             %Trento.Clusters.Events.ClusterChecksIntervalChanged{
               cluster_id: UUID.uuid4(),
               interval: "1h"
-            }
+            },
+            %Trento.Hosts.Events.HostChecksExceptionWindowSet{host_id: UUID.uuid4()},
+            %Trento.Hosts.Events.HostChecksExceptionWindowRemoved{host_id: UUID.uuid4()},
+            %Trento.Clusters.Events.ClusterChecksExceptionWindowSet{cluster_id: UUID.uuid4()},
+            %Trento.Clusters.Events.ClusterChecksExceptionWindowRemoved{cluster_id: UUID.uuid4()}
           ] do
         assert {:error, :not_interesting} =
                  ActivityCatalog.detect_activity(%{event: excluded_event})

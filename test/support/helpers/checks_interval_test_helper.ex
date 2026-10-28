@@ -3,19 +3,34 @@
 
 defmodule Trento.Support.Helpers.ChecksIntervalTestHelper do
   @moduledoc """
-  Runs the checks execution interval commands through the Host and Cluster
-  aggregates and their projector in the test process, in place of the
-  Commanded application. A change is read back from the read model the
-  projector writes, without the event handlers of the application.
+  Runs the checks execution interval and exception window commands through
+  the Host and Cluster aggregates and their projectors in the test process,
+  in place of the Commanded application. A change is read back from the read
+  models the projectors write, without the event handlers of the application.
   """
 
   import Mox
   import Trento.Factory
 
-  alias Trento.ChecksScheduling.Projections.TargetChecksIntervalProjector
+  alias Trento.ChecksScheduling.Projections.{
+    TargetChecksExceptionWindowProjector,
+    TargetChecksIntervalProjector
+  }
+
   alias Trento.Clusters.Cluster
-  alias Trento.Clusters.Commands.ChangeClusterChecksInterval
-  alias Trento.Hosts.Commands.ChangeHostChecksInterval
+
+  alias Trento.Clusters.Commands.{
+    ChangeClusterChecksInterval,
+    RemoveClusterChecksExceptionWindow,
+    SetClusterChecksExceptionWindow
+  }
+
+  alias Trento.Hosts.Commands.{
+    ChangeHostChecksInterval,
+    RemoveHostChecksExceptionWindow,
+    SetHostChecksExceptionWindow
+  }
+
   alias Trento.Hosts.Host
   alias Trento.ProjectorTestHelper
 
@@ -27,11 +42,22 @@ defmodule Trento.Support.Helpers.ChecksIntervalTestHelper do
     :ok
   end
 
-  defp run(aggregates, %ChangeHostChecksInterval{host_id: host_id} = command),
-    do: execute(aggregates, host_id, command, fn -> registered_host(host_id) end)
+  defp run(aggregates, %command{host_id: host_id} = host_command)
+       when command in [
+              ChangeHostChecksInterval,
+              SetHostChecksExceptionWindow,
+              RemoveHostChecksExceptionWindow
+            ],
+       do: execute(aggregates, host_id, host_command, fn -> registered_host(host_id) end)
 
-  defp run(aggregates, %ChangeClusterChecksInterval{cluster_id: cluster_id} = command),
-    do: execute(aggregates, cluster_id, command, fn -> registered_cluster(cluster_id) end)
+  defp run(aggregates, %command{cluster_id: cluster_id} = cluster_command)
+       when command in [
+              ChangeClusterChecksInterval,
+              SetClusterChecksExceptionWindow,
+              RemoveClusterChecksExceptionWindow
+            ],
+       do:
+         execute(aggregates, cluster_id, cluster_command, fn -> registered_cluster(cluster_id) end)
 
   defp execute(aggregates, id, command, registered) do
     %aggregate{} = state = Agent.get(aggregates, &Map.get(&1, id)) || registered.()
@@ -45,14 +71,15 @@ defmodule Trento.Support.Helpers.ChecksIntervalTestHelper do
         new_state = Enum.reduce(events, state, fn event, acc -> aggregate.apply(acc, event) end)
         Agent.update(aggregates, &Map.put(&1, id, new_state))
 
-        Enum.each(
-          events,
-          &ProjectorTestHelper.project(
-            TargetChecksIntervalProjector,
-            &1,
-            "target_checks_interval_projector"
-          )
-        )
+        for event <- events,
+            {projector, name} <- [
+              {TargetChecksIntervalProjector, "target_checks_interval_projector"},
+              {TargetChecksExceptionWindowProjector, "target_checks_exception_window_projector"}
+            ] do
+          ProjectorTestHelper.project(projector, event, name)
+        end
+
+        :ok
     end
   end
 

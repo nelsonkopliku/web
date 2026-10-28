@@ -13,8 +13,10 @@ defmodule Trento.Router do
     MarkClusterHostStale,
     RegisterOfflineClusterHost,
     RegisterOnlineClusterHost,
+    RemoveClusterChecksExceptionWindow,
     RollUpCluster,
-    SelectChecks
+    SelectChecks,
+    SetClusterChecksExceptionWindow
   }
 
   alias Trento.Hosts.Commands.{
@@ -24,9 +26,11 @@ defmodule Trento.Router do
     CompleteSoftwareUpdatesDiscovery,
     DeregisterHost,
     RegisterHost,
+    RemoveHostChecksExceptionWindow,
     RequestHostDeregistration,
     RollUpHost,
     SelectHostChecks,
+    SetHostChecksExceptionWindow,
     UpdateHeartbeat,
     UpdateProvider,
     UpdateSaptuneStatus,
@@ -79,6 +83,8 @@ defmodule Trento.Router do
              UpdateSlesSubscriptions,
              SelectHostChecks,
              ChangeHostChecksInterval,
+             SetHostChecksExceptionWindow,
+             RemoveHostChecksExceptionWindow,
              RollUpHost,
              RequestHostDeregistration,
              DeregisterHost,
@@ -100,6 +106,8 @@ defmodule Trento.Router do
              RegisterOnlineClusterHost,
              SelectChecks,
              ChangeClusterChecksInterval,
+             SetClusterChecksExceptionWindow,
+             RemoveClusterChecksExceptionWindow,
              CompleteChecksExecution
            ],
            to: Clusters.Cluster,

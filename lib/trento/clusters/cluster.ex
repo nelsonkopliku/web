@@ -92,6 +92,8 @@ defmodule Trento.Clusters.Cluster do
     SbdDevice
   }
 
+  alias Trento.ChecksScheduling.ValueObjects.ExceptionWindow
+
   alias Trento.Clusters.Commands.{
     ChangeClusterChecksInterval,
     CompleteChecksExecution,
@@ -99,8 +101,10 @@ defmodule Trento.Clusters.Cluster do
     MarkClusterHostStale,
     RegisterOfflineClusterHost,
     RegisterOnlineClusterHost,
+    RemoveClusterChecksExceptionWindow,
     RollUpCluster,
-    SelectChecks
+    SelectChecks,
+    SetClusterChecksExceptionWindow
   }
 
   alias Trento.Domain.Events.{
@@ -112,6 +116,8 @@ defmodule Trento.Clusters.Cluster do
 
   alias Trento.Clusters.Events.{
     ChecksSelected,
+    ClusterChecksExceptionWindowRemoved,
+    ClusterChecksExceptionWindowSet,
     ClusterChecksHealthChanged,
     ClusterChecksIntervalChanged,
     ClusterDataMarkedInSync,
@@ -159,6 +165,7 @@ defmodule Trento.Clusters.Cluster do
     field :stale_hosts, {:array, :string}, default: []
     field :selected_checks, {:array, :string}, default: []
     field :checks_interval, :string
+    embeds_one :checks_exception_window, ExceptionWindow
     field :rolling_up, :boolean, default: false
     field :deregistered_at, :utc_datetime_usec, default: nil
 
@@ -429,6 +436,23 @@ defmodule Trento.Clusters.Cluster do
 
   def execute(%Cluster{cluster_id: cluster_id}, %ChangeClusterChecksInterval{interval: interval}),
     do: %ClusterChecksIntervalChanged{cluster_id: cluster_id, interval: interval}
+
+  def execute(
+        %Cluster{cluster_id: cluster_id, checks_exception_window: current},
+        %SetClusterChecksExceptionWindow{exception_window: window, requested_at: requested_at}
+      ) do
+    cond do
+      ExceptionWindow.ended?(window, requested_at) -> {:error, :checks_exception_window_ended}
+      window == current -> []
+      true -> %ClusterChecksExceptionWindowSet{cluster_id: cluster_id, exception_window: window}
+    end
+  end
+
+  def execute(%Cluster{checks_exception_window: nil}, %RemoveClusterChecksExceptionWindow{}),
+    do: []
+
+  def execute(%Cluster{cluster_id: cluster_id}, %RemoveClusterChecksExceptionWindow{}),
+    do: %ClusterChecksExceptionWindowRemoved{cluster_id: cluster_id}
 
   def execute(
         %Cluster{
@@ -783,13 +807,24 @@ defmodule Trento.Clusters.Cluster do
   end
 
   # Deregistration
-  # The checks execution interval of a deregistered cluster is removed
+  # The checks execution settings of a deregistered cluster are removed
   def apply(%Cluster{} = cluster, %ClusterDeregistered{deregistered_at: deregistered_at}) do
-    %Cluster{cluster | deregistered_at: deregistered_at, checks_interval: nil}
+    %Cluster{
+      cluster
+      | deregistered_at: deregistered_at,
+        checks_interval: nil,
+        checks_exception_window: nil
+    }
   end
 
   def apply(%Cluster{} = cluster, %ClusterChecksIntervalChanged{interval: interval}),
     do: %Cluster{cluster | checks_interval: interval}
+
+  def apply(%Cluster{} = cluster, %ClusterChecksExceptionWindowSet{exception_window: window}),
+    do: %Cluster{cluster | checks_exception_window: window}
+
+  def apply(%Cluster{} = cluster, %ClusterChecksExceptionWindowRemoved{}),
+    do: %Cluster{cluster | checks_exception_window: nil}
 
   # Restoration
   def apply(%Cluster{} = cluster, %ClusterRestored{}) do

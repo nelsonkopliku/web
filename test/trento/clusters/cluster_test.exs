@@ -14,6 +14,8 @@ defmodule Trento.ClusterTest do
 
   alias Trento.Support.StructHelper
 
+  alias Trento.ChecksScheduling.ValueObjects.ExceptionWindow
+
   alias Trento.Clusters.Commands.{
     ChangeClusterChecksInterval,
     CompleteChecksExecution,
@@ -21,8 +23,10 @@ defmodule Trento.ClusterTest do
     MarkClusterHostStale,
     RegisterOfflineClusterHost,
     RegisterOnlineClusterHost,
+    RemoveClusterChecksExceptionWindow,
     RollUpCluster,
-    SelectChecks
+    SelectChecks,
+    SetClusterChecksExceptionWindow
   }
 
   alias Trento.Domain.Events.{
@@ -34,6 +38,8 @@ defmodule Trento.ClusterTest do
 
   alias Trento.Clusters.Events.{
     ChecksSelected,
+    ClusterChecksExceptionWindowRemoved,
+    ClusterChecksExceptionWindowSet,
     ClusterChecksHealthChanged,
     ClusterChecksIntervalChanged,
     ClusterDataMarkedInSync,
@@ -1823,6 +1829,73 @@ defmodule Trento.ClusterTest do
             []
           )
         end
+      )
+    end
+  end
+
+  describe "checks exception window" do
+    @window %ExceptionWindow{
+      starts_at: ~U[2026-11-07 22:00:00.000000Z],
+      timezone: "Etc/UTC",
+      duration_minutes: 60,
+      frequency: nil
+    }
+
+    test "should set and remove the exception window of a cluster" do
+      cluster_id = Faker.UUID.v4()
+      registered = build(:cluster_registered_event, cluster_id: cluster_id)
+
+      command =
+        SetClusterChecksExceptionWindow.new!(%{
+          cluster_id: cluster_id,
+          exception_window: Map.from_struct(@window),
+          requested_at: ~U[2026-11-02 10:00:00.000000Z]
+        })
+
+      assert_events_and_state(
+        registered,
+        command,
+        [%ClusterChecksExceptionWindowSet{cluster_id: cluster_id, exception_window: @window}],
+        fn cluster -> assert %Cluster{checks_exception_window: @window} = cluster end
+      )
+
+      set = %ClusterChecksExceptionWindowSet{cluster_id: cluster_id, exception_window: @window}
+
+      assert_events([registered, set], command, [])
+
+      assert_events_and_state(
+        [registered, set],
+        RemoveClusterChecksExceptionWindow.new!(%{cluster_id: cluster_id}),
+        [%ClusterChecksExceptionWindowRemoved{cluster_id: cluster_id}],
+        fn cluster -> assert %Cluster{checks_exception_window: nil} = cluster end
+      )
+
+      assert_state(
+        [
+          registered,
+          set,
+          %ClusterDeregistered{cluster_id: cluster_id, deregistered_at: DateTime.utc_now()}
+        ],
+        [],
+        fn cluster -> assert %Cluster{checks_exception_window: nil} = cluster end
+      )
+    end
+
+    test "should not set the window of a cluster that is not registered or rolling up" do
+      cluster_id = Faker.UUID.v4()
+
+      assert_error(
+        RemoveClusterChecksExceptionWindow.new!(%{cluster_id: cluster_id}),
+        {:error, :cluster_not_registered}
+      )
+
+      assert_error(
+        [
+          build(:cluster_registered_event, cluster_id: cluster_id),
+          %ClusterRollUpRequested{cluster_id: cluster_id, snapshot: %Cluster{}}
+        ],
+        RemoveClusterChecksExceptionWindow.new!(%{cluster_id: cluster_id}),
+        {:error, :cluster_rolling_up}
       )
     end
   end
