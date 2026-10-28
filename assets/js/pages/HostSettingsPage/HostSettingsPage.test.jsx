@@ -16,7 +16,11 @@ import {
 import { networkClient } from '@lib/network';
 import MockAdapter from 'axios-mock-adapter';
 
-import { hostFactory, selectableCheckFactory } from '@lib/test-utils/factories';
+import {
+  checksScheduleFactory,
+  hostFactory,
+  selectableCheckFactory,
+} from '@lib/test-utils/factories';
 
 import HostSettingsPage from './HostSettingsPage';
 
@@ -137,5 +141,45 @@ describe('HostSettingsPage component', () => {
     });
     const startExecutionButton = screen.getByText('Start Execution');
     expect(startExecutionButton).toBeEnabled();
+  });
+
+  it('should render the check execution frequency of the host', async () => {
+    const hosts = hostFactory.buildList(2);
+    const { id: hostID } = hosts[0];
+    const state = {
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities: [{ name: 'all', resource: 'check_frequency' }] },
+    };
+
+    axiosMock.onGet(`/api/v1/hosts/${hostID}/checks/schedule`).reply(
+      200,
+      checksScheduleFactory.build({
+        interval: '6h',
+        effective_interval: '6h',
+        global_interval: '5m',
+      })
+    );
+
+    const [StatefulHostSettingsPage] = withState(<HostSettingsPage />, state);
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulHostSettingsPage, {
+        path: 'hosts/:hostID/settings',
+        route: `/hosts/${hostID}/settings`,
+      });
+    });
+
+    expect(
+      screen.getByText(
+        'Configure how often the checks of this host are executed.'
+      )
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText('checks-execution-frequency')
+    ).toHaveTextContent(
+      'Every 6 hours (overrides the system setting: every 5 minutes)'
+    );
+    expect(screen.getByRole('button', { name: 'Edit Settings' })).toBeEnabled();
   });
 });

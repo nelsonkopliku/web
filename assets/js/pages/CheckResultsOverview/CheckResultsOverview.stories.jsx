@@ -18,6 +18,11 @@ export default {
       description: 'Timezone string for date formatting.',
       control: { type: 'text' },
     },
+    nextExecutionAt: {
+      description:
+        'When the checks are executed next: a date, null when periodic executions are disabled, undefined while unknown',
+      control: { type: 'text' },
+    },
     catalogDataEmpty: {
       description: 'Whether catalog data is empty',
       control: { type: 'boolean' },
@@ -78,5 +83,19 @@ export const NoData = {
   args: {
     ...Default.args,
     data: {},
+  },
+};
+
+export const WithNextExecution = {
+  args: {
+    ...Default.args,
+    nextExecutionAt: faker.date.soon().toISOString(),
+  },
+};
+
+export const PeriodicExecutionsDisabled = {
+  args: {
+    ...Default.args,
+    nextExecutionAt: null,
   },
 };
