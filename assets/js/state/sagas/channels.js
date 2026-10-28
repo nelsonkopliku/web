@@ -63,6 +63,7 @@ import {
 } from '@state/lastExecutions';
 
 import { operationCompleted } from '@state/runningOperations';
+import { operationSchedulesChanged } from '@state/operationSchedules';
 
 import { userUpdated, userLocked, userDeleted } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
@@ -265,6 +266,14 @@ const operationEvents = [
   },
 ];
 
+const operationScheduleEvents = [
+  {
+    name: 'operation_schedules_changed',
+    action: operationSchedulesChanged,
+    transform: ({ target_id: targetID }) => ({ targetID }),
+  },
+];
+
 const userEvents = [
   {
     name: 'user_updated',
@@ -332,6 +341,12 @@ export function* watchSocketEvents(socket) {
     fork(watchChannelEvents, socket, 'monitoring:databases', databaseEvents),
     fork(watchChannelEvents, socket, 'monitoring:executions', executionEvents),
     fork(watchChannelEvents, socket, 'monitoring:operations', operationEvents),
+    fork(
+      watchChannelEvents,
+      socket,
+      'monitoring:operation_schedules',
+      operationScheduleEvents
+    ),
     fork(watchChannelEvents, socket, `users:${userID}`, userEvents),
     fork(
       watchChannelEvents,

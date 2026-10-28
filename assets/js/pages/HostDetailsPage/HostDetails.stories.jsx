@@ -14,6 +14,7 @@ import {
   clusterFactory,
   databaseInstanceFactory,
   hostFactory,
+  operationScheduleFactory,
   sapSystemApplicationInstanceFactory,
 } from '@lib/test-utils/factories';
 import React from 'react';
@@ -302,6 +303,16 @@ export const Default = {
     operationsEnabled: true,
     runningOperations: {},
     timezone: 'Etc/UTC',
+  },
+};
+
+export const WithScheduledOperations = {
+  args: {
+    ...Default.args,
+    operationSchedules: operationScheduleFactory.buildList(2, {
+      target_id: host.id,
+      operation: 'reboot',
+    }),
   },
 };
 
