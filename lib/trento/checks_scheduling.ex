@@ -61,7 +61,8 @@ defmodule Trento.ChecksScheduling do
 
   @doc """
   Requests a checks execution for every host and cluster with selected checks
-  whose interval elapsed. A Quantum job calls it every minute.
+  whose interval elapsed, outside its exception window. A Quantum job calls
+  it every minute.
 
   When the previous execution of a target still runs, Wanda refuses the new
   request: executions do not pile up.
@@ -89,6 +90,18 @@ defmodule Trento.ChecksScheduling do
     do: Settings.get_checks_execution_settings().interval
 
   def effective_interval(%TargetSchedule{interval: interval}), do: interval
+
+  @doc """
+  Tells whether the target is in its exception window now. Manual checks
+  executions are refused during the window.
+  """
+  @spec in_exception_window?(String.t(), module()) :: boolean()
+  def in_exception_window?(target_id, date_service \\ DateService) do
+    case Repo.get(TargetSchedule, target_id) do
+      nil -> false
+      schedule -> not is_nil(window_end(schedule, date_service.utc_now()))
+    end
+  end
 
   @doc """
   The end of the exception window occurrence covering `at`, nil outside the window.
@@ -137,8 +150,10 @@ defmodule Trento.ChecksScheduling do
         false
 
       minutes ->
-        is_nil(schedule.last_requested_at) or
-          DateTime.diff(now, schedule.last_requested_at) >= minutes * 60 - @due_tolerance_seconds
+        is_nil(window_end(schedule, now)) and
+          (is_nil(schedule.last_requested_at) or
+             DateTime.diff(now, schedule.last_requested_at) >=
+               minutes * 60 - @due_tolerance_seconds)
     end
   end
 
