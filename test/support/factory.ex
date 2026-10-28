@@ -1519,6 +1519,18 @@ defmodule Trento.Factory do
     }
   end
 
+  def scheduled_run_factory do
+    %Trento.Operations.ScheduledRun{
+      operation_id: Faker.UUID.v4(),
+      schedule_id: Faker.UUID.v4(),
+      run_at: DateTime.utc_now(),
+      target_type: "host",
+      target_id: Faker.UUID.v4(),
+      operation: "reboot",
+      params: %{}
+    }
+  end
+
   def alerting_settings_factory do
     %AlertingSettings{
       type: :alerting_settings,

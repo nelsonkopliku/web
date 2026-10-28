@@ -23,6 +23,7 @@ defmodule Trento.Infrastructure.Operations.AMQP.Processor do
   alias Trento.ActivityLog.ActivityLogger
 
   alias Trento.Discovery
+  alias Trento.Operations.ScheduledRuns
 
   require Logger
 
@@ -44,6 +45,7 @@ defmodule Trento.Infrastructure.Operations.AMQP.Processor do
 
   defp log_activity(event) do
     ActivityLogger.log_activity(%{queue_event: event})
+    ScheduledRuns.record_reply(event)
 
     event
   end

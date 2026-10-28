@@ -25,6 +25,7 @@ defmodule Trento.ActivityLog.Logger.Parser.QueueEventParser do
   alias Trento.Infrastructure.Operations
 
   alias Trento.ActivityLog
+  alias Trento.Operations.{ScheduledRun, ScheduledRuns}
 
   alias Trento.Support.StructHelper
 
@@ -34,8 +35,11 @@ defmodule Trento.ActivityLog.Logger.Parser.QueueEventParser do
           queue_event: %OperationCompleted{operation_id: operation_id}
         }
       ) do
-    case ActivityLog.list_activity_log(%{type: "operation_requested", search: operation_id}) do
-      {:ok, [%{actor: actor}], _meta} -> actor
+    with nil <- ScheduledRuns.get_by_operation_id(operation_id),
+         {:ok, [%{actor: actor}], _meta} <-
+           ActivityLog.list_activity_log(%{type: "operation_requested", search: operation_id}) do
+      actor
+    else
       _ -> "system"
     end
   end
@@ -67,7 +71,13 @@ defmodule Trento.ActivityLog.Logger.Parser.QueueEventParser do
     operation = Operations.map_operation_type(operation_type)
 
     metadata =
-      case ActivityLog.list_activity_log(%{type: "operation_requested", search: operation_id}) do
+      case scheduled_or_requested(operation_id) do
+        %ScheduledRun{} = run ->
+          run
+          |> ScheduledRuns.activity_metadata()
+          |> Map.put(:operation, operation)
+          |> Map.put(:result, result)
+
         {:ok, [%{metadata: request_metadata}], _meta} ->
           request_metadata
           |> StructHelper.to_atomized_map()
@@ -176,4 +186,11 @@ defmodule Trento.ActivityLog.Logger.Parser.QueueEventParser do
 
   defp map_request_failed_error(:UNKNOWN),
     do: "The operation request terminated with an unexpected error"
+
+  defp scheduled_or_requested(operation_id) do
+    case ScheduledRuns.get_by_operation_id(operation_id) do
+      nil -> ActivityLog.list_activity_log(%{type: "operation_requested", search: operation_id})
+      run -> run
+    end
+  end
 end
