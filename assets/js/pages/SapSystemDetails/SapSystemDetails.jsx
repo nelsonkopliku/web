@@ -9,6 +9,10 @@ import { getFromConfig } from '@lib/config';
 import { APPLICATION_TYPE } from '@lib/model/sapSystems';
 import { getEnrichedSapSystemDetails } from '@state/selectors/sapSystem';
 import { getRunningOperationsList } from '@state/selectors/runningOperations';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 import { getUserProfile } from '@state/selectors/user';
 import { deregisterApplicationInstance } from '@state/sapSystems';
 import {
@@ -16,6 +20,12 @@ import {
   updateRunningOperations,
   removeRunningOperation,
 } from '@state/runningOperations';
+import {
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+} from '@state/operationSchedules';
 
 import BackButton from '@common/BackButton';
 import { GenericSystemDetails } from '@pages/SapSystemDetails';
@@ -37,9 +47,23 @@ function SapSystemDetails() {
 
   const runningOperations = useSelector(getRunningOperationsList);
 
+  const { schedules: operationSchedules } = useSelector(
+    getOperationSchedules(id)
+  );
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+
   useEffect(() => {
     operationsEnabled && dispatch(updateRunningOperations());
   }, [dispatch]);
+
+  useEffect(() => {
+    operationsEnabled && dispatch(fetchOperationSchedules({ targetID: id }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: id }));
+    };
+  }, [dispatch, id]);
 
   if (!sapSystem) {
     return <div>Not Found</div>;
@@ -63,6 +87,12 @@ function SapSystemDetails() {
           dispatch(deregisterApplicationInstance(instance));
         }}
         onRequestOperation={(payload) => dispatch(operationRequested(payload))}
+        operationSchedules={operationSchedules}
+        scheduleSubmission={scheduleSubmission}
+        onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+        onResetScheduleSubmission={() =>
+          dispatch(resetOperationScheduleSubmission())
+        }
         onCleanForbiddenOperation={(groupID) =>
           dispatch(removeRunningOperation({ groupID }))
         }
