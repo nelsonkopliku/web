@@ -68,6 +68,7 @@ function ClusterDetails({
   clusterName,
   details,
   hasSelectedChecks,
+  checksExecutionBlockedReason = null,
   hosts,
   health,
   state,
@@ -123,6 +124,7 @@ function ClusterDetails({
   const startExecutionDisabled =
     executionLoading ||
     !hasSelectedChecks ||
+    !!checksExecutionBlockedReason ||
     RUNNING_STATES.includes(executionStatus);
 
   const runningOperationName = get(runningOperation, 'operation', null);
@@ -310,8 +312,10 @@ function ClusterDetails({
               permitted={['all:cluster_checks_execution']}
             >
               <Tooltip
-                isEnabled={!hasSelectedChecks}
-                content="Select some Checks first!"
+                isEnabled={!hasSelectedChecks || !!checksExecutionBlockedReason}
+                content={
+                  checksExecutionBlockedReason || 'Select some Checks first!'
+                }
                 place="bottom"
                 wrap={false}
               >
