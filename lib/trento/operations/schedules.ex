@@ -60,8 +60,62 @@ defmodule Trento.Operations.Schedules do
   end
 
   @doc """
-  Lists the schedules of one or more targets, the next one first. With the
-  `operation` option, only the schedules of that operation.
+  Cancels a schedule: it no longer runs. An operation already running is not affected.
+  """
+  @spec cancel_schedule(String.t(), String.t()) :: :ok | {:error, :not_found}
+  def cancel_schedule(schedule_id, actor) do
+    with {:ok, schedule} <- get_schedule(schedule_id),
+         {:ok, schedule} <- delete(schedule) do
+      ScheduleActivity.record(:operation_schedule_cancelled, schedule, actor)
+    end
+  end
+
+  @doc """
+  Cancels the schedules of a target that is removed. The entries are logged
+  by the system and correlated to the clean up that removed the target.
+  """
+  @spec cancel_target_schedules(String.t(), String.t() | nil) :: :ok
+  def cancel_target_schedules(target_id, correlation_id) do
+    target_id
+    |> list_schedules()
+    |> cancel_removed(correlation_id)
+  end
+
+  @doc """
+  Cancels the SAP instance schedules of an instance that is removed, or of
+  every instance on a host that is removed: SAP instance schedules target the
+  SAP system and name the instance in their params.
+  """
+  @spec cancel_instance_schedules(keyword(), String.t() | nil) :: :ok
+  def cancel_instance_schedules(instance, correlation_id) do
+    query =
+      from s in OperationSchedule,
+        where:
+          s.target_type == "sap_system" and
+            s.operation in ["sap_instance_start", "sap_instance_stop"] and
+            fragment("?->>'host_id'", s.params) == ^Keyword.fetch!(instance, :host_id)
+
+    query =
+      case Keyword.fetch(instance, :sap_system_id) do
+        {:ok, sap_system_id} ->
+          where(
+            query,
+            [s],
+            s.target_id == ^sap_system_id and
+              fragment("?->>'instance_number'", s.params) ==
+                ^Keyword.fetch!(instance, :instance_number)
+          )
+
+        :error ->
+          query
+      end
+
+    query
+    |> Repo.all()
+    |> cancel_removed(correlation_id)
+  end
+
+  @doc """
   """
   @spec list_schedules(String.t() | [String.t()], keyword()) :: [OperationSchedule.t()]
   def list_schedules(target_ids, opts \\ [])
@@ -89,6 +143,24 @@ defmodule Trento.Operations.Schedules do
     case Repo.get(OperationSchedule, schedule_id) do
       nil -> {:error, :not_found}
       schedule -> {:ok, schedule}
+    end
+  end
+
+  defp cancel_removed(schedules, correlation_id) do
+    extra = if correlation_id, do: %{correlation_id: correlation_id}, else: %{}
+
+    Enum.each(schedules, fn schedule ->
+      with {:ok, schedule} <- delete(schedule) do
+        ScheduleActivity.record(:operation_schedule_cancelled, schedule, "system", extra)
+      end
+    end)
+  end
+
+  # A schedule cancelled meanwhile, by a user or by the clean up, is not found.
+  defp delete(%OperationSchedule{} = schedule) do
+    case Repo.delete(schedule, stale_error_field: :id) do
+      {:ok, schedule} -> {:ok, schedule}
+      {:error, _} -> {:error, :not_found}
     end
   end
 
