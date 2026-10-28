@@ -119,7 +119,7 @@ defmodule Trento.Operations.OperationSchedule do
     |> validate_number(:interval, greater_than: 0)
     |> validate_number(:max_occurrences, greater_than: 0)
     |> validate_subset(:weekdays, Enum.to_list(1..7))
-    |> put_first_occurrence()
+    |> put_first_occurrence(now)
   end
 
   defp normalize_recurrence(recurrence) do
@@ -146,13 +146,17 @@ defmodule Trento.Operations.OperationSchedule do
   defp schedulable?(target_type, operation),
     do: match?({:ok, _, _}, Requests.parse(target_type, operation))
 
-  defp put_first_occurrence(%Ecto.Changeset{valid?: false} = changeset), do: changeset
+  defp put_first_occurrence(%Ecto.Changeset{valid?: false} = changeset, _now), do: changeset
 
-  defp put_first_occurrence(changeset) do
+  # The first occurrence is the first one from the start, and not before now:
+  # a change of an ongoing periodic schedule keeps its start and continues
+  # with the next occurrence.
+  defp put_first_occurrence(changeset, now) do
     schedule = apply_changes(changeset)
-    before_start = DateTime.add(schedule.starts_at, -1, :microsecond)
+    from = Enum.max([schedule.starts_at, now], DateTime) |> DateTime.add(-1, :microsecond)
 
-    case Recurrence.next_occurrence(to_recurrence(schedule), before_start) do
+    case Recurrence.next_occurrence(to_recurrence(schedule), from) do
+      nil when is_nil(schedule.frequency) -> add_error(changeset, :starts_at, "is in the past")
       nil -> add_error(changeset, :ends_on, "leaves no occurrence")
       first -> put_change(changeset, :next_run_at, first)
     end
