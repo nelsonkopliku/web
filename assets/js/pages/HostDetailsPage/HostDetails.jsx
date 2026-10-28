@@ -16,7 +16,6 @@ import {
   SAPTUNE_SOLUTION_APPLY,
   SAPTUNE_SOLUTION_CHANGE,
   HOST_REBOOT,
-  OPERATION_NOT_ALLOWED_HOST,
   getOperationLabel,
   isSchedulable,
 } from '@lib/operations';
@@ -38,6 +37,7 @@ import OperationsButton from '@common/OperationsButton';
 import {
   SaptuneSolutionOperationModal,
   SimpleAcceptanceOperationModal,
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
   ScheduleWarningsModal,
 } from '@common/OperationModals';
@@ -60,6 +60,7 @@ import {
   isScheduleSubmitted,
   isSubmittingSchedule,
 } from '@state/operationSchedules';
+import { isOperationInProgress } from '@state/selectors/runningOperations';
 
 import HostSummary from './HostSummary';
 import ProviderDetails from './ProviderDetails';
@@ -132,6 +133,7 @@ function HostDetails({
     useState(false);
   const [currentOperation, setCurrentOperation] = useState(null);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
   const tableLabelId = useId();
 
   const versionWarningMessage = agentVersionWarning(agentVersion);
@@ -177,6 +179,13 @@ function HostDetails({
   const runningOperationName = get(runningOperation, 'operation', null);
   const operationForbidden = get(runningOperation, 'forbidden', false);
   const operationForbiddenErrors = get(runningOperation, 'errors', []);
+
+  // The menu stays open while an operation runs, to schedule: a request now
+  // is refused then
+  const requestNow = (operation, params) =>
+    isOperationInProgress(runningOperation)
+      ? setAlreadyRunning(operation)
+      : requestOperation(operation, params);
 
   const timeNow = new Date();
 
@@ -231,6 +240,11 @@ function HostDetails({
             onCancel={cleanForbiddenOperation}
             errors={operationForbiddenErrors}
           />
+          <OperationAlreadyRunningModal
+            isOpen={!!alreadyRunning}
+            operation={getOperationLabel(alreadyRunning)}
+            onClose={() => setAlreadyRunning(null)}
+          />
           <SaptuneSolutionOperationModal
             operation={currentOperation}
             currentlyApplied={currentlyAppliedSolution}
@@ -239,7 +253,7 @@ function HostDetails({
             isOpen={!!saptuneSolutionOperationModalOpen}
             onRequest={(solution) => {
               closeOperationModal();
-              requestOperation(currentOperation, { solution });
+              requestNow(currentOperation, { solution });
             }}
             onCancel={closeOperationModal}
           />
@@ -266,7 +280,7 @@ function HostDetails({
                 });
                 return;
               }
-              requestOperation(currentOperation, {});
+              requestNow(currentOperation, {});
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
@@ -307,8 +321,6 @@ function HostDetails({
               {operationsEnabled && (
                 <OperationsButton
                   userAbilities={userAbilities}
-                  disabled={!!staleAt}
-                  disabledTooltip={OPERATION_NOT_ALLOWED_HOST}
                   operations={[
                     {
                       value: 'Reboot Host',

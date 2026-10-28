@@ -8,6 +8,8 @@ import {
   getRunningOperationsList,
   isOperationRunning,
   getLocalOrTargetParams,
+  isOperationInProgress,
+  isGroupBusy,
 } from './runningOperations';
 
 describe('runningOperations selector', () => {
@@ -119,6 +121,30 @@ describe('runningOperations selector', () => {
         params: 'foo',
       };
       expect(getLocalOrTargetParams(localParams)).toBe('foo');
+    });
+  });
+
+  describe('operations in progress', () => {
+    it('should tell whether an operation runs for the group', () => {
+      expect(isOperationInProgress(null)).toBe(false);
+      expect(isOperationInProgress(undefined)).toBe(false);
+      expect(
+        isOperationInProgress({ operation: 'reboot', forbidden: false })
+      ).toBe(true);
+      expect(
+        isOperationInProgress({ operation: 'reboot', forbidden: true })
+      ).toBe(false);
+    });
+
+    it('should tell whether an operation runs for a group of a list', () => {
+      const list = [
+        { groupID: 'busy', operation: 'reboot', forbidden: false },
+        { groupID: 'forbidden', operation: 'reboot', forbidden: true },
+      ];
+
+      expect(isGroupBusy(list, 'busy')).toBe(true);
+      expect(isGroupBusy(list, 'forbidden')).toBe(false);
+      expect(isGroupBusy(list, 'idle')).toBe(false);
     });
   });
 });
