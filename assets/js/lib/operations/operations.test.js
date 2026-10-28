@@ -12,6 +12,7 @@ import {
   waiveOperationDisclaimer,
   resetOperationDisclaimer,
   describeOperationParams,
+  isSchedulable,
 } from '.';
 
 describe('operations', () => {
@@ -153,6 +154,30 @@ describe('operation params', () => {
     'should describe the operation params as "$description"',
     ({ params, description }) => {
       expect(describeOperationParams(params)).toBe(description);
+    }
+  );
+});
+
+describe('schedulable operations', () => {
+  it.each`
+    operation                       | schedulable
+    ${'reboot'}                     | ${true}
+    ${'cluster_maintenance_change'} | ${true}
+    ${'sap_system_start'}           | ${true}
+    ${'sap_system_stop'}            | ${true}
+    ${'sap_instance_start'}         | ${true}
+    ${'sap_instance_stop'}          | ${true}
+    ${'database_start'}             | ${true}
+    ${'database_stop'}              | ${true}
+    ${'saptune_solution_apply'}     | ${false}
+    ${'saptune_solution_change'}    | ${false}
+    ${'cluster_resource_refresh'}   | ${false}
+    ${'pacemaker_enable'}           | ${false}
+    ${'cluster_host_start'}         | ${false}
+  `(
+    'should tell whether $operation can be scheduled',
+    ({ operation, schedulable }) => {
+      expect(isSchedulable(operation)).toBe(schedulable);
     }
   );
 });
