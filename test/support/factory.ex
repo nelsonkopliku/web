@@ -1531,6 +1531,23 @@ defmodule Trento.Factory do
     }
   end
 
+  def operation_schedule_factory do
+    starts_at = DateTime.add(DateTime.utc_now(), 3, :day)
+
+    %Trento.Operations.Projections.OperationScheduleReadModel{
+      id: Faker.UUID.v4(),
+      target_type: "host",
+      target_id: Faker.UUID.v4(),
+      operation: "reboot",
+      params: %{},
+      starts_at: starts_at,
+      timezone: "Etc/UTC",
+      next_run_at: starts_at,
+      occurrences: 0,
+      created_by: "admin"
+    }
+  end
+
   def alerting_settings_factory do
     %AlertingSettings{
       type: :alerting_settings,
