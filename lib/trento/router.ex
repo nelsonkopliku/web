@@ -61,9 +61,12 @@ defmodule Trento.Router do
     TriggerScheduledRun
   }
 
+  alias Trento.MaintenanceWindows.Commands.ScheduleMaintenanceWindow
+
   alias Trento.Clusters
   alias Trento.Databases
   alias Trento.Hosts
+  alias Trento.MaintenanceWindows
   alias Trento.Operations
   alias Trento.SapSystems
 
@@ -144,4 +147,10 @@ defmodule Trento.Router do
            ],
            to: Operations.Schedule,
            lifespan: Operations.Lifespan
+
+  identify MaintenanceWindows.MaintenanceWindow, by: :window_id
+
+  dispatch [ScheduleMaintenanceWindow],
+    to: MaintenanceWindows.MaintenanceWindow,
+    lifespan: MaintenanceWindows.Lifespan
 end
