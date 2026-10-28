@@ -47,11 +47,24 @@ function SapStartStopOperationModal({
   sid,
   site = null,
   isOpen = false,
+  schedulable = false,
+  timezone,
+  initialSchedule = null,
+  existingSchedules,
+  loading = false,
+  errors,
   onRequest = noop,
   onCancel = noop,
+  onCancelSchedule = null,
 }) {
-  const [instanceType, setInstanceType] = useState(ALL_SELECTED);
-  const [timeout, setTimeout] = useState(DEFAULT_TIMEOUT);
+  const [instanceType, setInstanceType] = useState(
+    initialSchedule?.params?.instance_type || ALL_SELECTED
+  );
+  const [timeout, setTimeout] = useState(
+    initialSchedule?.params?.timeout
+      ? initialSchedule.params.timeout / 60
+      : DEFAULT_TIMEOUT
+  );
 
   const operationTitle = getOperationTitle(operation);
 
@@ -61,12 +74,22 @@ function SapStartStopOperationModal({
       description={`${operationTitle} ${sid}${site ? ` on ${site} site` : ''}`}
       operationText={operationTitle}
       isOpen={isOpen}
-      onRequest={() => {
-        onRequest({
-          timeout: timeout * 60,
-          ...(type === APPLICATION_TYPE && { instance_type: instanceType }),
-          ...(type === DATABASE_TYPE && site && { site }),
-        });
+      schedulable={schedulable}
+      timezone={timezone}
+      initialSchedule={initialSchedule}
+      existingSchedules={existingSchedules}
+      loading={loading}
+      errors={errors}
+      onCancelSchedule={onCancelSchedule}
+      onRequest={(schedule) => {
+        onRequest(
+          {
+            timeout: timeout * 60,
+            ...(type === APPLICATION_TYPE && { instance_type: instanceType }),
+            ...(type === DATABASE_TYPE && site && { site }),
+          },
+          schedule
+        );
       }}
       onCancel={() => {
         onCancel();
@@ -84,7 +107,10 @@ function SapStartStopOperationModal({
               className="ml-auto !flex-none !w-2/3"
               aria-label="instance_type"
               options={instanceTypes}
-              initialValues={[instanceTypes[0]]}
+              initialValues={[
+                instanceTypes.find(({ value }) => value === instanceType) ??
+                  instanceTypes[0],
+              ]}
               onChange={setInstanceType}
             />
           </div>

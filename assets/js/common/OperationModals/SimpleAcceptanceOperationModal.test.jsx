@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { waiveOperationDisclaimer } from '@lib/operations';
@@ -160,7 +160,7 @@ describe('SimpleAcceptanceOperationModal', () => {
     expect(screen.getByText('Request')).toBeEnabled();
     await user.click(screen.getByText('Request'));
 
-    expect(onRequest).toHaveBeenCalledWith({});
+    expect(onRequest).toHaveBeenCalledWith({}, null);
   });
 
   it('should call onCancel callback', async () => {
@@ -180,5 +180,40 @@ describe('SimpleAcceptanceOperationModal', () => {
     await user.click(screen.getByText('Cancel'));
 
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('should schedule the operation', async () => {
+    const user = userEvent.setup();
+    const onRequest = jest.fn();
+
+    render(
+      <SimpleAcceptanceOperationModal
+        operation={HOST_REBOOT}
+        descriptionResolverArgs={{ hostName: 'vmhana01' }}
+        isOpen
+        schedulable
+        timezone="Etc/UTC"
+        onRequest={onRequest}
+      />
+    );
+
+    await user.click(screen.getByText('Now'));
+    await user.click(screen.getByRole('option', { name: 'One Time' }));
+    fireEvent.change(screen.getByLabelText('Date'), {
+      target: { value: '2099-11-20' },
+    });
+    fireEvent.change(screen.getByLabelText('Start Time'), {
+      target: { value: '03:00' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+    expect(onRequest).toHaveBeenCalledWith(
+      {},
+      {
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      }
+    );
   });
 });

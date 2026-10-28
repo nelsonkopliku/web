@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import React from 'react';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { faker } from '@faker-js/faker';
@@ -17,13 +23,23 @@ import {
   saptuneStatusFactory,
   databaseInstanceFactory,
   sapSystemApplicationInstanceFactory,
+  operationScheduleFactory,
+  policyWarningFactory,
 } from '@lib/test-utils/factories';
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
 import {
   SAPTUNE_SOLUTION_APPLY,
   SAPTUNE_SOLUTION_CHANGE,
   HOST_REBOOT,
+  waiveOperationDisclaimer,
 } from '@lib/operations';
+
+import {
+  initialScheduleSubmission,
+  SUBMISSION_FAILED,
+  SUBMISSION_SUBMITTING,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
 
 import HostDetails from './HostDetails';
 
@@ -753,6 +769,188 @@ describe('HostDetails component', () => {
           : expect(menuButton).toBeDisabled();
       }
     );
+  });
+
+  describe('Host reboot scheduling', () => {
+    const hostID = faker.string.uuid();
+
+    const scheduleRebootAt = async (user, date, time) => {
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Reboot Host' }));
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'One Time' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: date },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: time },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+    };
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should schedule a host reboot and close the modal once it is scheduled', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const onResetScheduleSubmission = jest.fn();
+
+      const props = {
+        hostID,
+        agentVersion: '2.0.0',
+        heartbeat: 'passing',
+        userAbilities,
+        operationsEnabled: true,
+        timezone: 'Etc/UTC',
+        onScheduleOperation,
+        onResetScheduleSubmission,
+      };
+
+      const { rerender } = renderWithRouter(<HostDetails {...props} />);
+
+      await scheduleRebootAt(user, '2099-11-20', '03:00');
+
+      expect(onResetScheduleSubmission).toHaveBeenCalled();
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'host',
+        target_id: hostID,
+        operation: HOST_REBOOT,
+        params: {},
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+      expect(screen.getByRole('dialog')).toBeVisible();
+
+      rerender(
+        <HostDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUBMITTING,
+          }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Schedule' })).toBeDisabled();
+
+      rerender(
+        <HostDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: HOST_REBOOT,
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('should keep the modal open with the errors of a refused schedule', async () => {
+      const user = userEvent.setup();
+
+      const props = {
+        hostID,
+        agentVersion: '2.0.0',
+        userAbilities,
+        operationsEnabled: true,
+        timezone: 'Etc/UTC',
+      };
+
+      const { rerender } = renderWithRouter(<HostDetails {...props} />);
+
+      await scheduleRebootAt(user, '2099-11-20', '03:00');
+
+      rerender(
+        <HostDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_FAILED,
+            errors: [
+              {
+                title: 'Invalid value',
+                detail: 'must be in the future',
+                source: { pointer: '/starts_at' },
+              },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByRole('dialog')).toBeVisible();
+      expect(screen.getByText('Must be in the future')).toBeVisible();
+    });
+
+    it('should warn when the reboot is already scheduled', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+
+      renderWithRouter(
+        <HostDetails
+          hostID={hostID}
+          agentVersion="2.0.0"
+          userAbilities={userAbilities}
+          operationsEnabled
+          timezone="Etc/UTC"
+          operationSchedules={[
+            operationScheduleFactory.build({
+              target_id: hostID,
+              operation: HOST_REBOOT,
+              starts_at: '2099-11-19T03:00:00Z',
+              timezone: 'Etc/UTC',
+            }),
+          ]}
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      await scheduleRebootAt(user, '2099-11-20', '03:00');
+
+      expect(onScheduleOperation).not.toHaveBeenCalled();
+      expect(
+        screen.getByText('Reboot host is already scheduled for this target:')
+      ).toBeVisible();
+      expect(screen.getByText('19 Nov 2099 at 03:00 (Etc/UTC)')).toBeVisible();
+
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      expect(onScheduleOperation).toHaveBeenCalled();
+    });
+
+    it('should tell the policies that would not pass now', async () => {
+      const user = userEvent.setup();
+      const onResetScheduleSubmission = jest.fn();
+
+      renderWithRouter(
+        <HostDetails
+          hostID={hostID}
+          agentVersion="2.0.0"
+          userAbilities={userAbilities}
+          operationsEnabled
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: HOST_REBOOT,
+            warnings: [
+              policyWarningFactory.build({
+                message: 'Trento agent is not currently running in the host',
+              }),
+            ],
+          }}
+          onResetScheduleSubmission={onResetScheduleSubmission}
+        />
+      );
+
+      expect(screen.getByText('Operation Scheduled')).toBeVisible();
+      expect(
+        screen.getByText('Trento agent is not currently running in the host')
+      ).toBeVisible();
+
+      await user.click(screen.getByRole('button', { name: 'Close' }));
+      expect(onResetScheduleSubmission).toHaveBeenCalled();
+    });
   });
 
   describe('Host reboot operation button', () => {
