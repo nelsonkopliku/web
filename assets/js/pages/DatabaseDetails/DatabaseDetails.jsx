@@ -14,6 +14,10 @@ import { GenericSystemDetails } from '@pages/SapSystemDetails';
 
 import { getEnrichedDatabaseDetails } from '@state/selectors/sapSystem';
 import { getRunningOperationsList } from '@state/selectors/runningOperations';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 import { getUserProfile } from '@state/selectors/user';
 import { deregisterDatabaseInstance } from '@state/databases';
 import {
@@ -21,6 +25,14 @@ import {
   updateRunningOperations,
   removeRunningOperation,
 } from '@state/runningOperations';
+import {
+  cancelOperationSchedule,
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+  updateOperationSchedule,
+} from '@state/operationSchedules';
 
 import {
   getDatabaseOperations,
@@ -39,9 +51,22 @@ function DatabaseDetails() {
 
   const runningOperations = useSelector(getRunningOperationsList);
 
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(id));
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+
   useEffect(() => {
     operationsEnabled && dispatch(updateRunningOperations());
   }, [dispatch]);
+
+  useEffect(() => {
+    operationsEnabled && dispatch(fetchOperationSchedules({ targetID: id }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: id }));
+    };
+  }, [dispatch, id]);
 
   if (!database) {
     return <div>Not Found</div>;
@@ -65,6 +90,22 @@ function DatabaseDetails() {
           dispatch(deregisterDatabaseInstance(instance));
         }}
         onRequestOperation={(payload) => dispatch(operationRequested(payload))}
+        operationSchedules={operationSchedules}
+        scheduleSubmission={scheduleSubmission}
+        onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+        operationSchedulesError={operationSchedulesError}
+        onUpdateSchedule={(schedule, changes) =>
+          dispatch(updateOperationSchedule({ schedule, changes }))
+        }
+        onCancelSchedule={(schedule) =>
+          dispatch(cancelOperationSchedule({ schedule }))
+        }
+        onRetryOperationSchedules={() =>
+          dispatch(fetchOperationSchedules({ targetID: id }))
+        }
+        onResetScheduleSubmission={() =>
+          dispatch(resetOperationScheduleSubmission())
+        }
         onCleanForbiddenOperation={(groupID) =>
           dispatch(removeRunningOperation({ groupID }))
         }

@@ -5,8 +5,6 @@ import React from 'react';
 import classNames from 'classnames';
 import { capitalize, map, flatMap, flow, groupBy, noop } from 'lodash';
 
-import { OPERATION_NOT_ALLOWED_CLUSTER } from '@lib/operations';
-
 import Table from '@common/Table';
 import OperationsButton from '@common/OperationsButton';
 
@@ -48,7 +46,6 @@ const addInheritedBgColor = (columns) =>
 
 const getResourceTableConfig = (
   userAbilities = [],
-  operationsDisabled,
   getResourceOperations = noop
 ) => ({
   usePadding: false,
@@ -97,8 +94,6 @@ const getResourceTableConfig = (
             userAbilities={userAbilities}
             menuPosition="bottom end"
             transparent
-            disabled={operationsDisabled}
-            disabledTooltip={OPERATION_NOT_ALLOWED_CLUSTER}
             operations={getResourceOperations(item)}
           />
         </div>
@@ -128,7 +123,6 @@ function Resources({
   resources,
   hosts,
   userAbilities = [],
-  operationsDisabled = false,
   getResourceOperations = noop,
 }) {
   const groupedResources = groupResources(resources, hosts);
@@ -138,11 +132,7 @@ function Resources({
       <h2 className="mt-8 mb-2 text-2xl font-bold">Resources</h2>
       <div className="mt-2">
         <Table
-          config={getResourceTableConfig(
-            userAbilities,
-            operationsDisabled,
-            getResourceOperations
-          )}
+          config={getResourceTableConfig(userAbilities, getResourceOperations)}
           data={groupedResources}
           rowKey={(resource) => resource?.id}
         />
