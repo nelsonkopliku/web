@@ -59,4 +59,35 @@ describe('runningOperations reducer', () => {
       expectedState
     );
   });
+
+  it('should replace a refused request of the group with a running operation', () => {
+    const groupID = faker.string.uuid();
+    const initialState = {
+      [groupID]: {
+        operation: 'reboot',
+        forbidden: true,
+        errors: [{ detail: 'Trento agent is not currently running' }],
+        metadata: {},
+      },
+    };
+
+    expect(
+      runningOperationsReducer(
+        initialState,
+        setRunningOperation({
+          groupID,
+          operation: 'reboot',
+          metadata: { targets: [] },
+        })
+      )
+    ).toEqual({
+      [groupID]: {
+        groupID,
+        operation: 'reboot',
+        forbidden: false,
+        errors: [],
+        metadata: { targets: [] },
+      },
+    });
+  });
 });

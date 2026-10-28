@@ -54,13 +54,15 @@ const matchesResourceOperation =
       (params) => get(params, 'resource_id') === resourceID
     )(metadata);
 
+// The entries stay available while an operation runs or when the agents do
+// not report, so that the operations can be scheduled. A request now is
+// refused then. Only the state of what an operation changes disables it.
 export const getClusterOperations = (
   clusterID,
   runningOperation,
   setOperationParams,
   setOperationModelOpen,
-  details,
-  someHostOnline
+  details
 ) => [
   {
     value: 'Cluster Maintenance',
@@ -70,7 +72,7 @@ export const getClusterOperations = (
       CLUSTER_MAINTENANCE_CHANGE,
       matchesClusterOperation
     ),
-    disabled: !!runningOperation || !someHostOnline,
+    disabled: false,
     permitted: ['maintenance_change:cluster'],
     onClick: () => {
       setOperationParams({
@@ -90,7 +92,7 @@ export const getClusterOperations = (
       CLUSTER_RESOURCE_REFRESH,
       matchesClusterOperation
     ),
-    disabled: !!runningOperation || !someHostOnline,
+    disabled: false,
     permitted: ['resource_refresh:cluster'],
     onClick: () => {
       setOperationParams({});
@@ -119,7 +121,7 @@ export const getClusterHostOperations = curry(
         CLUSTER_MAINTENANCE_CHANGE,
         matchesNodeOperation(host.name)
       ),
-      disabled: !!runningOperation || !isOnlineInCluster(host),
+      disabled: !isOnlineInCluster(host),
       permitted: ['maintenance_change:cluster'],
       onClick: () => {
         setOperationParams({
@@ -140,7 +142,7 @@ export const getClusterHostOperations = curry(
         PACEMAKER_ENABLE,
         matchesHostIdOrTarget(host.id)
       ),
-      disabled: !!runningOperation || !canEnableUnit(host, 'pacemaker.service'),
+      disabled: !canEnableUnit(host, 'pacemaker.service'),
       permitted: ['pacemaker_enable:cluster'],
       onClick: () => {
         setCurrentOperationHost(host);
@@ -155,8 +157,7 @@ export const getClusterHostOperations = curry(
         PACEMAKER_DISABLE,
         matchesHostIdOrTarget(host.id)
       ),
-      disabled:
-        !!runningOperation || !canDisableUnit(host, 'pacemaker.service'),
+      disabled: !canDisableUnit(host, 'pacemaker.service'),
       permitted: ['pacemaker_disable:cluster'],
       onClick: () => {
         setCurrentOperationHost(host);
@@ -171,7 +172,7 @@ export const getClusterHostOperations = curry(
         CLUSTER_HOST_START,
         matchesHostIdOrTarget(host.id)
       ),
-      disabled: !!runningOperation || isOnlineInCluster(host),
+      disabled: isOnlineInCluster(host),
       permitted: ['cluster_host_start:cluster'],
       onClick: () => {
         setCurrentOperationHost(host);
@@ -189,7 +190,7 @@ export const getClusterHostOperations = curry(
         CLUSTER_HOST_STOP,
         matchesHostIdOrTarget(host.id)
       ),
-      disabled: !!runningOperation || !isOnlineInCluster(host),
+      disabled: !isOnlineInCluster(host),
       permitted: ['cluster_host_stop:cluster'],
       onClick: () => {
         setCurrentOperationHost(host);
@@ -208,7 +209,6 @@ export const getResourceOperations = curry(
     runningOperation,
     setOperationParams,
     setOperationModelOpen,
-    someHostOnline,
     resource
   ) => [
     {
@@ -219,7 +219,7 @@ export const getResourceOperations = curry(
         CLUSTER_MAINTENANCE_CHANGE,
         matchesResourceOperation(resource.id)
       ),
-      disabled: !!runningOperation || !someHostOnline,
+      disabled: false,
       permitted: ['maintenance_change:cluster'],
       onClick: () => {
         setOperationParams({
@@ -240,7 +240,7 @@ export const getResourceOperations = curry(
         CLUSTER_RESOURCE_REFRESH,
         matchesResourceOperation(resource.id)
       ),
-      disabled: !!runningOperation || !someHostOnline,
+      disabled: false,
       permitted: ['resource_refresh:cluster'],
       onClick: () => {
         setOperationParams({

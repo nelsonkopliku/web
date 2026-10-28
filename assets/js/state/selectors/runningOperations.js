@@ -3,7 +3,7 @@
 
 import { createSelector } from '@reduxjs/toolkit';
 import { pipe, find } from 'lodash/fp';
-import { flatMap, get, has } from 'lodash';
+import { flatMap, get, has, some } from 'lodash';
 
 const getRunningOperations = ({ runningOperations }) => runningOperations;
 
@@ -35,3 +35,15 @@ export const getLocalOrTargetParams = (metadata) =>
   has(metadata, 'targets')
     ? get(metadata, 'targets[0].arguments', {})
     : get(metadata, 'params', {});
+
+// A refused request leaves a forbidden entry, that is not running
+export const isOperationInProgress = (runningOperation) =>
+  Boolean(runningOperation?.operation) && !runningOperation.forbidden;
+
+export const isGroupBusy = (runningOperationsList, groupID) =>
+  some(
+    runningOperationsList,
+    (runningOperation) =>
+      runningOperation.groupID === groupID &&
+      isOperationInProgress(runningOperation)
+  );

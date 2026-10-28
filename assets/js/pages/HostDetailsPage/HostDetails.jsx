@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState, useId } from 'react';
-import { get, startCase, some } from 'lodash';
+import React, { useEffect, useState, useId } from 'react';
+import { filter, get, noop, startCase, some } from 'lodash';
 import classNames from 'classnames';
 import {
   EOS_CLEAR_ALL,
@@ -16,8 +16,8 @@ import {
   SAPTUNE_SOLUTION_APPLY,
   SAPTUNE_SOLUTION_CHANGE,
   HOST_REBOOT,
-  OPERATION_NOT_ALLOWED_HOST,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
 import { formatBytes } from '@lib/charts';
@@ -37,16 +37,30 @@ import OperationsButton from '@common/OperationsButton';
 import {
   SaptuneSolutionOperationModal,
   SimpleAcceptanceOperationModal,
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
+  ScheduleWarningsModal,
 } from '@common/OperationModals';
 
 import { subHours } from 'date-fns';
 
 import SuseLogo from '@static/suse_logo.svg';
 
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
 import CheckResultsOverview from '@pages/CheckResultsOverview';
 import { canStartExecution } from '@pages/ChecksSelection';
 import DeregistrationModal from '@pages/DeregistrationModal';
+
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
+import { isOperationInProgress } from '@state/selectors/runningOperations';
 
 import HostSummary from './HostSummary';
 import ProviderDetails from './ProviderDetails';
@@ -97,6 +111,15 @@ function HostDetails({
   cleanUpHost,
   requestHostChecksExecution,
   requestOperation,
+  nextExecutionAt = undefined,
+  operationSchedules = [],
+  operationSchedulesError = false,
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
+  onResetScheduleSubmission = noop,
   cleanForbiddenOperation,
   navigate,
   timezone,
@@ -109,6 +132,8 @@ function HostDetails({
   const [simpleOperationModalOpen, setSimpleOperationModalOpen] =
     useState(false);
   const [currentOperation, setCurrentOperation] = useState(null);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
   const tableLabelId = useId();
 
   const versionWarningMessage = agentVersionWarning(agentVersion);
@@ -155,9 +180,17 @@ function HostDetails({
   const operationForbidden = get(runningOperation, 'forbidden', false);
   const operationForbiddenErrors = get(runningOperation, 'errors', []);
 
+  // The menu stays open while an operation runs, to schedule: a request now
+  // is refused then
+  const requestNow = (operation, params) =>
+    isOperationInProgress(runningOperation)
+      ? setAlreadyRunning(operation)
+      : requestOperation(operation, params);
+
   const timeNow = new Date();
 
   const openOperationModal = (operation) => () => {
+    onResetScheduleSubmission();
     setCurrentOperation(operation);
     switch (operation) {
       case SAPTUNE_SOLUTION_APPLY:
@@ -176,6 +209,15 @@ function HostDetails({
     setSaptuneSolutionOperationModalOpen(false);
     setSimpleOperationModalOpen(false);
   };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) {
+      closeOperationModal();
+      setEditingSchedule(null);
+    }
+  }, [scheduleSubmitted]);
 
   return (
     <>
@@ -198,6 +240,11 @@ function HostDetails({
             onCancel={cleanForbiddenOperation}
             errors={operationForbiddenErrors}
           />
+          <OperationAlreadyRunningModal
+            isOpen={!!alreadyRunning}
+            operation={getOperationLabel(alreadyRunning)}
+            onClose={() => setAlreadyRunning(null)}
+          />
           <SaptuneSolutionOperationModal
             operation={currentOperation}
             currentlyApplied={currentlyAppliedSolution}
@@ -206,19 +253,53 @@ function HostDetails({
             isOpen={!!saptuneSolutionOperationModalOpen}
             onRequest={(solution) => {
               closeOperationModal();
-              requestOperation(currentOperation, { solution });
+              requestNow(currentOperation, { solution });
             }}
             onCancel={closeOperationModal}
           />
           <SimpleAcceptanceOperationModal
+            key={`${currentOperation}-${!!simpleOperationModalOpen}`}
             operation={currentOperation}
             descriptionResolverArgs={{ hostName: hostname }}
             isOpen={!!simpleOperationModalOpen}
-            onRequest={() => {
-              requestOperation(currentOperation, {});
+            schedulable={isSchedulable(currentOperation)}
+            timezone={timezone}
+            existingSchedules={filter(operationSchedules, {
+              operation: currentOperation,
+            })}
+            loading={isSubmittingSchedule(scheduleSubmission)}
+            errors={scheduleSubmission.errors}
+            onRequest={(params, schedule) => {
+              if (schedule) {
+                onScheduleOperation({
+                  target_type: 'host',
+                  target_id: hostID,
+                  operation: currentOperation,
+                  params,
+                  ...schedule,
+                });
+                return;
+              }
+              requestNow(currentOperation, {});
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
+          />
+          <EditOperationScheduleModal
+            key={editingSchedule?.id}
+            schedule={editingSchedule}
+            isOpen={!!editingSchedule}
+            descriptionResolverArgs={{ hostName: hostname }}
+            submission={scheduleSubmission}
+            onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+            onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+            onCancel={() => setEditingSchedule(null)}
+          />
+          <ScheduleWarningsModal
+            isOpen={hasScheduleWarnings(scheduleSubmission)}
+            operation={getOperationLabel(scheduleSubmission.operation)}
+            warnings={scheduleSubmission.warnings}
+            onClose={onResetScheduleSubmission}
           />
         </>
       )}
@@ -240,8 +321,6 @@ function HostDetails({
               {operationsEnabled && (
                 <OperationsButton
                   userAbilities={userAbilities}
-                  disabled={!!staleAt}
-                  disabledTooltip={OPERATION_NOT_ALLOWED_HOST}
                   operations={[
                     {
                       value: 'Reboot Host',
@@ -284,7 +363,7 @@ function HostDetails({
                 onClick={() => navigate(`/hosts/${hostID}/settings`)}
               >
                 <EOS_PLAYLIST_ADD_CHECK_FILLED className="inline-block fill-jungle-green-500" />{' '}
-                Check Selection
+                Check Settings
               </Button>
 
               <Button
@@ -372,6 +451,7 @@ function HostDetails({
               data={lastExecutionData}
               catalogDataEmpty={catalogData?.length === 0}
               timezone={timezone}
+              nextExecutionAt={nextExecutionAt}
               loading={catalogLoading || lastExecutionLoading}
               error={catalogError || lastExecutionError}
               onCheckClick={(checksHealth) =>
@@ -418,6 +498,22 @@ function HostDetails({
           </div>
           <DiskSpaceChart hostId={hostID} />
         </ChartsFeatureWrapper>
+        {operationsEnabled && (
+          <OperationSchedules
+            schedules={operationSchedules}
+            error={operationSchedulesError}
+            timezone={timezone}
+            userAbilities={userAbilities}
+            submission={scheduleSubmission}
+            onEdit={(schedule) => {
+              onResetScheduleSubmission();
+              setEditingSchedule(schedule);
+            }}
+            onCancel={onCancelSchedule}
+            onRetry={onRetryOperationSchedules}
+            onResetSubmission={onResetScheduleSubmission}
+          />
+        )}
         <div className="mt-16">
           <div className="mb-4">
             <h2 className="text-2xl font-bold">Provider details</h2>
