@@ -22,6 +22,10 @@ import { isPermitted } from './users';
 import { DISABLED, describeFrequency } from './checksSchedule';
 import { describeOccurrences } from './recurrence';
 import { DEFAULT_TIMEZONE, formatDateTime } from '@lib/timezones';
+import {
+  describeForbids,
+  describeMaintenanceWindow,
+} from './maintenanceWindows';
 
 export const LOGIN_ATTEMPT = 'login_attempt';
 export const RESOURCE_TAGGING = 'resource_tagging';
@@ -179,6 +183,11 @@ export const SCHEDULED_OPERATION_REQUESTED = 'scheduled_operation_requested';
 export const SCHEDULED_OPERATION_REQUEST_FAILED =
   'scheduled_operation_request_failed';
 
+// Maintenance windows
+export const MAINTENANCE_WINDOW_SCHEDULED = 'maintenance_window_scheduled';
+export const MAINTENANCE_WINDOW_CHANGED = 'maintenance_window_changed';
+export const MAINTENANCE_WINDOW_DELETED = 'maintenance_window_deleted';
+
 // Checks execution frequency
 export const CHECKS_EXECUTION_SETTINGS_UPDATED =
   'checks_execution_settings_updated';
@@ -191,6 +200,7 @@ const SCHEDULED_REQUEST_FAILURE_REASONS = {
   policies: 'the operation policies did not pass',
   already_running: 'another operation was running',
   target_not_found: 'the target is gone',
+  maintenance_window: 'a maintenance window forbids operations',
 };
 
 // Check Customization
@@ -307,6 +317,24 @@ const failedRequestMessage = (metadata) => {
     SCHEDULED_REQUEST_FAILURE_REASONS[metadata.reason] || metadata.reason;
 
   return `Scheduled operation ${operationWithOptions(metadata)}${forTarget(metadata)}${run}${run ? ',' : ''} not requested: ${reason}`;
+};
+
+const targetResourceType = (entry) =>
+  resolveResourceType(
+    entry,
+    entry.metadata?.target_type,
+    'Unable to determine target type'
+  );
+
+// Maintenance windows are described in their own timezone
+const windowDetails = (metadata) =>
+  metadata.starts_at && metadata.timezone && metadata.forbids
+    ? `: ${describeMaintenanceWindow(metadata)}, forbidding ${lowerFirst(describeForbids(metadata.forbids))}`
+    : '';
+
+const ofTarget = (metadata) => {
+  const name = targetNameFromMetadata(metadata);
+  return name ? ` of ${name}` : '';
 };
 
 const frequencyChange = (metadata) => {
@@ -965,6 +993,24 @@ export const ACTIVITY_TYPES_CONFIG = {
     label: 'Scheduled Operation Request Failed',
     message: ({ metadata }) => failedRequestMessage(metadata),
     resource: scheduleResourceType,
+  },
+  [MAINTENANCE_WINDOW_SCHEDULED]: {
+    label: 'Maintenance Window Scheduled',
+    message: ({ metadata }) =>
+      `Maintenance window scheduled${forTarget(metadata)}${windowDetails(metadata)}`,
+    resource: targetResourceType,
+  },
+  [MAINTENANCE_WINDOW_CHANGED]: {
+    label: 'Maintenance Window Changed',
+    message: ({ metadata }) =>
+      `Maintenance window${ofTarget(metadata)} changed${windowDetails(metadata)}`,
+    resource: targetResourceType,
+  },
+  [MAINTENANCE_WINDOW_DELETED]: {
+    label: 'Maintenance Window Deleted',
+    message: ({ metadata }) =>
+      `Maintenance window${ofTarget(metadata)} deleted${windowDetails(metadata)}`,
+    resource: targetResourceType,
   },
   [OPERATION_COMPLETED]: {
     label: 'Operation Completed',

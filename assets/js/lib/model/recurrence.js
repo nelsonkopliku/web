@@ -9,6 +9,7 @@
 import { tz } from '@date-fns/tz';
 import {
   addHours,
+  addMinutes,
   format,
   isAfter,
   parse,
@@ -62,13 +63,17 @@ const endsSuffix = ({ ends_on: endsOn, max_occurrences: maxOccurrences }) => {
 
 /**
  * Human readable summary of a schedule, in the given timezone, for example
- * "Every 2 weeks on Saturdays, Sundays at 03:00, 5 times"
+ * "Every 2 weeks on Saturdays, Sundays at 03:00, 5 times". With a duration in
+ * minutes, each occurrence is shown as a time range.
  */
-export const describeOccurrences = (schedule, timezone) => {
+export const describeOccurrences = (schedule, timezone, { duration } = {}) => {
   const { starts_at: startsAt, recurrence } = schedule;
 
   const start = parseISO(startsAt);
-  const at = ` at ${inTimezone(start, 'HH:mm', timezone)}`;
+  const startTime = inTimezone(start, 'HH:mm', timezone);
+  const at = duration
+    ? `, ${startTime} – ${inTimezone(addMinutes(start, duration), 'HH:mm', timezone)}`
+    : ` at ${startTime}`;
 
   if (!recurrence) {
     return `${inTimezone(start, 'dd MMM yyyy', timezone)}${at}`;
