@@ -180,4 +180,17 @@ describe('recurrence', () => {
       ).toBe(true);
     });
   });
+
+  it('should describe occurrences lasting some minutes as a time range', () => {
+    expect(
+      describeOccurrences(
+        { ...schedule, recurrence: { frequency: 'monthly', interval: 1 } },
+        'Europe/Berlin',
+        { duration: 90 }
+      )
+    ).toBe('Every month on day 24, 03:00 – 04:30');
+    expect(
+      describeOccurrences(schedule, 'Europe/Berlin', { duration: 60 })
+    ).toBe('24 Oct 2026, 03:00 – 04:00');
+  });
 });
