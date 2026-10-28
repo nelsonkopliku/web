@@ -42,10 +42,12 @@ import {
 } from '@state/runningOperations';
 
 import {
+  cancelOperationSchedule,
   fetchOperationSchedules,
   forgetOperationSchedules,
   resetOperationScheduleSubmission,
   scheduleOperation,
+  updateOperationSchedule,
 } from '@state/operationSchedules';
 
 import { deregisterHost } from '@state/hosts';
@@ -109,9 +111,8 @@ function HostDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(hostID));
-  const { schedules: operationSchedules } = useSelector(
-    getOperationSchedules(hostID)
-  );
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(hostID));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
 
   const getExportersStatus = async () => {
@@ -192,6 +193,16 @@ function HostDetailsPage() {
       operationSchedules={operationSchedules}
       scheduleSubmission={scheduleSubmission}
       onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      operationSchedulesError={operationSchedulesError}
+      onUpdateSchedule={(schedule, changes) =>
+        dispatch(updateOperationSchedule({ schedule, changes }))
+      }
+      onCancelSchedule={(schedule) =>
+        dispatch(cancelOperationSchedule({ schedule }))
+      }
+      onRetryOperationSchedules={() =>
+        dispatch(fetchOperationSchedules({ targetID: hostID }))
+      }
       onResetScheduleSubmission={() =>
         dispatch(resetOperationScheduleSubmission())
       }
