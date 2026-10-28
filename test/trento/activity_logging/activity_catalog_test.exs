@@ -151,6 +151,33 @@ defmodule Trento.ActivityLog.ActivityCatalogTest do
     end
   end
 
+  describe "application activities" do
+    test "should expose the activities that the application emits" do
+      assert [
+               :operation_scheduled,
+               :operation_schedule_changed,
+               :operation_schedule_cancelled,
+               :scheduled_operation_requested,
+               :scheduled_operation_request_failed
+             ] == ActivityCatalog.application_activities()
+
+      for activity <- ActivityCatalog.application_activities() do
+        assert :application_activity == ActivityCatalog.detect_activity_category(activity)
+        assert activity in ActivityCatalog.supported_activities()
+      end
+    end
+
+    test "should detect an application activity, and nothing else under that key" do
+      assert {:ok, :operation_scheduled} ==
+               ActivityCatalog.detect_activity(%{application_activity: :operation_scheduled})
+
+      for activity <- [:login_attempt, :not_an_activity, "operation_scheduled"] do
+        assert {:error, :not_interesting} ==
+                 ActivityCatalog.detect_activity(%{application_activity: activity})
+      end
+    end
+  end
+
   describe "activity detection" do
     test "should not detect activity from invalid input" do
       Enum.each([nil, %{}, "", 42, Foo.Bar.Event], fn input ->

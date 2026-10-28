@@ -14,6 +14,15 @@ defmodule Trento.ActivityLog.ActivityLogger do
 
   require Logger
 
+  @doc """
+  Logs an activity that the application emits itself (see
+  `Trento.ActivityLog.ActivityCatalog.application_activities/0`). Logging never
+  raises: a failure is reported in the log only.
+  """
+  @spec log_application_activity(atom(), String.t(), map()) :: :ok
+  def log_application_activity(activity, actor, metadata),
+    do: log_activity(%{application_activity: activity, actor: actor, metadata: metadata})
+
   def log_activity(activity_context) do
     with {:ok, detected_activity} <- ActivityCatalog.detect_activity(activity_context),
          {:ok, log_entry} <- ActivityParser.to_activity_log(detected_activity, activity_context) do

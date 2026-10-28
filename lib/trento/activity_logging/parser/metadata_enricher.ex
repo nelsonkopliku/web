@@ -20,7 +20,8 @@ defmodule Trento.ActivityLog.Logger.Parser.MetadataEnricher do
       when supported_activities in [
              :connection_activity,
              :domain_event_activity,
-             :queue_event_activity
+             :queue_event_activity,
+             :application_activity
            ] ->
         {:ok, enrich_metadata(activity, metadata)}
 
