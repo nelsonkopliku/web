@@ -137,8 +137,7 @@ describe('Resources', () => {
               clusterID,
               null,
               noop,
-              noop,
-              true
+              noop
             )}
           />
         );
@@ -152,7 +151,7 @@ describe('Resources', () => {
       }
     );
 
-    it('should disable operations if some operation is running', async () => {
+    it('should keep the operations available while an operation runs', async () => {
       const user = userEvent.setup();
       const clusterID = faker.string.uuid();
       const resources = clusterResourceFactory.buildList(5, {
@@ -168,8 +167,7 @@ describe('Resources', () => {
             clusterID,
             { group_id: '123', operation: CLUSTER_MAINTENANCE_CHANGE },
             noop,
-            noop,
-            true
+            noop
           )}
         />
       );
@@ -180,38 +178,7 @@ describe('Resources', () => {
 
       screen
         .getAllByRole('menuitem')
-        .forEach((item) => expect(item).toBeDisabled());
-    });
-
-    it('should disable operations if none of the hosts are online', async () => {
-      const user = userEvent.setup();
-      const clusterID = faker.string.uuid();
-      const resources = clusterResourceFactory.buildList(5, {
-        parent: null,
-      });
-
-      render(
-        <Resources
-          resources={resources}
-          hosts={[]}
-          userAbilities={[{ name: 'all', resource: 'all' }]}
-          getResourceOperations={getResourceOperations(
-            clusterID,
-            null,
-            noop,
-            noop,
-            false
-          )}
-        />
-      );
-
-      const operationButtons = screen.getAllByRole('button');
-
-      await user.click(operationButtons[0]);
-
-      screen
-        .getAllByRole('menuitem')
-        .forEach((item) => expect(item).toBeDisabled());
+        .forEach((item) => expect(item).toBeEnabled());
     });
 
     const runningOperationsScenarios = [
@@ -253,8 +220,7 @@ describe('Resources', () => {
               clusterID,
               runningOperation(clusterID, resources[0]),
               noop,
-              noop,
-              true
+              noop
             )}
           />
         );
@@ -266,7 +232,7 @@ describe('Resources', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: runningItem,
         });
-        expect(menuItem).toBeDisabled();
+        expect(menuItem).toBeEnabled();
 
         const { getByTestId } = within(menuItem);
 
@@ -322,8 +288,7 @@ describe('Resources', () => {
               clusterID,
               null,
               noop,
-              noop,
-              true
+              noop
             )}
           />
         );
