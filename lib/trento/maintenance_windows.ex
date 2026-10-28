@@ -163,6 +163,15 @@ defmodule Trento.MaintenanceWindows do
     |> Enum.sort_by(&{not &1.active, sort_start(&1)})
   end
 
+  @doc """
+  A window seen from the target it is set on.
+  """
+  @spec own_window(MaintenanceWindowReadModel.t(), module()) :: covering_window()
+  def own_window(%MaintenanceWindowReadModel{} = window, date_service \\ DateService) do
+    target = {window.target_type, window.target_id}
+    covering(window, target, target_names([target]), date_service.utc_now())
+  end
+
   @spec get_window(String.t()) :: {:ok, MaintenanceWindowReadModel.t()} | {:error, :not_found}
   def get_window(window_id) do
     case Repo.get(MaintenanceWindowReadModel, window_id) do
