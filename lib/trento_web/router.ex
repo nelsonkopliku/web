@@ -148,6 +148,7 @@ defmodule TrentoWeb.Router do
 
       get "/maintenance_windows", MaintenanceWindowController, :index
       post "/maintenance_windows", MaintenanceWindowController, :create
+      post "/maintenance_windows/bulk", MaintenanceWindowController, :bulk_create
       put "/maintenance_windows/:id", MaintenanceWindowController, :update
       delete "/maintenance_windows/:id", MaintenanceWindowController, :delete
 
