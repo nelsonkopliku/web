@@ -122,6 +122,34 @@ defmodule TrentoWeb.V1.OperationScheduleController do
     end
   end
 
+  operation :bulk_create,
+    summary: "Schedule an operation on several targets.",
+    description:
+      "Schedules the same operation on several targets of one type. It creates one schedule per target, all with the same bulk_id, or none when one of them is refused. Schedules can only be changed and cancelled one by one.",
+    tags: ["Operations"],
+    request_body:
+      {"Targets and schedule.", "application/json", Scheduling.BulkCreateOperationScheduleRequest},
+    responses: [
+      created: {"Saved schedules.", "application/json", Scheduling.BulkOperationSchedules},
+      unauthorized: Schema.Unauthorized.response(),
+      forbidden: Schema.Forbidden.response(),
+      not_found: Schema.NotFound.response(),
+      unprocessable_entity: Schema.UnprocessableEntity.response()
+    ]
+
+  def bulk_create(conn, _) do
+    attrs = OpenApiSpex.body_params(conn)
+    %{username: username} = Pow.Plug.current_user(conn)
+
+    with {:ok, params} <- OperationScheduleParams.cast(attrs.operation, Map.get(attrs, :params)),
+         {:ok, bulk_id, results} <-
+           Schedules.create_bulk_schedules(Map.put(attrs, :params, params), username) do
+      conn
+      |> put_status(:created)
+      |> render(:bulk_operation_schedules, bulk_id: bulk_id, results: results)
+    end
+  end
+
   operation :update,
     summary: "Change an operation schedule.",
     description:
@@ -171,7 +199,8 @@ defmodule TrentoWeb.V1.OperationScheduleController do
     end
   end
 
-  def get_policy_resource(%{private: %{phoenix_action: :create}} = conn) do
+  def get_policy_resource(%{private: %{phoenix_action: action}} = conn)
+      when action in [:create, :bulk_create] do
     %{target_type: target_type, operation: operation} = OpenApiSpex.body_params(conn)
     %{target_type: target_type, operation: operation}
   end
