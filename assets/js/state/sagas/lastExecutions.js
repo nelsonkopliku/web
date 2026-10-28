@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { put, call, takeEvery, select, getContext } from 'redux-saga/effects';
+import { get } from 'lodash';
 
 import { notify } from '@state/notifications';
 import {
@@ -43,6 +44,16 @@ export function* updateLastExecution({ payload }) {
   }
 }
 
+// The server tells why it refuses an execution, for example during an
+// maintenance window
+const refusalReason = (error) => {
+  const detail = get(error, ['response', 'data', 'errors', 0, 'detail']);
+
+  return get(error, ['response', 'status']) === 422 && detail
+    ? `. ${detail}`
+    : '';
+};
+
 export function* requestExecution({ payload }) {
   const { clusterID } = payload;
   const clusterName = yield select(getClusterName(clusterID));
@@ -61,7 +72,7 @@ export function* requestExecution({ payload }) {
   } catch (error) {
     yield put(
       notify({
-        text: `Unable to start execution for cluster: ${clusterName}`,
+        text: `Unable to start execution for cluster: ${clusterName}${refusalReason(error)}`,
         icon: '❌',
       })
     );
@@ -86,7 +97,7 @@ export function* requestHostExecution({ payload }) {
   } catch (error) {
     yield put(
       notify({
-        text: `Unable to start execution for host: ${hostName}`,
+        text: `Unable to start execution for host: ${hostName}${refusalReason(error)}`,
         icon: '❌',
       })
     );

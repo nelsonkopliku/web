@@ -22,6 +22,8 @@ import PageHeader from '@common/PageHeader';
 import ChecksSelection, { useChecksSelection } from '@pages/ChecksSelection';
 import ChecksSelectionHeader from '@pages/ChecksSelection/ChecksSelectionHeader';
 import TargetChecksExecutionSection from '@pages/ChecksSelection/TargetChecksExecutionSection';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
+import { checksExecutionBlockedReason } from '@lib/model/maintenanceWindows';
 
 function HostSettingsPage() {
   const dispatch = useDispatch();
@@ -29,6 +31,10 @@ function HostSettingsPage() {
   const [selection, setSelection] = useState([]);
 
   const { abilities } = useSelector(getUserProfile);
+  const { windows: maintenanceWindows } = useMaintenanceWindows(
+    TARGET_HOST,
+    hostID
+  );
   const host = useSelector(getHost(hostID));
   const selectedChecks = useSelector((state) =>
     getHostSelectedChecks(state, hostID)
@@ -99,6 +105,9 @@ function HostSettingsPage() {
         selection={selection}
         userAbilities={abilities}
         checkSelectionPermittedFor={['all:host_checks_selection']}
+        executionBlockedReason={checksExecutionBlockedReason(
+          maintenanceWindows
+        )}
         checkExecutionPermittedFor={['all:host_checks_execution']}
         onSaveSelection={saveSelection}
         onStartExecution={requestChecksExecution}

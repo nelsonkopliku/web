@@ -13,6 +13,33 @@ import ChecksSelectionHeader from './ChecksSelectionHeader';
 import { renderWithRouter } from '../../lib/test-utils';
 
 describe('ChecksSelectionHeader component', () => {
+  it('should not start an execution while checks executions are blocked', async () => {
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ChecksSelectionHeader
+        targetID={faker.string.uuid()}
+        targetName={faker.lorem.word()}
+        isSavingSelection={false}
+        selection={[faker.string.uuid()]}
+        savedSelection={[faker.string.uuid()]}
+        executionBlockedReason="Checks cannot be executed during a maintenance window"
+        userAbilities={[{ name: 'all', resource: 'all' }]}
+        checkSelectionPermittedFor={['all:all']}
+        checkExecutionPermittedFor={['all:all']}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Start Execution' })
+    ).toBeDisabled();
+
+    await user.hover(screen.getByText('Start Execution'));
+    expect(
+      screen.getByText('Checks cannot be executed during a maintenance window')
+    ).toBeVisible();
+  });
+
   it('should render a target checks selection header', async () => {
     const user = userEvent.setup();
 

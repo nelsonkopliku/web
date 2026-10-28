@@ -185,6 +185,36 @@ describe('ClusterDetails ClusterDetails component', () => {
     }
   );
 
+  it('should disable start check execution button while checks executions are blocked', async () => {
+    const user = userEvent.setup();
+    const { id, name, details } = clusterFactory.build();
+
+    renderWithRouter(
+      <ClusterDetails
+        clusterID={id}
+        clusterName={name}
+        details={details}
+        hasSelectedChecks
+        checksExecutionBlockedReason="Checks cannot be executed during a maintenance window"
+        hosts={[]}
+        selectedChecks={['check1']}
+        userAbilities={[{ name: 'all', resource: 'all' }]}
+        onStartExecution={noop}
+        navigate={noop}
+      />
+    );
+
+    const startExecutionButton = screen.getByRole('button', {
+      name: 'Start Execution',
+    });
+    expect(startExecutionButton).toBeDisabled();
+
+    await user.hover(startExecutionButton);
+    expect(
+      screen.getByText('Checks cannot be executed during a maintenance window')
+    ).toBeInTheDocument();
+  });
+
   it('should navigate to the proper pages when check selection and result buttons are clicked', async () => {
     const user = userEvent.setup();
     const { id, name, details } = clusterFactory.build();
