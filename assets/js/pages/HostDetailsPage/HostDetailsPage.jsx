@@ -58,6 +58,7 @@ import {
   getSoftwareUpdatesErrorTooltip,
 } from './suseMultiLinuxManagerMessaging';
 import { useChecksSchedule } from '@pages/ChecksSelection';
+import { executionBlockedReason } from '@lib/model/checksSchedule';
 
 import HostDetails from './HostDetails';
 
@@ -189,6 +190,7 @@ function HostDetailsPage() {
       timezone={timezone}
       operationsEnabled={operationsEnabled}
       nextExecutionAt={checksSchedule?.next_execution_at}
+      checksExecutionBlockedReason={executionBlockedReason(checksSchedule)}
       runningOperation={runningOperation}
       operationSchedules={operationSchedules}
       scheduleSubmission={scheduleSubmission}

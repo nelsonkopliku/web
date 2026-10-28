@@ -166,3 +166,10 @@ export const windowFormErrors = (
     Object.entries(errors).filter(([_field, error]) => error)
   );
 };
+
+export const EXCEPTION_WINDOW_BLOCKS_EXECUTION =
+  'Checks cannot be executed during exception window';
+
+// Why the checks of a target cannot be executed now, null when they can
+export const executionBlockedReason = (schedule) =>
+  schedule?.in_exception_window ? EXCEPTION_WINDOW_BLOCKS_EXECUTION : null;

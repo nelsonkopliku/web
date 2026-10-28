@@ -31,6 +31,8 @@ import Banner from '@common/Banners';
 import ChecksSelection, { useChecksSelection } from '@pages/ChecksSelection';
 import ChecksSelectionHeader from '@pages/ChecksSelection/ChecksSelectionHeader';
 import TargetChecksExecutionSection from '@pages/ChecksSelection/TargetChecksExecutionSection';
+import { useChecksSchedule } from '@pages/ChecksSelection/hooks';
+import { executionBlockedReason } from '@lib/model/checksSchedule';
 
 const catalogBanner = {
   [UNKNOWN_PROVIDER]: (
@@ -49,6 +51,7 @@ function ClusterSettingsPage() {
   const [selection, setSelection] = useState([]);
 
   const { abilities, timezone } = useSelector(getUserProfile);
+  const checksSchedule = useChecksSchedule(TARGET_CLUSTER, clusterID);
   const cluster = useSelector(getCluster(clusterID));
 
   const clusterHosts = useSelector((state) =>
@@ -136,6 +139,7 @@ function ClusterSettingsPage() {
         selection={selection}
         userAbilities={abilities}
         checkSelectionPermittedFor={['all:cluster_checks_selection']}
+        executionBlockedReason={executionBlockedReason(checksSchedule.schedule)}
         checkExecutionPermittedFor={['all:cluster_checks_execution']}
         onSaveSelection={saveSelection}
         onStartExecution={requestChecksExecution}
@@ -149,7 +153,7 @@ function ClusterSettingsPage() {
       />
       <TargetChecksExecutionSection
         targetType={TARGET_CLUSTER}
-        targetID={clusterID}
+        checksSchedule={checksSchedule}
         timezone={timezone}
         userAbilities={abilities}
       />

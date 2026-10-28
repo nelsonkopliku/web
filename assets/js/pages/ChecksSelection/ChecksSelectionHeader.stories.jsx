@@ -70,6 +70,11 @@ export default {
       description: 'Starts the host checks execution',
       action: 'onStartExecution',
     },
+    executionBlockedReason: {
+      control: { type: 'text' },
+      description:
+        'Why the checks cannot be executed now, for example during an exception window',
+    },
   },
 };
 
@@ -145,6 +150,13 @@ export const CannotStartExecution = {
     ...Default.args,
     savedSelection: [],
     isSavingSelection: false,
+  },
+};
+
+export const InExceptionWindow = {
+  args: {
+    ...Default.args,
+    executionBlockedReason: 'Checks cannot be executed during exception window',
   },
 };
 

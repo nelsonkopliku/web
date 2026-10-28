@@ -12,7 +12,20 @@ import { networkClient } from '@lib/network';
 import { renderWithRouter, withState } from '@lib/test-utils';
 import { checksScheduleFactory } from '@lib/test-utils/factories';
 
+import { useChecksSchedule } from './hooks';
 import TargetChecksExecutionSection from './TargetChecksExecutionSection';
+
+function HostChecksExecutionSection({ hostID, ...props }) {
+  const checksSchedule = useChecksSchedule('host', hostID);
+
+  return (
+    <TargetChecksExecutionSection
+      targetType="host"
+      checksSchedule={checksSchedule}
+      {...props}
+    />
+  );
+}
 
 const axiosMock = new MockAdapter(networkClient);
 
@@ -20,11 +33,7 @@ const abilities = [{ name: 'all', resource: 'all' }];
 
 const renderSection = async (targetID) => {
   const [StatefulSection] = withState(
-    <TargetChecksExecutionSection
-      targetType="host"
-      targetID={targetID}
-      userAbilities={abilities}
-    />,
+    <HostChecksExecutionSection hostID={targetID} userAbilities={abilities} />,
     { lastExecutions: {} }
   );
 
@@ -118,11 +127,7 @@ describe('TargetChecksExecutionSection', () => {
     axiosMock.onGet(scheduleURL).reply(200, checksScheduleFactory.build());
     let state = { lastExecutions: {} };
     const [StatefulSection, store] = withState(
-      <TargetChecksExecutionSection
-        targetType="host"
-        targetID={hostID}
-        userAbilities={abilities}
-      />,
+      <HostChecksExecutionSection hostID={hostID} userAbilities={abilities} />,
       () => state
     );
     await act(async () => {
