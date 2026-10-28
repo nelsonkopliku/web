@@ -13,6 +13,7 @@ import {
   hostFactory,
   clusterFactory,
   operationScheduleFactory,
+  maintenanceWindowFactory,
 } from '@lib/test-utils/factories';
 import {
   initialScheduleSubmission,
@@ -861,5 +862,50 @@ describe('ClusterDetails ClusterDetails component', () => {
       );
       expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
     });
+  });
+
+  it('should show the maintenance windows of the cluster', async () => {
+    const user = userEvent.setup();
+    const cluster = clusterFactory.build();
+
+    renderWithRouter(
+      <ClusterDetails
+        clusterID={cluster.id}
+        clusterName={cluster.name}
+        details={cluster.details}
+        hosts={[]}
+        selectedChecks={[]}
+        userAbilities={userAbilities}
+        userTimezone="Etc/UTC"
+        maintenanceWindows={{
+          windows: [
+            maintenanceWindowFactory.build({
+              active: true,
+              forbids: ['checks_execution'],
+              current_occurrence: {
+                starts_at: '2026-11-20T08:00:00Z',
+                ends_at: '2026-11-20T10:00:00Z',
+              },
+            }),
+          ],
+          error: false,
+        }}
+      />
+    );
+
+    expect(
+      screen.getByText(
+        'Maintenance window in progress: check execution forbidden until 20 Nov 2026, 10:00:00.'
+      )
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole('button', { name: /Schedule Maintenance/ })
+    );
+    expect(
+      screen.getByText(
+        new RegExp(`forbidden actions on cluster ${cluster.name}`)
+      )
+    ).toBeVisible();
   });
 });

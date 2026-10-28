@@ -12,6 +12,7 @@ import { userUpdated } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
 import { operationCompleted, operationStarted } from '@state/runningOperations';
 import { operationSchedulesChanged } from '@state/operationSchedules';
+import { maintenanceWindowsChanged } from '@state/maintenanceWindows';
 
 import { watchSocketEvents } from './channels';
 
@@ -54,6 +55,7 @@ const channels = {
   'monitoring:executions': new MockChannel(),
   'monitoring:operations': new MockChannel(),
   'monitoring:operation_schedules': new MockChannel(),
+  'monitoring:maintenance_windows': new MockChannel(),
   [`users:${USER_ID}`]: new MockChannel(),
   [`activity_log:${USER_ID}`]: new MockChannel(),
 };
@@ -205,6 +207,25 @@ describe('Channels saga', () => {
         operationID: 'operation_id',
         groupID: 'group_id',
         operation: 'operation',
+      }),
+    ]);
+  });
+
+  it('should listen and transform maintenance_windows_changed event', async () => {
+    const { saga, dispatched } = runWatchSocketEventsSaga(mockSocket);
+
+    channels['monitoring:maintenance_windows'].emit(
+      'maintenance_windows_changed',
+      { target_type: 'cluster', target_id: 'target_id' }
+    );
+
+    closeSocket();
+    await saga;
+
+    expect(dispatched).toEqual([
+      maintenanceWindowsChanged({
+        targetType: 'cluster',
+        targetID: 'target_id',
       }),
     ]);
   });

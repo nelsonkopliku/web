@@ -13,6 +13,7 @@ import {
   formToMaintenanceWindow,
   maintenanceWindowFormErrors,
   maintenanceWindowToForm,
+  nextWindowsBoundary,
 } from './maintenanceWindows';
 
 describe('maintenance windows', () => {
@@ -175,5 +176,33 @@ describe('maintenance windows', () => {
         checksExecutionBlockedBy([operationsWindow, upcomingWindow])
       ).toBeUndefined();
     });
+  });
+
+  it('should tell when the windows start or end next', () => {
+    const now = new Date('2026-11-20T10:00:00Z');
+    const active = maintenanceWindowFactory.build({
+      active: true,
+      current_occurrence: {
+        starts_at: '2026-11-20T09:00:00Z',
+        ends_at: '2026-11-20T12:00:00Z',
+      },
+      next_occurrence: null,
+    });
+    const upcoming = maintenanceWindowFactory.build({
+      active: false,
+      current_occurrence: null,
+      next_occurrence: {
+        starts_at: '2026-11-20T11:00:00Z',
+        ends_at: '2026-11-20T13:00:00Z',
+      },
+    });
+
+    expect(nextWindowsBoundary([active, upcoming], now)).toEqual(
+      new Date('2026-11-20T11:00:00Z')
+    );
+    expect(nextWindowsBoundary([active], now)).toEqual(
+      new Date('2026-11-20T12:00:00Z')
+    );
+    expect(nextWindowsBoundary([], now)).toBeNull();
   });
 });

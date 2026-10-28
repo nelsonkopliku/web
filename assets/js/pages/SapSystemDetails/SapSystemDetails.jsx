@@ -31,6 +31,7 @@ import {
 
 import BackButton from '@common/BackButton';
 import { GenericSystemDetails } from '@pages/SapSystemDetails';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
 
 import {
   getSapSystemOperations,
@@ -52,6 +53,7 @@ function SapSystemDetails() {
   const { schedules: operationSchedules, error: operationSchedulesError } =
     useSelector(getOperationSchedules(id));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows('sap_system', id);
 
   useEffect(() => {
     operationsEnabled && dispatch(updateRunningOperations());
@@ -89,6 +91,7 @@ function SapSystemDetails() {
         }}
         onRequestOperation={(payload) => dispatch(operationRequested(payload))}
         operationSchedules={operationSchedules}
+        maintenanceWindows={maintenanceWindows}
         scheduleSubmission={scheduleSubmission}
         onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
         operationSchedulesError={operationSchedulesError}

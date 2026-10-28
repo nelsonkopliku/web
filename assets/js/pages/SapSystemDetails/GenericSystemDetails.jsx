@@ -64,6 +64,9 @@ import OperationSchedules, {
 } from '@common/OperationSchedules';
 
 import DeregistrationModal from '@pages/DeregistrationModal';
+import MaintenanceWindowsSection, {
+  MaintenanceWindowBanner,
+} from '@pages/MaintenanceWindows';
 
 import {
   hasScheduleWarnings,
@@ -140,6 +143,7 @@ export function GenericSystemDetails({
   onInstanceCleanUp = noop,
   onRequestOperation = noop,
   operationSchedules = [],
+  maintenanceWindows = null,
   operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
   onScheduleOperation = noop,
@@ -410,6 +414,12 @@ export function GenericSystemDetails({
           </div>
         )}
       </div>
+      {maintenanceWindows && (
+        <MaintenanceWindowBanner
+          windows={maintenanceWindows.windows}
+          timezone={userTimezone}
+        />
+      )}
       {system.stale_at && (
         <Banner type="warning" truncate={false}>
           An agent in one of the{' '}
@@ -633,6 +643,15 @@ export function GenericSystemDetails({
           onCancel={onCancelSchedule}
           onRetry={onRetryOperationSchedules}
           onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
+
+      {maintenanceWindows && (
+        <MaintenanceWindowsSection
+          {...maintenanceWindows}
+          timezone={userTimezone}
+          targetLabel={`${type === DATABASE_TYPE ? 'HANA database' : 'SAP system'} ${system.sid}`}
+          userAbilities={userAbilities}
         />
       )}
 
