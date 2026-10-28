@@ -116,6 +116,7 @@ function HostDetails({
   requestOperation,
   nextExecutionAt = undefined,
   maintenanceWindows = null,
+  checksExecutionBlockedReason = null,
   operationSchedules = [],
   operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
@@ -192,6 +193,10 @@ function HostDetails({
       : requestOperation(operation, params);
 
   const timeNow = new Date();
+
+  const executionAllowed =
+    canStartExecution(selectedChecks, savingChecks) &&
+    !checksExecutionBlockedReason;
 
   const openOperationModal = (operation) => () => {
     onResetScheduleSubmission();
@@ -386,8 +391,10 @@ function HostDetails({
               >
                 <Tooltip
                   wrap={false}
-                  isEnabled={!canStartExecution(selectedChecks, savingChecks)}
-                  content="Select some Checks first!"
+                  isEnabled={!executionAllowed}
+                  content={
+                    checksExecutionBlockedReason || 'Select some Checks first!'
+                  }
                   place="bottom"
                 >
                   <Button
@@ -395,18 +402,12 @@ function HostDetails({
                     className="mx-0.5"
                     size="small"
                     onClick={requestHostChecksExecution}
-                    disabled={!canStartExecution(selectedChecks, savingChecks)}
+                    disabled={!executionAllowed}
                   >
                     <EOS_PLAY_CIRCLE
                       className={classNames('inline-block align-sub', {
-                        'fill-white': canStartExecution(
-                          selectedChecks,
-                          savingChecks
-                        ),
-                        'fill-gray-200': !canStartExecution(
-                          selectedChecks,
-                          savingChecks
-                        ),
+                        'fill-white': executionAllowed,
+                        'fill-gray-200': !executionAllowed,
                       })}
                     />{' '}
                     Start Execution

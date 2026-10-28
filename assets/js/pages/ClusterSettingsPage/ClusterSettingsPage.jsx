@@ -31,6 +31,8 @@ import Banner from '@common/Banners';
 import ChecksSelection, { useChecksSelection } from '@pages/ChecksSelection';
 import ChecksSelectionHeader from '@pages/ChecksSelection/ChecksSelectionHeader';
 import TargetChecksExecutionSection from '@pages/ChecksSelection/TargetChecksExecutionSection';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
+import { checksExecutionBlockedReason } from '@lib/model/maintenanceWindows';
 
 const catalogBanner = {
   [UNKNOWN_PROVIDER]: (
@@ -49,6 +51,10 @@ function ClusterSettingsPage() {
   const [selection, setSelection] = useState([]);
 
   const { abilities } = useSelector(getUserProfile);
+  const { windows: maintenanceWindows } = useMaintenanceWindows(
+    TARGET_CLUSTER,
+    clusterID
+  );
   const cluster = useSelector(getCluster(clusterID));
 
   const clusterHosts = useSelector((state) =>
@@ -136,6 +142,9 @@ function ClusterSettingsPage() {
         selection={selection}
         userAbilities={abilities}
         checkSelectionPermittedFor={['all:cluster_checks_selection']}
+        executionBlockedReason={checksExecutionBlockedReason(
+          maintenanceWindows
+        )}
         checkExecutionPermittedFor={['all:cluster_checks_execution']}
         onSaveSelection={saveSelection}
         onStartExecution={requestChecksExecution}
