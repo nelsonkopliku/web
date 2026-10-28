@@ -15,7 +15,12 @@ defmodule Trento.Operations.Schedules do
 
   import Ecto.Query, only: [from: 2, where: 3]
 
-  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
+  alias Trento.Operations.Commands.{
+    CancelOperationSchedule,
+    ChangeOperationSchedule,
+    ScheduleOperation
+  }
+
   alias Trento.Operations.Projections.{OperationScheduleProjector, OperationScheduleReadModel}
   alias Trento.Operations.{Requests, ScheduleActivity}
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
@@ -77,6 +82,68 @@ defmodule Trento.Operations.Schedules do
       end)
       |> with_warnings(warnings)
     end
+  end
+
+  @doc """
+  Cancels a schedule: it no longer runs. An operation already running is not
+  affected. A schedule cancelled meanwhile, by another user or by the clean
+  up, is not found.
+  """
+  @spec cancel_schedule(String.t(), String.t()) ::
+          :ok | {:error, :not_found} | {:error, :consistency_timeout} | {:error, any()}
+  def cancel_schedule(schedule_id, actor) do
+    with {:ok, schedule} <- get_schedule(schedule_id) do
+      %{schedule_id: schedule_id}
+      |> CancelOperationSchedule.new!()
+      |> dispatch([])
+      |> cancelled(schedule, actor, %{})
+    end
+  end
+
+  @doc """
+  Cancels the schedules of a target that is removed. The entries are logged
+  by the system and correlated to the clean up that removed the target:
+  `cause` holds its correlation and causation ids.
+  """
+  @spec cancel_target_schedules(String.t(), keyword()) :: :ok | {:error, any()}
+  def cancel_target_schedules(target_id, cause) do
+    target_id
+    |> list_schedules()
+    |> cancel_removed(cause)
+  end
+
+  @doc """
+  Cancels the SAP instance schedules of an instance that is removed, or of
+  every instance on a host that is removed: SAP instance schedules target the
+  SAP system and name the instance in their params.
+  """
+  @spec cancel_instance_schedules(keyword(), keyword()) :: :ok | {:error, any()}
+  def cancel_instance_schedules(instance, cause) do
+    query =
+      from s in OperationScheduleReadModel,
+        where:
+          s.target_type == "sap_system" and
+            s.operation in ["sap_instance_start", "sap_instance_stop"] and
+            fragment("?->>'host_id'", s.params) == ^Keyword.fetch!(instance, :host_id)
+
+    query =
+      case Keyword.fetch(instance, :sap_system_id) do
+        {:ok, sap_system_id} ->
+          where(
+            query,
+            [s],
+            s.target_id == ^sap_system_id and
+              fragment("?->>'instance_number'", s.params) ==
+                ^Keyword.fetch!(instance, :instance_number)
+          )
+
+        :error ->
+          query
+      end
+
+    query
+    |> Repo.all()
+    |> cancel_removed(cause)
   end
 
   @doc """
@@ -183,6 +250,36 @@ defmodule Trento.Operations.Schedules do
   defp saved({:error, :operation_schedule_not_found}, _, _, _), do: {:error, :not_found}
 
   defp saved({:error, _} = error, _, _, _), do: error
+
+  # A schedule cancelled meanwhile is skipped. The other schedules are
+  # cancelled anyway, and the first error is returned, so that the clean up
+  # can retry.
+  defp cancel_removed(schedules, cause) do
+    extra = Map.new(Keyword.take(cause, [:correlation_id]))
+
+    schedules
+    |> Enum.map(fn %OperationScheduleReadModel{id: schedule_id} = schedule ->
+      %{schedule_id: schedule_id}
+      |> CancelOperationSchedule.new!()
+      |> CommandedUtils.dispatch([consistency: [OperationScheduleProjector]] ++ cause)
+      |> cancelled(schedule, "system", extra)
+    end)
+    |> Enum.find(:ok, &match?({:error, reason} when reason != :consistency_timeout, &1))
+  end
+
+  defp cancelled(result, schedule, actor, extra)
+       when result in [:ok, {:error, :consistency_timeout}] do
+    ScheduleActivity.record(:operation_schedule_cancelled, schedule, actor, extra)
+    result
+  end
+
+  defp cancelled({:error, :operation_schedule_not_found}, _, "system", _), do: :ok
+  defp cancelled({:error, :operation_schedule_not_found}, _, _, _), do: {:error, :not_found}
+
+  defp cancelled({:error, reason} = error, %{id: schedule_id}, _, _) do
+    Logger.error("Operation schedule #{schedule_id} could not be cancelled: #{inspect(reason)}")
+    error
+  end
 
   defp with_warnings({:ok, schedule}, warnings), do: {:ok, schedule, warnings}
   defp with_warnings(error, _), do: error

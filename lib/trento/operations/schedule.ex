@@ -18,8 +18,18 @@ defmodule Trento.Operations.Schedule do
 
   use Trento.Support.Type
 
-  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
-  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
+  alias Trento.Operations.Commands.{
+    CancelOperationSchedule,
+    ChangeOperationSchedule,
+    ScheduleOperation
+  }
+
+  alias Trento.Operations.Events.{
+    OperationScheduleCancelled,
+    OperationScheduleChanged,
+    OperationScheduled
+  }
+
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
   alias Trento.Scheduling.Recurrence, as: Occurrences
 
@@ -35,6 +45,7 @@ defmodule Trento.Operations.Schedule do
     field :next_run_at, :utc_datetime_usec
     field :occurrences, :integer, default: 0
     field :bulk_id, Ecto.UUID
+    field :cancelled, :boolean, default: false
   end
 
   def execute(%__MODULE__{schedule_id: nil}, %ScheduleOperation{} = command) do
@@ -65,6 +76,7 @@ defmodule Trento.Operations.Schedule do
     do: {:error, :operation_schedule_already_exists}
 
   def execute(%__MODULE__{schedule_id: nil}, _), do: {:error, :operation_schedule_not_found}
+  def execute(%__MODULE__{cancelled: true}, _), do: {:error, :operation_schedule_not_found}
 
   # An ongoing periodic schedule can keep its start: it continues with its
   # next occurrence, never with one in the past.
@@ -87,6 +99,9 @@ defmodule Trento.Operations.Schedule do
       }
     end
   end
+
+  def execute(%__MODULE__{schedule_id: schedule_id}, %CancelOperationSchedule{}),
+    do: %OperationScheduleCancelled{schedule_id: schedule_id}
 
   def apply(%__MODULE__{} = schedule, %OperationScheduled{} = event) do
     %__MODULE__{
@@ -116,6 +131,9 @@ defmodule Trento.Operations.Schedule do
         occurrences: 0
     }
   end
+
+  def apply(%__MODULE__{} = schedule, %OperationScheduleCancelled{}),
+    do: %__MODULE__{schedule | cancelled: true}
 
   # A start that does not change can be in the past
   defp starts_in_the_future(current, starts_at, requested_at) do

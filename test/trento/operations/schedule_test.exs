@@ -4,8 +4,18 @@
 defmodule Trento.Operations.ScheduleTest do
   use Trento.AggregateCase, aggregate: Trento.Operations.Schedule, async: true
 
-  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
-  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
+  alias Trento.Operations.Commands.{
+    CancelOperationSchedule,
+    ChangeOperationSchedule,
+    ScheduleOperation
+  }
+
+  alias Trento.Operations.Events.{
+    OperationScheduleCancelled,
+    OperationScheduleChanged,
+    OperationScheduled
+  }
+
   alias Trento.Operations.Schedule
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
 
@@ -264,6 +274,36 @@ defmodule Trento.Operations.ScheduleTest do
     test "should not change a schedule that does not exist" do
       assert_error(
         change(UUID.uuid4(), %{}),
+        {:error, :operation_schedule_not_found}
+      )
+    end
+  end
+
+  describe "cancelling" do
+    test "should cancel a schedule" do
+      schedule_id = UUID.uuid4()
+
+      assert_events_and_state(
+        [scheduled(schedule_id)],
+        CancelOperationSchedule.new!(%{schedule_id: schedule_id}),
+        [%OperationScheduleCancelled{schedule_id: schedule_id}],
+        fn %Schedule{} = schedule -> assert %Schedule{cancelled: true} = schedule end
+      )
+    end
+
+    test "should refuse any change after a cancellation" do
+      schedule_id = UUID.uuid4()
+      initial = [scheduled(schedule_id), %OperationScheduleCancelled{schedule_id: schedule_id}]
+
+      for command <- [
+            CancelOperationSchedule.new!(%{schedule_id: schedule_id}),
+            change(schedule_id, %{})
+          ] do
+        assert_error(initial, command, {:error, :operation_schedule_not_found})
+      end
+
+      assert_error(
+        CancelOperationSchedule.new!(%{schedule_id: schedule_id}),
         {:error, :operation_schedule_not_found}
       )
     end

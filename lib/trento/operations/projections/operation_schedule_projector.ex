@@ -17,7 +17,12 @@ defmodule Trento.Operations.Projections.OperationScheduleProjector do
     name: "operation_schedule_projector",
     consistency: :strong
 
-  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
+  alias Trento.Operations.Events.{
+    OperationScheduleCancelled,
+    OperationScheduleChanged,
+    OperationScheduled
+  }
+
   alias Trento.Operations.Projections.OperationScheduleReadModel
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
   alias Trento.Repo
@@ -50,6 +55,14 @@ defmodule Trento.Operations.Projections.OperationScheduleProjector do
       |> OperationScheduleReadModel.changeset(timing(event))
 
     Ecto.Multi.update(multi, :operation_schedule, changeset)
+  end)
+
+  project(%OperationScheduleCancelled{schedule_id: schedule_id}, fn multi ->
+    Ecto.Multi.delete(
+      multi,
+      :operation_schedule,
+      Repo.get!(OperationScheduleReadModel, schedule_id)
+    )
   end)
 
   @impl true
