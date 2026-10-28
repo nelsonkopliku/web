@@ -10,6 +10,7 @@ defmodule Trento.ActivityLog.Parser.ActivityParser do
   alias Trento.ActivityLog.SeverityLevel
 
   alias Trento.ActivityLog.Logger.Parser.{
+    ApplicationActivityParser,
     EventParser,
     MetadataEnricher,
     PhoenixConnParser,
@@ -60,6 +61,9 @@ defmodule Trento.ActivityLog.Parser.ActivityParser do
       :queue_event_activity ->
         {:ok, parse_queue_event_activity_info(info, activity, activity_context)}
 
+      :application_activity ->
+        {:ok, parse_application_activity_info(info, activity, activity_context)}
+
       :unsupported_activity ->
         {:error, :unsupported_activity}
     end
@@ -82,4 +86,10 @@ defmodule Trento.ActivityLog.Parser.ActivityParser do
 
   defp parse_queue_event_activity_info(:metadata, activity, activity_context),
     do: QueueEventParser.get_activity_metadata(activity, activity_context)
+
+  defp parse_application_activity_info(:actor, activity, activity_context),
+    do: ApplicationActivityParser.get_activity_actor(activity, activity_context)
+
+  defp parse_application_activity_info(:metadata, activity, activity_context),
+    do: ApplicationActivityParser.get_activity_metadata(activity, activity_context)
 end

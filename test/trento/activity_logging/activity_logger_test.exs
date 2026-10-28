@@ -17,6 +17,8 @@ defmodule Trento.ActivityLog.ActivityLoggerTest do
   alias Trento.ActivityLog.{ActivityLog, ActivityLogger}
   alias Trento.Tags.Tag
 
+  require Ecto.Query
+
   alias TrentoWeb.Auth.AccessToken
 
   setup [:set_mox_from_context, :verify_on_exit!]
@@ -583,5 +585,46 @@ defmodule Trento.ActivityLog.ActivityLoggerTest do
              } =
                Enum.find(activity_log, &(&1.type == expected_activity_type))
     end
+  end
+
+  test "application activity logging" do
+    %{id: host_id, hostname: hostname} = insert(:host)
+    correlation_id = UUID.uuid4()
+
+    assert :ok ==
+             ActivityLogger.log_application_activity(:operation_scheduled, "admin", %{
+               host_id: host_id,
+               operation: "reboot",
+               correlation_id: correlation_id
+             })
+
+    assert :ok ==
+             ActivityLogger.log_application_activity(
+               :scheduled_operation_request_failed,
+               "system",
+               %{host_id: host_id, reason: "policies", correlation_id: correlation_id}
+             )
+
+    assert :ok == ActivityLogger.log_application_activity(:not_an_activity, "admin", %{})
+
+    assert [
+             %ActivityLog{
+               type: "operation_scheduled",
+               actor: "admin",
+               severity: 9,
+               metadata: %{
+                 "host_id" => ^host_id,
+                 "hostname" => ^hostname,
+                 "operation" => "reboot",
+                 "correlation_id" => ^correlation_id
+               }
+             },
+             %ActivityLog{
+               type: "scheduled_operation_request_failed",
+               actor: "system",
+               severity: 13,
+               metadata: %{"hostname" => ^hostname, "reason" => "policies"}
+             }
+           ] = ActivityLog |> Ecto.Query.order_by(:inserted_at) |> Trento.Repo.all()
   end
 end

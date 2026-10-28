@@ -42,12 +42,27 @@ defmodule Trento.ActivityLog.ActivityCatalog do
      :sap_system_operation_requested}
   ]
 
+  # Activities that the application emits itself, when no connection, domain
+  # event or queue event carries them: a schedule created for many targets at
+  # once, an operation requested by the scheduler.
+  @application_activities [
+    :operation_scheduled,
+    :operation_schedule_changed,
+    :operation_schedule_cancelled,
+    :scheduled_operation_requested,
+    :scheduled_operation_request_failed
+  ]
+
   @type activity_type :: atom()
   @type connection_activity :: {controller :: module(), action :: atom()}
   @type domain_event_activity :: event_module :: module()
   @type queue_event_activity :: event_module :: module()
+  @type application_activity :: {:application, activity_type()}
   @type logged_activity ::
-          connection_activity() | domain_event_activity() | queue_event_activity()
+          connection_activity()
+          | domain_event_activity()
+          | queue_event_activity()
+          | application_activity()
 
   @spec supported_activities() :: [activity_type()]
   def supported_activities, do: Enum.map(activity_catalog(), &to_activity_type/1)
@@ -62,10 +77,14 @@ defmodule Trento.ActivityLog.ActivityCatalog do
   @spec queue_event_activities() :: [activity_type()]
   def queue_event_activities, do: Enum.map(get_queue_events_activities(), &to_activity_type/1)
 
+  @spec application_activities() :: [activity_type()]
+  def application_activities, do: @application_activities
+
   @spec detect_activity_category(activity_type()) ::
           :connection_activity
           | :domain_event_activity
           | :queue_event_activity
+          | :application_activity
           | :unsupported_activity
   def detect_activity_category(activity) do
     cond do
@@ -77,6 +96,9 @@ defmodule Trento.ActivityLog.ActivityCatalog do
 
       activity in queue_event_activities() ->
         :queue_event_activity
+
+      activity in application_activities() ->
+        :application_activity
 
       true ->
         :unsupported_activity
@@ -99,6 +121,7 @@ defmodule Trento.ActivityLog.ActivityCatalog do
     get_connection_activities()
     |> Map.merge(get_domain_events_activities())
     |> Map.merge(get_queue_events_activities())
+    |> Map.merge(get_application_activities())
   end
 
   @spec get_activity_type(logged_activity()) :: activity_type() | nil
@@ -121,6 +144,9 @@ defmodule Trento.ActivityLog.ActivityCatalog do
   defp extract_activity(%{event: %event_module{}}), do: event_module
 
   defp extract_activity(%{queue_event: %event_module{}}), do: event_module
+
+  defp extract_activity(%{application_activity: activity}) when is_atom(activity),
+    do: {:application, activity}
 
   defp extract_activity(_), do: nil
 
@@ -253,6 +279,9 @@ defmodule Trento.ActivityLog.ActivityCatalog do
       {{controller, op}, {event, 202}}
     end
   end
+
+  defp get_application_activities,
+    do: Map.new(@application_activities, &{{:application, &1}, {&1, :always}})
 
   defp get_queue_events_activities do
     %{
