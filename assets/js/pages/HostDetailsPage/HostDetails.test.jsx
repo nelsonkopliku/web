@@ -553,7 +553,7 @@ describe('HostDetails component', () => {
   });
 
   describe('operations', () => {
-    it('should disable operations button if host data is stale', async () => {
+    it('should keep the operations button available if host data is stale', async () => {
       const user = userEvent.setup();
 
       renderWithRouter(
@@ -570,10 +570,12 @@ describe('HostDetails component', () => {
         name: 'Operations',
       });
 
+      // the operations can be scheduled, the policies refuse a request now
+      expect(operationsButton).toBeEnabled();
       await user.hover(operationsButton);
       expect(
         screen.queryByText('Trento agent is not currently running in the host')
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
 
     it.each`
@@ -605,8 +607,6 @@ describe('HostDetails component', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: menuEntry,
         });
-
-        expect(menuItem).toBeDisabled();
 
         const { getByTestId } = within(menuItem);
 
@@ -769,6 +769,115 @@ describe('HostDetails component', () => {
           : expect(menuButton).toBeDisabled();
       }
     );
+  });
+
+  describe('Requests while an operation runs', () => {
+    it('should refuse a request now and keep scheduling possible', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const requestOperation = jest.fn();
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          heartbeat="passing"
+          userAbilities={userAbilities}
+          operationsEnabled
+          runningOperation={{ operation: HOST_REBOOT }}
+          requestOperation={requestOperation}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Reboot Host' }));
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(requestOperation).not.toHaveBeenCalled();
+      expect(
+        screen.getByText(
+          'Unable to run Reboot host operation now. Another operation is already running for this target.'
+        )
+      ).toBeVisible();
+    });
+
+    it('should keep the reboot available while another operation runs', async () => {
+      const user = userEvent.setup();
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          heartbeat="passing"
+          userAbilities={userAbilities}
+          operationsEnabled
+          runningOperation={{ operation: SAPTUNE_SOLUTION_APPLY }}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+
+      expect(
+        screen.getByRole('menuitem', { name: 'Reboot Host' })
+      ).toBeEnabled();
+    });
+
+    it('should schedule a reboot while another operation runs', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const requestOperation = jest.fn();
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          heartbeat="passing"
+          userAbilities={userAbilities}
+          operationsEnabled
+          timezone="Etc/UTC"
+          runningOperation={{ operation: HOST_REBOOT }}
+          requestOperation={requestOperation}
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Reboot Host' }));
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'One Time' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(onScheduleOperation).toHaveBeenCalled();
+      expect(requestOperation).not.toHaveBeenCalled();
+      expect(
+        screen.queryByText('Operation Already Running')
+      ).not.toBeInTheDocument();
+    });
+
+    it('should request a reboot when the last request was refused', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const requestOperation = jest.fn();
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          heartbeat="passing"
+          userAbilities={userAbilities}
+          operationsEnabled
+          runningOperation={{ operation: HOST_REBOOT, forbidden: true }}
+          requestOperation={requestOperation}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Close' }));
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Reboot Host' }));
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(requestOperation).toHaveBeenCalledWith(HOST_REBOOT, {});
+    });
   });
 
   describe('Host reboot scheduling', () => {

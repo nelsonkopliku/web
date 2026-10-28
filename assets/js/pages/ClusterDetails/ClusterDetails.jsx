@@ -19,9 +19,7 @@ import {
   isScheduleSubmitted,
   isSubmittingSchedule,
 } from '@state/operationSchedules';
-
-import { isSomeHostOnline } from '@lib/model/clusters';
-import { isSomeHostHeartbeatPassing } from '@lib/model/hosts';
+import { isOperationInProgress } from '@state/selectors/runningOperations';
 
 import {
   CLUSTER_MAINTENANCE_CHANGE,
@@ -30,7 +28,6 @@ import {
   PACEMAKER_DISABLE,
   CLUSTER_HOST_START,
   CLUSTER_HOST_STOP,
-  OPERATION_NOT_ALLOWED_CLUSTER,
   getOperationLabel,
   isSchedulable,
 } from '@lib/operations';
@@ -45,6 +42,7 @@ import OperationsButton from '@common/OperationsButton';
 import { DetailsViewHeader } from '@common/PageHeader';
 import Tooltip from '@common/Tooltip';
 import {
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
   ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
@@ -100,6 +98,7 @@ function ClusterDetails({
   const [currentOperationHost, setCurrentOperationHost] = useState(undefined);
   const [operationParams, setOperationParams] = useState(undefined);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
 
   const closeOperationModal = () =>
     setOperationModalOpen((prevState) => ({ ...prevState, open: false }));
@@ -130,9 +129,6 @@ function ClusterDetails({
   const operationForbidden = get(runningOperation, 'forbidden', false);
   const operationForbiddenErrors = get(runningOperation, 'errors', []);
 
-  const someHostOnline = isSomeHostOnline(hosts);
-  const someHostHeartbeatPassing = isSomeHostHeartbeatPassing(hosts);
-
   const clusterState = state || 'unknown';
 
   const clusterOperations = getClusterOperations(
@@ -140,16 +136,14 @@ function ClusterDetails({
     runningOperation,
     setOperationParams,
     openOperationModal,
-    details,
-    someHostOnline
+    details
   );
 
   const curriedGetResourceOperations = getResourceOperations(
     clusterID,
     runningOperation,
     setOperationParams,
-    openOperationModal,
-    someHostOnline
+    openOperationModal
   );
 
   const getOperationModalDescriptionArgs = (operation) => {
@@ -211,6 +205,11 @@ function ClusterDetails({
             onCancel={onCleanForbiddenOperation}
             errors={operationForbiddenErrors}
           />
+          <OperationAlreadyRunningModal
+            isOpen={!!alreadyRunning}
+            operation={getOperationLabel(alreadyRunning)}
+            onClose={() => setAlreadyRunning(null)}
+          />
           <SimpleAcceptanceOperationModal
             key={`${operationModalOpen.operation}-${operationModalOpen.open}`}
             operation={operationModalOpen.operation}
@@ -236,7 +235,13 @@ function ClusterDetails({
                 });
                 return;
               }
-              requestOperation(operationModalOpen.operation);
+              // The menus stay open while an operation runs, to schedule: a
+              // request now is refused then
+              if (isOperationInProgress(runningOperation)) {
+                setAlreadyRunning(operationModalOpen.operation);
+              } else {
+                requestOperation(operationModalOpen.operation);
+              }
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
@@ -277,8 +282,6 @@ function ClusterDetails({
             {operationsEnabled && (
               <OperationsButton
                 userAbilities={userAbilities}
-                disabled={!someHostHeartbeatPassing}
-                disabledTooltip={OPERATION_NOT_ALLOWED_CLUSTER}
                 operations={clusterOperations}
               />
             )}
@@ -365,7 +368,6 @@ function ClusterDetails({
         resources={details?.resources}
         hosts={hosts}
         userAbilities={userAbilities}
-        operationsDisabled={!someHostHeartbeatPassing}
         getResourceOperations={curriedGetResourceOperations}
       />
       <SBDDetails sbdDevices={details.sbd_devices} />
