@@ -24,6 +24,7 @@ import userEvent from '@testing-library/user-event';
 import {
   clusterFactory,
   hostFactory,
+  operationScheduleFactory,
   sapSystemApplicationInstanceFactory,
   sapSystemFactory,
   databaseInstanceFactory,
@@ -1817,6 +1818,72 @@ describe('GenericSystemDetails', () => {
       expect(
         screen.getByText('Params/timeout: must be less than or equal to 43200')
       ).toBeVisible();
+    });
+  });
+
+  describe('scheduled operations', () => {
+    it('should list, change and cancel the scheduled operations of the SAP system', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onUpdateSchedule = jest.fn();
+      const onCancelSchedule = jest.fn();
+      const hosts = hostFactory.buildList(1);
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({ host: hosts[0] }),
+        ],
+      });
+      const schedule = operationScheduleFactory.build({
+        target_type: 'sap_system',
+        target_id: sapSystem.id,
+        operation: SAP_SYSTEM_STOP,
+        params: { instance_type: 'all', timeout: 300 },
+        starts_at: '2099-11-20T03:00:00Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+        next_run_at: '2099-11-20T03:00:00Z',
+      });
+      const rowLabel =
+        'the schedule of SAP system stop, next run 20 Nov 2099, 03:00:00';
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          operationsEnabled
+          operationSchedules={[schedule]}
+          onUpdateSchedule={onUpdateSchedule}
+          onCancelSchedule={onCancelSchedule}
+        />
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: `Edit ${rowLabel}` })
+      );
+      expect(
+        screen.getByText(`Stop SAP system ${sapSystem.sid}`)
+      ).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+      expect(onUpdateSchedule).toHaveBeenCalledWith(schedule, {
+        params: { instance_type: 'all', timeout: 300 },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+
+      await user.click(
+        screen.getByRole('button', { name: `Cancel ${rowLabel}` })
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Yes, Cancel Schedule' })
+      );
+      expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
     });
   });
 });

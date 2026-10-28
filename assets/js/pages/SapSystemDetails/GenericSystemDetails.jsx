@@ -63,6 +63,10 @@ import OperationsButton from '@common/OperationsButton';
 import HealthIcon from '@common/HealthIcon';
 import SapSystemLink from '@common/SapSystemLink';
 
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
 import DeregistrationModal from '@pages/DeregistrationModal';
 
 import {
@@ -141,8 +145,12 @@ export function GenericSystemDetails({
   onInstanceCleanUp = noop,
   onRequestOperation = noop,
   operationSchedules = [],
+  operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
   onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
   onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
 }) {
@@ -153,6 +161,7 @@ export function GenericSystemDetails({
   const [currentOperationInstance, setCurrentOperationInstance] =
     useState(undefined);
   const [currentOperationSite, setCurrentOperationSite] = useState(undefined);
+  const [editingSchedule, setEditingSchedule] = useState(null);
 
   const closeOperationModal = (prevState) => {
     setCurrentOperationInstance(undefined);
@@ -169,7 +178,10 @@ export function GenericSystemDetails({
   // A schedule closes its modal only once it is saved
   const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
   useEffect(() => {
-    if (scheduleSubmitted) setOperationModelOpen(closeOperationModal);
+    if (scheduleSubmitted) {
+      setOperationModelOpen(closeOperationModal);
+      setEditingSchedule(null);
+    }
   }, [scheduleSubmitted]);
 
   if (!system) {
@@ -356,6 +368,17 @@ export function GenericSystemDetails({
         onCancel={() => {
           setOperationModelOpen(closeOperationModal);
         }}
+      />
+      <EditOperationScheduleModal
+        key={editingSchedule?.id}
+        schedule={editingSchedule}
+        isOpen={!!editingSchedule}
+        sid={system.sid}
+        type={type}
+        submission={scheduleSubmission}
+        onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+        onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+        onCancel={() => setEditingSchedule(null)}
       />
       <ScheduleWarningsModal
         isOpen={hasScheduleWarnings(scheduleSubmission)}
@@ -603,6 +626,23 @@ export function GenericSystemDetails({
           );
         })}
       </div>
+
+      {operationsEnabled && (
+        <OperationSchedules
+          schedules={operationSchedules}
+          error={operationSchedulesError}
+          timezone={userTimezone}
+          userAbilities={userAbilities}
+          submission={scheduleSubmission}
+          onEdit={(schedule) => {
+            onResetScheduleSubmission();
+            setEditingSchedule(schedule);
+          }}
+          onCancel={onCancelSchedule}
+          onRetry={onRetryOperationSchedules}
+          onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
 
       <div className="mt-8">
         <div>
