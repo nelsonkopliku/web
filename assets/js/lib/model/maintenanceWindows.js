@@ -177,3 +177,7 @@ export const nextWindowsBoundary = (windows, now = new Date()) => {
 
   return boundaries[0] ?? null;
 };
+
+// Why the checks of the target cannot be executed now, null when they can
+export const checksExecutionBlockedReason = (windows) =>
+  checksExecutionBlockedBy(windows) ? CHECKS_EXECUTION_BLOCKED : null;

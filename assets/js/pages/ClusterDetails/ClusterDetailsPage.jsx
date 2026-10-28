@@ -51,6 +51,7 @@ import {
 
 import { useChecksSchedule } from '@pages/ChecksSelection';
 import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
+import { checksExecutionBlockedReason } from '@lib/model/maintenanceWindows';
 
 import ClusterDetails from './ClusterDetails';
 import AscsErsClusterDetails from './AscsErsClusterDetails';
@@ -165,6 +166,9 @@ export function ClusterDetailsPage() {
       runningOperation={runningOperation}
       operationSchedules={operationSchedules}
       maintenanceWindows={maintenanceWindows}
+      checksExecutionBlockedReason={checksExecutionBlockedReason(
+        maintenanceWindows.windows
+      )}
       scheduleSubmission={scheduleSubmission}
       onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
       operationSchedulesError={operationSchedulesError}
