@@ -3,7 +3,10 @@
 
 import { action } from 'storybook/actions';
 
-import { checksScheduleFactory } from '@lib/test-utils/factories';
+import {
+  checksScheduleFactory,
+  exceptionWindowFactory,
+} from '@lib/test-utils/factories';
 
 import TargetChecksExecutionModal from './TargetChecksExecutionModal';
 
@@ -23,13 +26,17 @@ export default {
       description: 'Checks schedule of the target',
       control: { type: 'object' },
     },
+    timezone: {
+      description: 'Timezone of the user, for a new exception window',
+      control: { type: 'text' },
+    },
     errors: {
       description: 'Errors of a refused change, in the format of the API',
       control: { type: 'object' },
     },
     onSave: {
       description:
-        'Callback with the new interval, null for the system setting',
+        'Callback with the new interval, null for the system setting, and the exception window, null for none',
       action: 'onSave',
     },
     onCancel: {
@@ -82,5 +89,18 @@ export const WithErrors = {
         title: 'Invalid value',
       },
     ],
+  },
+};
+
+export const WithExceptionWindow = {
+  args: {
+    ...SystemSetting.args,
+    timezone: 'Etc/UTC',
+    schedule: checksScheduleFactory.build({
+      exception_window: exceptionWindowFactory.build({
+        timezone: 'Europe/Berlin',
+        recurrence: { frequency: 'daily', interval: 1 },
+      }),
+    }),
   },
 };

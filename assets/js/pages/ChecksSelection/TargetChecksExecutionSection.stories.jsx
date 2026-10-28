@@ -40,13 +40,15 @@ export default {
         })
       );
       axiosMock.onPut(`/hosts/${hostID}/checks/schedule`).reply(({ data }) => {
-        const { interval } = JSON.parse(data);
+        const { interval, exception_window: exceptionWindow } =
+          JSON.parse(data);
         return [
           200,
           checksScheduleFactory.build({
             interval,
             effective_interval: interval ?? '15m',
             global_interval: '15m',
+            exception_window: exceptionWindow,
           }),
         ];
       });
@@ -72,6 +74,10 @@ export default {
       description: 'Identifier of the target',
       control: { type: 'text' },
     },
+    timezone: {
+      description: 'Timezone of the user, for a new exception window',
+      control: { type: 'text' },
+    },
     userAbilities: {
       description: 'Abilities of the user, editing needs all:check_frequency',
       control: { type: 'object' },
@@ -83,6 +89,7 @@ export const Default = {
   args: {
     targetType: 'host',
     targetID: hostID,
+    timezone: 'Europe/Berlin',
     userAbilities: [abilityFactory.build({ name: 'all', resource: 'all' })],
   },
 };

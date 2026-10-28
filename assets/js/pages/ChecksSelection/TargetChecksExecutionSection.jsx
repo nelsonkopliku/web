@@ -14,7 +14,12 @@ import TargetChecksExecutionModal from './TargetChecksExecutionModal';
 /**
  * Check execution settings of a host or a cluster, in its check settings view
  */
-function TargetChecksExecutionSection({ targetType, targetID, userAbilities }) {
+function TargetChecksExecutionSection({
+  targetType,
+  targetID,
+  timezone,
+  userAbilities,
+}) {
   const {
     schedule,
     fetchLoading,
@@ -55,6 +60,7 @@ function TargetChecksExecutionSection({ targetType, targetID, userAbilities }) {
             loading={submitLoading}
             errors={submitErrors}
             schedule={schedule}
+            timezone={timezone}
             onSave={save}
             onCancel={() => setModalOpen(false)}
           />
