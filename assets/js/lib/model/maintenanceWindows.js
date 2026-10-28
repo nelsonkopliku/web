@@ -161,3 +161,19 @@ export const checksExecutionBlockedBy = (windows) =>
     windows,
     ({ active, forbids }) => active && forbids.includes(CHECKS_EXECUTION)
   );
+
+// When a window starts or ends next, null when no window is active or
+// upcoming
+export const nextWindowsBoundary = (windows, now = new Date()) => {
+  const boundaries = windows
+    .flatMap(({ current_occurrence: current, next_occurrence: next }) => [
+      current?.ends_at,
+      next?.starts_at,
+    ])
+    .filter(Boolean)
+    .map((date) => new Date(date))
+    .filter((date) => date > now)
+    .sort((a, b) => a - b);
+
+  return boundaries[0] ?? null;
+};

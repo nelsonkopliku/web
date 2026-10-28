@@ -18,6 +18,7 @@ import activityLogsSettingsReducer from './activityLogsSettings';
 import activityLogReducer from './activityLog';
 import runningOperationsReducer from './runningOperations';
 import operationSchedulesReducer from './operationSchedules';
+import maintenanceWindowsReducer from './maintenanceWindows';
 import rootSaga from './sagas';
 
 export const createStore = (router, preloadedState) => {
@@ -43,6 +44,7 @@ export const createStore = (router, preloadedState) => {
       activityLog: activityLogReducer,
       runningOperations: runningOperationsReducer,
       operationSchedules: operationSchedulesReducer,
+      maintenanceWindows: maintenanceWindowsReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(sagaMiddleware),

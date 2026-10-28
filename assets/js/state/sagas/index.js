@@ -88,6 +88,7 @@ import { watchActivityLogActions } from '@state/sagas/activityLog';
 import { checkApiKeyExpiration } from '@state/sagas/settings';
 import { watchOperationEvents } from '@state/sagas/operations';
 import { watchOperationSchedules } from '@state/sagas/operationSchedules';
+import { watchMaintenanceWindows } from '@state/sagas/maintenanceWindows';
 
 const RESET_STATE = 'RESET_STATE';
 
@@ -198,5 +199,6 @@ export default function* rootSaga() {
     watchActivityLogActions(),
     watchOperationEvents(),
     watchOperationSchedules(),
+    watchMaintenanceWindows(),
   ]);
 }

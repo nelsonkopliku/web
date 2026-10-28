@@ -64,6 +64,7 @@ import {
 
 import { operationCompleted, operationStarted } from '@state/runningOperations';
 import { operationSchedulesChanged } from '@state/operationSchedules';
+import { maintenanceWindowsChanged } from '@state/maintenanceWindows';
 
 import { userUpdated, userLocked, userDeleted } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
@@ -283,6 +284,17 @@ const operationScheduleEvents = [
   },
 ];
 
+const maintenanceWindowEvents = [
+  {
+    name: 'maintenance_windows_changed',
+    action: maintenanceWindowsChanged,
+    transform: ({ target_type: targetType, target_id: targetID }) => ({
+      targetType,
+      targetID,
+    }),
+  },
+];
+
 const userEvents = [
   {
     name: 'user_updated',
@@ -355,6 +367,12 @@ export function* watchSocketEvents(socket) {
       socket,
       'monitoring:operation_schedules',
       operationScheduleEvents
+    ),
+    fork(
+      watchChannelEvents,
+      socket,
+      'monitoring:maintenance_windows',
+      maintenanceWindowEvents
     ),
     fork(watchChannelEvents, socket, `users:${userID}`, userEvents),
     fork(
