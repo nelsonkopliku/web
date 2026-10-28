@@ -23,6 +23,10 @@ import {
   getSoftwareUpdatesErrors,
 } from '@state/selectors/softwareUpdates';
 import { getRunningOperation } from '@state/selectors/runningOperations';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 
 import { getHost, getHostSelectedChecks } from '@state/selectors/host';
 import { isSaving } from '@state/selectors/checksSelection';
@@ -37,6 +41,15 @@ import {
   removeRunningOperation,
 } from '@state/runningOperations';
 
+import {
+  cancelOperationSchedule,
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+  updateOperationSchedule,
+} from '@state/operationSchedules';
+
 import { deregisterHost } from '@state/hosts';
 import { fetchSoftwareUpdates } from '@state/softwareUpdates';
 
@@ -44,6 +57,9 @@ import {
   getSoftwareUpdatesErrorMessage,
   getSoftwareUpdatesErrorTooltip,
 } from './suseMultiLinuxManagerMessaging';
+import { useChecksSchedule } from '@pages/ChecksSelection';
+import { executionBlockedReason } from '@lib/model/checksSchedule';
+
 import HostDetails from './HostDetails';
 
 const chartsEnabled = getFromConfig('chartsEnabled');
@@ -60,6 +76,7 @@ function HostDetailsPage() {
     getInstancesOnHost(state, hostID)
   );
   const { abilities, timezone } = useSelector(getUserProfile);
+  const { schedule: checksSchedule } = useChecksSchedule(TARGET_HOST, hostID);
 
   const lastExecution = useSelector(getLastExecution(hostID));
   const catalog = useSelector(getCatalog);
@@ -95,6 +112,9 @@ function HostDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(hostID));
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(hostID));
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
 
   const getExportersStatus = async () => {
     const { data } = await networkClient.get(
@@ -119,6 +139,16 @@ function HostDetailsPage() {
     dispatch(updateLastExecution(hostID));
     operationsEnabled && dispatch(updateRunningOperations());
   }, []);
+
+  useEffect(() => {
+    operationsEnabled &&
+      dispatch(fetchOperationSchedules({ targetID: hostID }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: hostID }));
+    };
+  }, [dispatch, hostID]);
 
   if (!host) {
     return <div>Not Found</div>;
@@ -159,7 +189,25 @@ function HostDetailsPage() {
       userAbilities={abilities}
       timezone={timezone}
       operationsEnabled={operationsEnabled}
+      nextExecutionAt={checksSchedule?.next_execution_at}
+      checksExecutionBlockedReason={executionBlockedReason(checksSchedule)}
       runningOperation={runningOperation}
+      operationSchedules={operationSchedules}
+      scheduleSubmission={scheduleSubmission}
+      onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      operationSchedulesError={operationSchedulesError}
+      onUpdateSchedule={(schedule, changes) =>
+        dispatch(updateOperationSchedule({ schedule, changes }))
+      }
+      onCancelSchedule={(schedule) =>
+        dispatch(cancelOperationSchedule({ schedule }))
+      }
+      onRetryOperationSchedules={() =>
+        dispatch(fetchOperationSchedules({ targetID: hostID }))
+      }
+      onResetScheduleSubmission={() =>
+        dispatch(resetOperationScheduleSubmission())
+      }
       cleanUpHost={() => {
         dispatch(deregisterHost({ id: hostID, hostname: host.hostname }));
       }}

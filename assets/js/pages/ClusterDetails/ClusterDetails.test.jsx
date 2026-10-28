@@ -4,12 +4,21 @@
 import React from 'react';
 import { faker } from '@faker-js/faker';
 import { noop } from 'lodash';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { formatDateTime } from '@lib/timezones';
 
-import { hostFactory, clusterFactory } from '@lib/test-utils/factories';
+import {
+  hostFactory,
+  clusterFactory,
+  operationScheduleFactory,
+} from '@lib/test-utils/factories';
+import {
+  initialScheduleSubmission,
+  SUBMISSION_FAILED,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
 import { renderWithRouter } from '@lib/test-utils';
 import {
   CLUSTER_MAINTENANCE_CHANGE,
@@ -175,6 +184,36 @@ describe('ClusterDetails ClusterDetails component', () => {
     }
   );
 
+  it('should disable start check execution button while checks executions are blocked', async () => {
+    const user = userEvent.setup();
+    const { id, name, details } = clusterFactory.build();
+
+    renderWithRouter(
+      <ClusterDetails
+        clusterID={id}
+        clusterName={name}
+        details={details}
+        hasSelectedChecks
+        checksExecutionBlockedReason="Checks cannot be executed during exception window"
+        hosts={[]}
+        selectedChecks={['check1']}
+        userAbilities={[{ name: 'all', resource: 'all' }]}
+        onStartExecution={noop}
+        navigate={noop}
+      />
+    );
+
+    const startExecutionButton = screen.getByRole('button', {
+      name: 'Start Execution',
+    });
+    expect(startExecutionButton).toBeDisabled();
+
+    await user.hover(startExecutionButton);
+    expect(
+      screen.getByText('Checks cannot be executed during exception window')
+    ).toBeInTheDocument();
+  });
+
   it('should navigate to the proper pages when check selection and result buttons are clicked', async () => {
     const user = userEvent.setup();
     const { id, name, details } = clusterFactory.build();
@@ -193,7 +232,7 @@ describe('ClusterDetails ClusterDetails component', () => {
         navigate={mockNavigate}
       />
     );
-    await user.click(screen.getByRole('button', { name: 'Check Selection' }));
+    await user.click(screen.getByRole('button', { name: 'Check Settings' }));
     expect(mockNavigate).toHaveBeenCalledWith(`/clusters/${id}/settings`);
 
     await user.click(screen.getByRole('button', { name: 'Show Results' }));
@@ -271,7 +310,7 @@ describe('ClusterDetails ClusterDetails component', () => {
   );
 
   describe('cluster operations', () => {
-    it('should disable main operations button if all the hosts heartbeat is not passing', async () => {
+    it('should keep the main operations button available if no host heartbeat passes', async () => {
       const user = userEvent.setup();
       const { id, name, details } = clusterFactory.build();
       const hosts = hostFactory.buildList(2, {
@@ -297,15 +336,17 @@ describe('ClusterDetails ClusterDetails component', () => {
         name: 'Operations',
       });
 
+      // the operations can be scheduled, the policies refuse a request now
+      expect(operationsButton).toBeEnabled();
       await user.hover(operationsButton);
       expect(
         screen.queryByText(
           'Trento agent is not currently running in any of the hosts in the cluster'
         )
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
 
-    it('should disable resources operations buttons if all the hosts heartbeat is not passing', async () => {
+    it('should keep resources operations available if no host heartbeat passes', async () => {
       const user = userEvent.setup();
       const { id, name, details } = clusterFactory.build();
       const hosts = hostFactory.buildList(2, {
@@ -333,12 +374,50 @@ describe('ClusterDetails ClusterDetails component', () => {
       const resourcesTable = resourcesHeader.nextElementSibling;
       const { getAllByRole } = within(resourcesTable);
       const operationButtons = getAllByRole('button');
+      expect(operationButtons[0]).toBeEnabled();
       await user.hover(operationButtons[0]);
       expect(
         screen.queryByText(
           'Trento agent is not currently running in any of the hosts in the cluster'
         )
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
+    });
+
+    it('should refuse a request now while an operation runs for the cluster', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onRequestOperation = jest.fn();
+      const { id, name, details } = clusterFactory.build();
+      const hosts = hostFactory.buildList(2, {
+        cluster_host_status: 'online',
+        heartbeat: 'passing',
+      });
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={id}
+          clusterName={name}
+          details={details}
+          hasSelectedChecks
+          hosts={hosts}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          operationsEnabled
+          runningOperation={{ operation: CLUSTER_RESOURCE_REFRESH }}
+          onRequestOperation={onRequestOperation}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      const maintenanceItem = screen.getByRole('menuitem', {
+        name: 'Cluster Maintenance',
+      });
+      expect(maintenanceItem).toBeEnabled();
+      await user.click(maintenanceItem);
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(onRequestOperation).not.toHaveBeenCalled();
+      expect(screen.getByText('Operation Already Running')).toBeVisible();
     });
   });
 
@@ -430,8 +509,6 @@ describe('ClusterDetails ClusterDetails component', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: menuItemText,
         });
-        expect(menuItem).toBeDisabled();
-
         const { getByTestId } = within(menuItem);
 
         expect(getByTestId('eos-svg-component')).toBeInTheDocument();
@@ -478,7 +555,7 @@ describe('ClusterDetails ClusterDetails component', () => {
         expect(mockCleanForbiddenOperation).toHaveBeenCalled();
       });
 
-      it('should disable operation when none of the hosts is online', async () => {
+      it('should keep the operation available when none of the hosts is online', async () => {
         const user = userEvent.setup();
         const { id, name, details } = clusterFactory.build();
         const hosts = hostFactory.buildList(2, {
@@ -507,7 +584,7 @@ describe('ClusterDetails ClusterDetails component', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: menuItemText,
         });
-        expect(menuItem).toBeDisabled();
+        expect(menuItem).toBeEnabled();
       });
     }
   );
@@ -625,5 +702,194 @@ describe('ClusterDetails ClusterDetails component', () => {
         }
       }
     );
+  });
+
+  describe('cluster maintenance scheduling', () => {
+    const cluster = clusterFactory.build({
+      details: { maintenance_mode: false },
+    });
+    const hosts = hostFactory.buildList(2, {
+      cluster_host_status: 'online',
+      heartbeat: 'passing',
+    });
+
+    const scheduleMaintenance = async (user) => {
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Cluster Maintenance' })
+      );
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'Periodic' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '03:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+    };
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should schedule the maintenance of the cluster with its options', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const props = {
+        clusterID: cluster.id,
+        clusterName: cluster.name,
+        details: cluster.details,
+        hasSelectedChecks: true,
+        hosts,
+        selectedChecks: [],
+        userAbilities,
+        userTimezone: 'Europe/Berlin',
+        operationsEnabled: true,
+        onScheduleOperation,
+      };
+
+      const { rerender } = renderWithRouter(<ClusterDetails {...props} />);
+
+      await scheduleMaintenance(user);
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'cluster',
+        target_id: cluster.id,
+        operation: CLUSTER_MAINTENANCE_CHANGE,
+        params: { maintenance: true },
+        starts_at: '2099-11-20T02:00:00.000Z',
+        timezone: 'Europe/Berlin',
+        recurrence: {
+          frequency: 'daily',
+          interval: 1,
+          weekdays: [],
+          ends_on: null,
+          max_occurrences: null,
+        },
+      });
+
+      rerender(
+        <ClusterDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_FAILED,
+            errors: [{ title: 'Forbidden', detail: 'Not allowed' }],
+          }}
+        />
+      );
+      expect(screen.getByText('Not allowed')).toBeVisible();
+
+      rerender(
+        <ClusterDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: CLUSTER_MAINTENANCE_CHANGE,
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('should warn when the maintenance is already scheduled', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={cluster.id}
+          clusterName={cluster.name}
+          details={cluster.details}
+          hasSelectedChecks
+          hosts={hosts}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          operationsEnabled
+          operationSchedules={[
+            operationScheduleFactory.build({
+              target_type: 'cluster',
+              target_id: cluster.id,
+              operation: CLUSTER_MAINTENANCE_CHANGE,
+              params: { maintenance: true },
+            }),
+          ]}
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      await scheduleMaintenance(user);
+
+      expect(
+        screen.getByText(
+          'Maintenance change is already scheduled for this target:'
+        )
+      ).toBeVisible();
+      expect(onScheduleOperation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('scheduled operations', () => {
+    const cluster = clusterFactory.build();
+    const schedule = operationScheduleFactory.build({
+      target_type: 'cluster',
+      target_id: cluster.id,
+      operation: CLUSTER_MAINTENANCE_CHANGE,
+      params: { maintenance: true, node_id: 'node01' },
+      starts_at: '2099-11-20T03:00:00Z',
+      timezone: 'Etc/UTC',
+      recurrence: null,
+      next_run_at: '2099-11-20T03:00:00Z',
+    });
+    const rowLabel =
+      'the schedule of Cluster maintenance change, next run 20 Nov 2099, 03:00:00';
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should list, change and cancel the scheduled operations of the cluster', async () => {
+      const user = userEvent.setup();
+      const onUpdateSchedule = jest.fn();
+      const onCancelSchedule = jest.fn();
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={cluster.id}
+          clusterName={cluster.name}
+          details={cluster.details}
+          hasSelectedChecks
+          hosts={[]}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          userTimezone="Etc/UTC"
+          operationsEnabled
+          operationSchedules={[schedule]}
+          onUpdateSchedule={onUpdateSchedule}
+          onCancelSchedule={onCancelSchedule}
+        />
+      );
+
+      expect(screen.getByText('Maintenance: on, Node: node01')).toBeVisible();
+
+      await user.click(
+        screen.getByRole('button', { name: `Edit ${rowLabel}` })
+      );
+      expect(screen.getByText(/on node node01/)).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+      expect(onUpdateSchedule).toHaveBeenCalledWith(schedule, {
+        params: { maintenance: true, node_id: 'node01' },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Cancel Schedule' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Yes, Cancel Schedule' })
+      );
+      expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
+    });
   });
 });

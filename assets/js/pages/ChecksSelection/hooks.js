@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { get } from 'lodash';
 import { pipe, map, omit } from 'lodash/fp';
 
 import { notify } from '@state/notifications';
@@ -13,6 +14,12 @@ import {
   resetCheckCustomization,
   saveCheckCustomization,
 } from '@lib/api/checks';
+import {
+  getChecksSchedule,
+  updateChecksSchedule,
+} from '@lib/api/checksSchedule';
+import { nextWindowBoundary } from '@lib/model/checksSchedule';
+import { defaultGlobalError } from '@lib/api/validationErrors';
 
 const setCheckCustomized = (customized) => (check) => ({
   ...check,
@@ -138,5 +145,111 @@ export const useChecksSelection = () => {
     resetChecksCustomization,
     saveChecksCustomization,
     customizationStatus,
+  };
+};
+
+// setTimeout takes at most about 24 days: far boundaries are looked at again
+// every day
+const MAX_BOUNDARY_DELAY = 24 * 60 * 60 * 1000;
+
+// The server may still be on the other side of the boundary for a moment
+const BOUNDARY_MARGIN = 1000;
+
+/**
+ * Checks execution frequency of a host or a cluster, its exception window,
+ * and when its checks are executed next. The next execution moves when an
+ * execution of the target starts or completes, and whether the target is in
+ * its exception window changes when the window starts or ends, so the
+ * schedule is fetched again then, without the loading state: what shows the
+ * schedule, and an open modal, stay. `saveSchedule` resolves to whether the
+ * change was saved.
+ */
+export const useChecksSchedule = (targetType, targetID) => {
+  const [schedule, setSchedule] = useState(null);
+  const [fetchLoading, setFetchLoading] = useState(Boolean(targetID));
+  const [fetchError, setFetchError] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitErrors, setSubmitErrors] = useState([]);
+
+  // Responses can arrive out of order: only the latest request counts
+  const latestRequest = useRef(0);
+  const shownTarget = useRef(null);
+  const target = `${targetType}/${targetID}`;
+
+  const lastExecutionStatus = useSelector((state) =>
+    get(state, ['lastExecutions', targetID, 'data', 'status'])
+  );
+
+  const fetchSchedule = async () => {
+    latestRequest.current += 1;
+    const request = latestRequest.current;
+    const isLatest = () => request === latestRequest.current;
+
+    if (shownTarget.current !== target) setFetchLoading(true);
+    setFetchError(false);
+
+    try {
+      const { data } = await getChecksSchedule(targetType, targetID);
+      if (isLatest()) {
+        shownTarget.current = target;
+        setSchedule(data);
+      }
+    } catch {
+      if (isLatest()) setFetchError(true);
+    } finally {
+      if (isLatest()) setFetchLoading(false);
+    }
+  };
+
+  const saveSchedule = async (changes) => {
+    latestRequest.current += 1;
+    const request = latestRequest.current;
+
+    setSubmitLoading(true);
+    setSubmitErrors([]);
+
+    try {
+      const { data } = await updateChecksSchedule(
+        targetType,
+        targetID,
+        changes
+      );
+      if (request === latestRequest.current) setSchedule(data);
+      return true;
+    } catch (error) {
+      setSubmitErrors(
+        get(error, ['response', 'data', 'errors'], [defaultGlobalError])
+      );
+      return false;
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (targetID) fetchSchedule();
+  }, [targetType, targetID, lastExecutionStatus]);
+
+  useEffect(() => {
+    const boundary = nextWindowBoundary(schedule?.exception_window);
+    if (!boundary) return undefined;
+
+    const timer = setTimeout(
+      fetchSchedule,
+      Math.min(boundary - Date.now() + BOUNDARY_MARGIN, MAX_BOUNDARY_DELAY)
+    );
+
+    return () => clearTimeout(timer);
+  }, [schedule]);
+
+  return {
+    schedule,
+    fetchLoading,
+    fetchError,
+    submitLoading,
+    submitErrors,
+    fetchSchedule,
+    saveSchedule,
+    clearSubmitErrors: () => setSubmitErrors([]),
   };
 };

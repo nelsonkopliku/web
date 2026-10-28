@@ -21,10 +21,6 @@ export default {
       description: 'The userAbilities prop',
       control: { type: 'object' },
     },
-    operationsDisabled: {
-      description: 'The operationsDisabled prop',
-      control: { type: 'text' },
-    },
     getResourceOperations: {
       description: 'The getResourceOperations prop',
       control: { type: 'object' },
@@ -37,7 +33,6 @@ export const Default = {
     resources: clusterResourceFactory.buildList(5, { parent: null }),
     hosts: [],
     userAbilities: [],
-    operationsDisabled: false,
     getResourceOperations: () => [],
   },
 };
