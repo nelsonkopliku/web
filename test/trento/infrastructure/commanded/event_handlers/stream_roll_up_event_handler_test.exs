@@ -182,6 +182,26 @@ defmodule Trento.Infrastructure.Commanded.EventHandlers.StreamRollUpEventHandler
              )
   end
 
+  test "should roll up a host or a cluster whose exception window changes too often" do
+    host_id = Faker.UUID.v4()
+    cluster_id = Faker.UUID.v4()
+    fill_stream(host_id)
+    fill_stream(cluster_id)
+
+    expect(Trento.Commanded.Mock, :dispatch, 2, fn
+      %RollUpHost{host_id: ^host_id}, _ -> :ok
+      %RollUpCluster{cluster_id: ^cluster_id}, _ -> :ok
+    end)
+
+    for event <- [
+          %Trento.Hosts.Events.HostChecksExceptionWindowRemoved{host_id: host_id},
+          %Trento.Clusters.Events.ClusterChecksExceptionWindowSet{cluster_id: cluster_id}
+        ] do
+      assert :ok =
+               StreamRollUpEventHandler.handle(event, %{stream_version: @max_stream_version + 1})
+    end
+  end
+
   test "should roll up a cluster whose checks execution interval changes too often" do
     cluster_id = Faker.UUID.v4()
     fill_stream(cluster_id)

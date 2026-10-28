@@ -8,6 +8,8 @@ defmodule Trento.Hosts.HostTest do
 
   alias Trento.Support.StructHelper
 
+  alias Trento.ChecksScheduling.ValueObjects.ExceptionWindow
+
   alias Trento.Hosts.Commands.{
     ChangeHostChecksInterval,
     ClearSoftwareUpdatesDiscovery,
@@ -15,9 +17,11 @@ defmodule Trento.Hosts.HostTest do
     CompleteSoftwareUpdatesDiscovery,
     DeregisterHost,
     RegisterHost,
+    RemoveHostChecksExceptionWindow,
     RequestHostDeregistration,
     RollUpHost,
     SelectHostChecks,
+    SetHostChecksExceptionWindow,
     UpdateHeartbeat,
     UpdateProvider,
     UpdateSaptuneStatus,
@@ -27,6 +31,8 @@ defmodule Trento.Hosts.HostTest do
   alias Trento.Hosts.Events.{
     HeartbeatFailed,
     HeartbeatSucceeded,
+    HostChecksExceptionWindowRemoved,
+    HostChecksExceptionWindowSet,
     HostChecksHealthChanged,
     HostChecksIntervalChanged,
     HostChecksSelected,
@@ -1802,6 +1808,124 @@ defmodule Trento.Hosts.HostTest do
             ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "12h"}),
             []
           )
+        end
+      )
+    end
+  end
+
+  describe "checks exception window" do
+    @window %ExceptionWindow{
+      starts_at: ~U[2026-11-07 22:00:00.000000Z],
+      timezone: "Europe/Berlin",
+      duration_minutes: 120,
+      frequency: :weekly,
+      interval: 1,
+      weekdays: [6]
+    }
+
+    defp set_window(host_id, window, requested_at \\ ~U[2026-11-02 10:00:00.000000Z]) do
+      SetHostChecksExceptionWindow.new!(%{
+        host_id: host_id,
+        exception_window: Map.from_struct(window),
+        requested_at: requested_at
+      })
+    end
+
+    test "should set and remove the exception window of a host" do
+      host_id = Faker.UUID.v4()
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_events_and_state(
+        registered,
+        set_window(host_id, @window),
+        [%HostChecksExceptionWindowSet{host_id: host_id, exception_window: @window}],
+        fn host -> assert %Host{checks_exception_window: @window} = host end
+      )
+
+      assert_events_and_state(
+        [registered, %HostChecksExceptionWindowSet{host_id: host_id, exception_window: @window}],
+        RemoveHostChecksExceptionWindow.new!(%{host_id: host_id}),
+        [%HostChecksExceptionWindowRemoved{host_id: host_id}],
+        fn host -> assert %Host{checks_exception_window: nil} = host end
+      )
+    end
+
+    test "should not emit an event when the window does not change" do
+      host_id = Faker.UUID.v4()
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_events(
+        [registered, %HostChecksExceptionWindowSet{host_id: host_id, exception_window: @window}],
+        set_window(host_id, @window),
+        []
+      )
+
+      assert_events(registered, RemoveHostChecksExceptionWindow.new!(%{host_id: host_id}), [])
+    end
+
+    test "should refuse a one-time window that is over" do
+      host_id = Faker.UUID.v4()
+
+      assert_error(
+        build(:host_registered_event, host_id: host_id),
+        set_window(
+          host_id,
+          %ExceptionWindow{@window | frequency: nil, interval: nil, weekdays: nil},
+          ~U[2026-11-08 01:00:00.000000Z]
+        ),
+        {:error, :checks_exception_window_ended}
+      )
+    end
+
+    test "should not set the window of a host that is not registered, deregistered or rolling up" do
+      host_id = Faker.UUID.v4()
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_error(set_window(host_id, @window), {:error, :host_not_registered})
+
+      assert_error(
+        [registered, %HostDeregistered{host_id: host_id, deregistered_at: DateTime.utc_now()}],
+        set_window(host_id, @window),
+        {:error, :host_not_registered}
+      )
+
+      assert_error(
+        [registered, %HostRollUpRequested{host_id: host_id, snapshot: %Host{}}],
+        RemoveHostChecksExceptionWindow.new!(%{host_id: host_id}),
+        {:error, :host_rolling_up}
+      )
+    end
+
+    test "should remove the window of a deregistered host" do
+      host_id = Faker.UUID.v4()
+
+      assert_state(
+        [
+          build(:host_registered_event, host_id: host_id),
+          %HostChecksExceptionWindowSet{host_id: host_id, exception_window: @window},
+          %HostDeregistered{host_id: host_id, deregistered_at: DateTime.utc_now()}
+        ],
+        [],
+        fn host -> assert %Host{checks_exception_window: nil} = host end
+      )
+    end
+
+    test "should keep the window through a roll-up" do
+      host_id = Faker.UUID.v4()
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_state(
+        [registered, %HostChecksExceptionWindowSet{host_id: host_id, exception_window: @window}],
+        RollUpHost.new!(%{host_id: host_id}),
+        fn %Host{} = host ->
+          rolled_up =
+            %HostRolledUp{host_id: host_id, snapshot: %Host{host | rolling_up: false}}
+            |> Jason.encode!()
+            |> Jason.decode!()
+            |> then(&%Trento.Support.IntermediateEvent{module: HostRolledUp, term: &1})
+            |> Commanded.Event.Upcaster.upcast(%{})
+
+          assert_events([registered, rolled_up], set_window(host_id, @window), [])
         end
       )
     end

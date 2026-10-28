@@ -7,7 +7,8 @@ defmodule Trento.ChecksScheduling do
 
   A target uses its own interval, kept on the Host and Cluster aggregates and
   projected into the target_checks_intervals read model, or the global one of
-  `Trento.Settings.get_checks_execution_settings/0`.
+  `Trento.Settings.get_checks_execution_settings/0`. The next execution of a
+  target falls after its exception window, kept the same way.
   """
 
   import Ecto.Query, only: [from: 2]
@@ -15,15 +16,30 @@ defmodule Trento.ChecksScheduling do
   alias Trento.ChecksScheduling.{ExecutionRequest, Interval}
 
   alias Trento.ChecksScheduling.Projections.{
+    TargetChecksExceptionWindowProjector,
+    TargetChecksExceptionWindowReadModel,
     TargetChecksIntervalProjector,
     TargetChecksIntervalReadModel
   }
 
+  alias Trento.ChecksScheduling.ValueObjects.ExceptionWindow
   alias Trento.Clusters
-  alias Trento.Clusters.Commands.ChangeClusterChecksInterval
+
+  alias Trento.Clusters.Commands.{
+    ChangeClusterChecksInterval,
+    RemoveClusterChecksExceptionWindow,
+    SetClusterChecksExceptionWindow
+  }
+
   alias Trento.Clusters.Projections.ClusterReadModel
   alias Trento.Hosts
-  alias Trento.Hosts.Commands.ChangeHostChecksInterval
+
+  alias Trento.Hosts.Commands.{
+    ChangeHostChecksInterval,
+    RemoveHostChecksExceptionWindow,
+    SetHostChecksExceptionWindow
+  }
+
   alias Trento.Hosts.Projections.HostReadModel
   alias Trento.Repo
   alias Trento.Settings
@@ -39,14 +55,16 @@ defmodule Trento.ChecksScheduling do
           {:ok, map()} | {:error, :not_found}
   def get_target_schedule(target_type, target_id, date_service \\ DateService) do
     with :ok <- target_exists(target_type, target_id) do
-      {:ok, view(interval(target_id), target_id, date_service.utc_now())}
+      {:ok, view(interval(target_id), window(target_id), target_id, date_service.utc_now())}
     end
   end
 
   @doc """
-  Replaces the interval of a target. A nil interval means the global one.
+  Replaces the interval of a target, a nil interval meaning the global one.
+  With an exception_window, replaces the exception window too: nil removes it.
+  Both are checked before any of them changes.
 
-  The change waits until the read model shows it, so that the next read shows
+  A change waits until the read model shows it, so that the next read shows
   it too. When the read model takes too long, the change is saved anyway.
   """
   @spec update_target_schedule(target_type(), String.t(), map(), module()) ::
@@ -54,13 +72,17 @@ defmodule Trento.ChecksScheduling do
   def update_target_schedule(
         target_type,
         target_id,
-        %{interval: interval},
+        %{interval: interval} = attrs,
         date_service \\ DateService
       ) do
+    now = date_service.utc_now()
+
     with :ok <- target_exists(target_type, target_id),
          {:ok, command} <- command(target_type, target_id, interval),
-         :ok <- dispatch(command, target_id) do
-      {:ok, view(interval, target_id, date_service.utc_now())}
+         {:ok, window_command} <- window_command(target_type, target_id, attrs, now),
+         :ok <- dispatch(command, target_id, TargetChecksIntervalProjector),
+         :ok <- dispatch(window_command, target_id, TargetChecksExceptionWindowProjector) do
+      {:ok, view(interval, changed_window(window_command, target_id), target_id, now)}
     end
   end
 
@@ -107,16 +129,30 @@ defmodule Trento.ChecksScheduling do
   def effective_interval(interval, _), do: interval
 
   @doc """
-  When the next periodic execution runs, nil when they are disabled.
+  When the next periodic execution runs, after the exception window; nil when
+  they are disabled.
   """
-  @spec next_execution_at(Interval.t(), DateTime.t() | nil, DateTime.t()) :: DateTime.t() | nil
-  def next_execution_at(effective_interval, last_requested_at, now) do
+  @spec next_execution_at(
+          Interval.t(),
+          DateTime.t() | nil,
+          ExceptionWindow.t() | nil,
+          DateTime.t()
+        ) ::
+          DateTime.t() | nil
+  def next_execution_at(effective_interval, last_requested_at, window, now) do
     case {Interval.to_minutes(effective_interval), last_requested_at} do
-      {nil, _} -> nil
-      {_, nil} -> now
-      {minutes, last} -> Enum.max([DateTime.add(last, minutes, :minute), now], DateTime)
+      {nil, _} ->
+        nil
+
+      {_, nil} ->
+        after_window(window, now)
+
+      {minutes, last} ->
+        after_window(window, Enum.max([DateTime.add(last, minutes, :minute), now], DateTime))
     end
   end
+
+  defp after_window(window, due), do: ExceptionWindow.window_end(window, due) || due
 
   # The job runs every minute, a few seconds later or earlier each time: an
   # execution is due once its interval elapsed, give or take half a minute, so
@@ -175,7 +211,7 @@ defmodule Trento.ChecksScheduling do
     Enum.map(hosts, &{:host, &1}) ++ Enum.map(clusters, &{:cluster, &1})
   end
 
-  defp view(interval, target_id, now) do
+  defp view(interval, window, target_id, now) do
     global_interval = Settings.get_checks_execution_settings().interval
     effective_interval = effective_interval(interval, global_interval)
     last_requested_at = last_requested_at(target_id)
@@ -185,9 +221,21 @@ defmodule Trento.ChecksScheduling do
       effective_interval: effective_interval,
       global_interval: global_interval,
       last_requested_at: last_requested_at,
-      next_execution_at: next_execution_at(effective_interval, last_requested_at, now)
+      next_execution_at: next_execution_at(effective_interval, last_requested_at, window, now),
+      exception_window: ExceptionWindow.to_map(window),
+      in_exception_window: not is_nil(ExceptionWindow.window_end(window, now))
     }
   end
+
+  defp window(target_id) do
+    TargetChecksExceptionWindowReadModel
+    |> Repo.get(target_id)
+    |> TargetChecksExceptionWindowReadModel.to_exception_window()
+  end
+
+  defp changed_window(nil, target_id), do: window(target_id)
+  defp changed_window(%{exception_window: window}, _), do: window
+  defp changed_window(_removed, _), do: nil
 
   defp interval(target_id) do
     case Repo.get(TargetChecksIntervalReadModel, target_id) do
@@ -209,6 +257,50 @@ defmodule Trento.ChecksScheduling do
   defp command(:cluster, cluster_id, interval),
     do: new(ChangeClusterChecksInterval, %{cluster_id: cluster_id, interval: interval})
 
+  # No exception_window keeps the current one, nil removes it.
+  defp window_command(target_type, target_id, attrs, now) do
+    case Map.fetch(attrs, :exception_window) do
+      :error -> {:ok, nil}
+      {:ok, nil} -> {:ok, remove_window(target_type, target_id)}
+      {:ok, window} -> set_window(target_type, target_id, window, now)
+    end
+  end
+
+  defp remove_window(:host, host_id), do: %RemoveHostChecksExceptionWindow{host_id: host_id}
+
+  defp remove_window(:cluster, cluster_id),
+    do: %RemoveClusterChecksExceptionWindow{cluster_id: cluster_id}
+
+  defp set_window(target_type, target_id, window, now) do
+    {command, target_key} =
+      case target_type do
+        :host -> {SetHostChecksExceptionWindow, :host_id}
+        :cluster -> {SetClusterChecksExceptionWindow, :cluster_id}
+      end
+
+    changeset =
+      command
+      |> struct()
+      |> command.changeset(%{
+        target_key => target_id,
+        exception_window: ExceptionWindow.attrs(window),
+        requested_at: now
+      })
+
+    with {:ok, %{exception_window: window} = command} <-
+           Ecto.Changeset.apply_action(changeset, :update) do
+      if ExceptionWindow.ended?(window, now),
+        do:
+          {:error,
+           Ecto.Changeset.update_change(
+             changeset,
+             :exception_window,
+             &Ecto.Changeset.add_error(&1, :starts_at, "the exception window has already ended")
+           )},
+        else: {:ok, command}
+    end
+  end
+
   defp new(command, attrs) do
     command
     |> struct()
@@ -216,13 +308,17 @@ defmodule Trento.ChecksScheduling do
     |> Ecto.Changeset.apply_action(:update)
   end
 
-  defp dispatch(command, target_id) do
-    case CommandedUtils.correlated_dispatch(command, consistency: [TargetChecksIntervalProjector]) do
+  defp dispatch(nil, _, _), do: :ok
+
+  defp dispatch(command, target_id, projector) do
+    case CommandedUtils.correlated_dispatch(command, consistency: [projector]) do
       :ok ->
         :ok
 
       {:error, :consistency_timeout} ->
-        Logger.warning("Checks execution interval of #{target_id} saved, its read model is late")
+        Logger.warning(
+          "Checks execution settings of #{target_id} saved, their read model is late"
+        )
 
       {:error, reason} when reason in [:host_not_registered, :cluster_not_registered] ->
         {:error, :not_found}

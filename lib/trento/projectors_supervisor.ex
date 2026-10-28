@@ -6,7 +6,10 @@ defmodule Trento.ProjectorsSupervisor do
 
   use Supervisor
 
-  alias Trento.ChecksScheduling.Projections.TargetChecksIntervalProjector
+  alias Trento.ChecksScheduling.Projections.{
+    TargetChecksExceptionWindowProjector,
+    TargetChecksIntervalProjector
+  }
 
   alias Trento.Clusters.Projections.ClusterProjector
 
@@ -38,6 +41,7 @@ defmodule Trento.ProjectorsSupervisor do
       SapSystemProjector,
       ScheduledRunProjector,
       SlesSubscriptionsProjector,
+      TargetChecksExceptionWindowProjector,
       TargetChecksIntervalProjector
     ]
 

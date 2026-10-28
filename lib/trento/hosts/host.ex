@@ -81,6 +81,8 @@ defmodule Trento.Hosts.Host do
     SystemdUnit
   }
 
+  alias Trento.ChecksScheduling.ValueObjects.ExceptionWindow
+
   alias Trento.Hosts.Commands.{
     ChangeHostChecksInterval,
     ClearSoftwareUpdatesDiscovery,
@@ -88,9 +90,11 @@ defmodule Trento.Hosts.Host do
     CompleteSoftwareUpdatesDiscovery,
     DeregisterHost,
     RegisterHost,
+    RemoveHostChecksExceptionWindow,
     RequestHostDeregistration,
     RollUpHost,
     SelectHostChecks,
+    SetHostChecksExceptionWindow,
     UpdateHeartbeat,
     UpdateProvider,
     UpdateSaptuneStatus,
@@ -100,6 +104,8 @@ defmodule Trento.Hosts.Host do
   alias Trento.Hosts.Events.{
     HeartbeatFailed,
     HeartbeatSucceeded,
+    HostChecksExceptionWindowRemoved,
+    HostChecksExceptionWindowSet,
     HostChecksHealthChanged,
     HostChecksIntervalChanged,
     HostChecksSelected,
@@ -149,6 +155,7 @@ defmodule Trento.Hosts.Host do
     field :rolling_up, :boolean, default: false
     field :selected_checks, {:array, :string}, default: []
     field :checks_interval, :string
+    embeds_one :checks_exception_window, ExceptionWindow
     field :deregistered_at, :utc_datetime_usec, default: nil
 
     embeds_one :saptune_status, SaptuneStatus
@@ -530,6 +537,22 @@ defmodule Trento.Hosts.Host do
     do: %HostChecksIntervalChanged{host_id: host_id, interval: interval}
 
   def execute(
+        %Host{host_id: host_id, checks_exception_window: current},
+        %SetHostChecksExceptionWindow{exception_window: window, requested_at: requested_at}
+      ) do
+    cond do
+      ExceptionWindow.ended?(window, requested_at) -> {:error, :checks_exception_window_ended}
+      window == current -> []
+      true -> %HostChecksExceptionWindowSet{host_id: host_id, exception_window: window}
+    end
+  end
+
+  def execute(%Host{checks_exception_window: nil}, %RemoveHostChecksExceptionWindow{}), do: []
+
+  def execute(%Host{host_id: host_id}, %RemoveHostChecksExceptionWindow{}),
+    do: %HostChecksExceptionWindowRemoved{host_id: host_id}
+
+  def execute(
         %Host{
           host_id: host_id
         } = host,
@@ -807,6 +830,12 @@ defmodule Trento.Hosts.Host do
   def apply(%Host{} = host, %HostChecksIntervalChanged{interval: interval}),
     do: %Host{host | checks_interval: interval}
 
+  def apply(%Host{} = host, %HostChecksExceptionWindowSet{exception_window: window}),
+    do: %Host{host | checks_exception_window: window}
+
+  def apply(%Host{} = host, %HostChecksExceptionWindowRemoved{}),
+    do: %Host{host | checks_exception_window: nil}
+
   def apply(%Host{} = host, %HostChecksHealthChanged{
         checks_health: checks_health
       }),
@@ -855,11 +884,16 @@ defmodule Trento.Hosts.Host do
 
   # Deregistration
 
-  # The checks execution interval of a deregistered host is removed
+  # The checks execution settings of a deregistered host are removed
   def apply(%Host{} = host, %HostDeregistered{
         deregistered_at: deregistered_at
       }) do
-    %Host{host | deregistered_at: deregistered_at, checks_interval: nil}
+    %Host{
+      host
+      | deregistered_at: deregistered_at,
+        checks_interval: nil,
+        checks_exception_window: nil
+    }
   end
 
   def apply(%Host{} = host, %HostDeregistrationRequested{}), do: host
