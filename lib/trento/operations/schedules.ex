@@ -13,6 +13,8 @@ defmodule Trento.Operations.Schedules do
   that the read model does not show it yet.
   """
 
+  import Ecto.Query, only: [from: 2, where: 3]
+
   alias Trento.Operations.Commands.ScheduleOperation
   alias Trento.Operations.Projections.{OperationScheduleProjector, OperationScheduleReadModel}
   alias Trento.Operations.{Requests, ScheduleActivity}
@@ -46,6 +48,39 @@ defmodule Trento.Operations.Schedules do
         ScheduleActivity.record(:operation_scheduled, schedule || provisional(command), actor)
       end)
       |> with_warnings(warnings)
+    end
+  end
+
+  @doc """
+  Lists the schedules of one or more targets, the next one first. With the
+  `operation` option, only the schedules of that operation.
+  """
+  @spec list_schedules(String.t() | [String.t()], keyword()) :: [OperationScheduleReadModel.t()]
+  def list_schedules(target_ids, opts \\ [])
+
+  def list_schedules(target_id, opts) when is_binary(target_id),
+    do: list_schedules([target_id], opts)
+
+  def list_schedules(target_ids, opts) do
+    query =
+      from s in OperationScheduleReadModel,
+        where: s.target_id in ^target_ids,
+        order_by: [asc: s.next_run_at, asc: s.inserted_at]
+
+    query =
+      case Keyword.get(opts, :operation) do
+        nil -> query
+        operation -> where(query, [s], s.operation == ^operation)
+      end
+
+    Repo.all(query)
+  end
+
+  @spec get_schedule(String.t()) :: {:ok, OperationScheduleReadModel.t()} | {:error, :not_found}
+  def get_schedule(schedule_id) do
+    case Repo.get(OperationScheduleReadModel, schedule_id) do
+      nil -> {:error, :not_found}
+      schedule -> {:ok, schedule}
     end
   end
 
