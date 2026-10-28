@@ -15,7 +15,7 @@ defmodule Trento.Operations.Schedules do
 
   import Ecto.Query, only: [from: 2, where: 3]
 
-  alias Trento.Operations.Commands.ScheduleOperation
+  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
   alias Trento.Operations.Projections.{OperationScheduleProjector, OperationScheduleReadModel}
   alias Trento.Operations.{Requests, ScheduleActivity}
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
@@ -41,11 +41,39 @@ defmodule Trento.Operations.Schedules do
     changeset = schedule_changeset(attrs, UUID.uuid4(), date_service.utc_now())
 
     with {:ok, command} <- Ecto.Changeset.apply_action(changeset, :insert),
-         {:ok, warnings} <- policy_warnings(command) do
+         {:ok, warnings} <- policy_warnings(command, command.params) do
       command
       |> dispatch(metadata: %{"created_by" => actor})
       |> saved(changeset, command.schedule_id, fn schedule ->
         ScheduleActivity.record(:operation_scheduled, schedule || provisional(command), actor)
+      end)
+      |> with_warnings(warnings)
+    end
+  end
+
+  @doc """
+  Replaces the params and the timing of a schedule. The occurrence count
+  restarts. Failing operation policies come back as warnings.
+  """
+  @spec update_schedule(String.t(), map(), String.t(), module()) ::
+          {:ok, OperationScheduleReadModel.t(), warnings()}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :consistency_timeout}
+          | {:error, any()}
+  def update_schedule(schedule_id, attrs, actor, date_service \\ DateService) do
+    with {:ok, current} <- get_schedule(schedule_id),
+         changeset = change_changeset(attrs, schedule_id, date_service.utc_now()),
+         {:ok, command} <- Ecto.Changeset.apply_action(changeset, :update),
+         {:ok, warnings} <- policy_warnings(current, command.params) do
+      command
+      |> dispatch([])
+      |> saved(changeset, schedule_id, fn schedule ->
+        ScheduleActivity.record(
+          :operation_schedule_changed,
+          schedule || provisional(command, current),
+          actor
+        )
       end)
       |> with_warnings(warnings)
     end
@@ -93,11 +121,24 @@ defmodule Trento.Operations.Schedules do
     )
   end
 
-  defp policy_warnings(%{target_type: target_type, operation: operation} = command) do
-    {:ok, target_type, operation} = Requests.parse(target_type, operation)
-    params = OperationParams.to_map(command.params)
+  defp change_changeset(attrs, schedule_id, requested_at) do
+    ChangeOperationSchedule.changeset(
+      %ChangeOperationSchedule{},
+      attrs
+      |> Map.merge(%{schedule_id: schedule_id, requested_at: requested_at})
+      |> Map.update(:params, %{}, &(&1 || %{}))
+    )
+  end
 
-    case Requests.authorize(target_type, command.target_id, operation, params) do
+  defp policy_warnings(%{target_type: target_type, operation: operation} = schedule, params) do
+    {:ok, target_type, operation} = Requests.parse(target_type, operation)
+
+    case Requests.authorize(
+           target_type,
+           schedule.target_id,
+           operation,
+           OperationParams.to_map(params)
+         ) do
       :ok -> {:ok, []}
       {:error, :forbidden, errors} -> {:ok, errors}
       {:error, :not_found} -> {:error, :not_found}
@@ -139,28 +180,35 @@ defmodule Trento.Operations.Schedules do
      )}
   end
 
+  defp saved({:error, :operation_schedule_not_found}, _, _, _), do: {:error, :not_found}
+
   defp saved({:error, _} = error, _, _, _), do: error
 
   defp with_warnings({:ok, schedule}, warnings), do: {:ok, schedule, warnings}
   defp with_warnings(error, _), do: error
 
   # The schedule as the read model will show it, to log a change that the
-  # read model does not show yet.
+  # read model does not show yet. The next occurrence is not known.
   defp provisional(%ScheduleOperation{} = command) do
-    recurrence = Recurrence.to_map(command.recurrence) || %{}
+    provisional(command, %OperationScheduleReadModel{
+      id: command.schedule_id,
+      target_type: command.target_type,
+      target_id: command.target_id,
+      operation: command.operation,
+      bulk_id: command.bulk_id
+    })
+  end
 
+  defp provisional(command, %OperationScheduleReadModel{} = current) do
     struct(
-      OperationScheduleReadModel,
-      Map.merge(recurrence, %{
-        id: command.schedule_id,
-        target_type: command.target_type,
-        target_id: command.target_id,
-        operation: command.operation,
-        params: OperationParams.to_map(command.params),
-        starts_at: command.starts_at,
-        timezone: command.timezone,
-        bulk_id: command.bulk_id
-      })
+      %OperationScheduleReadModel{
+        current
+        | params: OperationParams.to_map(command.params),
+          starts_at: command.starts_at,
+          timezone: command.timezone,
+          next_run_at: nil
+      },
+      Recurrence.to_map(command.recurrence) || %{frequency: nil}
     )
   end
 end

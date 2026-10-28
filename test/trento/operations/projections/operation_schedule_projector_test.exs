@@ -5,7 +5,7 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
   use ExUnit.Case
   use Trento.DataCase
 
-  alias Trento.Operations.Events.OperationScheduled
+  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
 
   alias Trento.Operations.Projections.{
     OperationScheduleProjector,
@@ -14,6 +14,8 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
 
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
   alias Trento.ProjectorTestHelper
+
+  import Trento.Factory
 
   @moduletag :integration
 
@@ -103,5 +105,45 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
 
     assert %OperationScheduleReadModel{params: %{}, frequency: nil, created_by: nil} = schedule
     assert nil == OperationScheduleReadModel.recurrence(schedule)
+  end
+
+  test "should project a change of the params and the timing" do
+    target_id = UUID.uuid4()
+
+    %{id: schedule_id} =
+      insert(:operation_schedule,
+        target_id: target_id,
+        frequency: :weekly,
+        interval: 2,
+        weekdays: [1],
+        occurrences: 2,
+        created_by: "admin"
+      )
+
+    project(%OperationScheduleChanged{
+      schedule_id: schedule_id,
+      params: %OperationParams{timeout: 60},
+      starts_at: ~U[2026-11-10 04:00:00.000000Z],
+      timezone: "Europe/Berlin",
+      recurrence: nil,
+      next_run_at: ~U[2026-11-10 04:00:00.000000Z]
+    })
+
+    assert %OperationScheduleReadModel{
+             params: %{"timeout" => 60},
+             starts_at: ~U[2026-11-10 04:00:00.000000Z],
+             timezone: "Europe/Berlin",
+             frequency: nil,
+             interval: 1,
+             weekdays: [],
+             next_run_at: ~U[2026-11-10 04:00:00.000000Z],
+             occurrences: 0,
+             created_by: "admin"
+           } = Repo.get!(OperationScheduleReadModel, schedule_id)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "operation_schedules_changed",
+      payload: %{target_id: ^target_id}
+    }
   end
 end

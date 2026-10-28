@@ -4,8 +4,8 @@
 defmodule Trento.Operations.ScheduleTest do
   use Trento.AggregateCase, aggregate: Trento.Operations.Schedule, async: true
 
-  alias Trento.Operations.Commands.ScheduleOperation
-  alias Trento.Operations.Events.OperationScheduled
+  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
+  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
   alias Trento.Operations.Schedule
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
 
@@ -139,6 +139,132 @@ defmodule Trento.Operations.ScheduleTest do
         ],
         schedule_operation(schedule_id),
         {:error, :operation_schedule_already_exists}
+      )
+    end
+  end
+
+  describe "changing" do
+    defp scheduled(schedule_id, recurrence \\ nil) do
+      %OperationScheduled{
+        schedule_id: schedule_id,
+        target_type: "host",
+        target_id: "0a7a5d13-0e6e-4ac4-9f76-6b2d9d6a1b5e",
+        operation: "reboot",
+        params: %OperationParams{},
+        starts_at: @starts_at,
+        timezone: "Etc/UTC",
+        recurrence: recurrence,
+        next_run_at: @starts_at
+      }
+    end
+
+    defp change(schedule_id, overrides) do
+      ChangeOperationSchedule.new!(
+        Map.merge(
+          %{
+            schedule_id: schedule_id,
+            params: %{},
+            starts_at: @starts_at,
+            timezone: "Etc/UTC",
+            recurrence: nil,
+            requested_at: @requested_at
+          },
+          overrides
+        )
+      )
+    end
+
+    test "should replace the params and the timing of a schedule" do
+      schedule_id = UUID.uuid4()
+
+      assert_events_and_state(
+        [scheduled(schedule_id, %Recurrence{frequency: :daily, interval: 1})],
+        change(schedule_id, %{
+          params: %{timeout: 300},
+          starts_at: ~U[2026-11-10 04:00:00.000000Z],
+          timezone: "Europe/Berlin"
+        }),
+        [
+          %OperationScheduleChanged{
+            schedule_id: schedule_id,
+            params: %OperationParams{timeout: 300},
+            starts_at: ~U[2026-11-10 04:00:00.000000Z],
+            timezone: "Europe/Berlin",
+            recurrence: nil,
+            next_run_at: ~U[2026-11-10 04:00:00.000000Z]
+          }
+        ],
+        fn %Schedule{} = schedule ->
+          assert %Schedule{
+                   params: %OperationParams{timeout: 300},
+                   starts_at: ~U[2026-11-10 04:00:00.000000Z],
+                   timezone: "Europe/Berlin",
+                   recurrence: nil,
+                   next_run_at: ~U[2026-11-10 04:00:00.000000Z],
+                   occurrences: 0
+                 } = schedule
+        end
+      )
+    end
+
+    test "should continue an ongoing periodic schedule with its next occurrence" do
+      schedule_id = UUID.uuid4()
+      recurrence = %{frequency: :daily, interval: 1, max_occurrences: 3}
+
+      # The daily schedule started on 7 November; on 9 November at 10:00 its
+      # params change, its start stays.
+      assert_events(
+        [scheduled(schedule_id, struct(Recurrence, recurrence))],
+        change(schedule_id, %{
+          recurrence: recurrence,
+          params: %{timeout: 60},
+          requested_at: ~U[2026-11-09 10:00:00.000000Z]
+        }),
+        [
+          %OperationScheduleChanged{
+            schedule_id: schedule_id,
+            params: %OperationParams{timeout: 60},
+            starts_at: @starts_at,
+            timezone: "Etc/UTC",
+            recurrence: struct(Recurrence, recurrence),
+            next_run_at: ~U[2026-11-10 02:00:00.000000Z]
+          }
+        ]
+      )
+    end
+
+    test "should refuse a new start in the past, or keeping the past start of a one-time schedule" do
+      schedule_id = UUID.uuid4()
+
+      assert_error(
+        [scheduled(schedule_id)],
+        change(schedule_id, %{starts_at: ~U[2026-11-01 04:00:00.000000Z]}),
+        {:error, :operation_schedule_start_in_the_past}
+      )
+
+      assert_error(
+        [scheduled(schedule_id)],
+        change(schedule_id, %{requested_at: ~U[2026-11-09 10:00:00.000000Z]}),
+        {:error, :operation_schedule_start_in_the_past}
+      )
+    end
+
+    test "should refuse a recurrence that leaves no occurrence" do
+      schedule_id = UUID.uuid4()
+
+      assert_error(
+        [scheduled(schedule_id)],
+        change(schedule_id, %{
+          recurrence: %{frequency: :weekly, interval: 1, ends_on: ~D[2026-11-07]}
+        }),
+        {:error, :operation_schedule_without_occurrences}
+      )
+    end
+
+    test "should not change a schedule that does not exist" do
+      assert_error(
+        change(UUID.uuid4(), %{}),
+        {:error, :operation_schedule_not_found}
       )
     end
   end
