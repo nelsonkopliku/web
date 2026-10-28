@@ -1,27 +1,31 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { call, put, select, takeEvery } from 'redux-saga/effects';
-import { get, has, sortBy } from 'lodash';
+import { all, call, put, select, takeEvery } from 'redux-saga/effects';
+import { flatMap, get, has, sortBy } from 'lodash';
 
 import {
+  createBulkOperationSchedules,
   createOperationSchedule,
   deleteOperationSchedule,
   getOperationSchedules,
+  getOperationSchedulesOfTargets,
   updateOperationSchedule as updateOperationScheduleRequest,
 } from '@lib/api/operationSchedules';
 import { defaultGlobalError } from '@lib/api/validationErrors';
-import { getOperationLabel } from '@lib/operations';
+import { countTargets, getOperationLabel } from '@lib/operations';
 
 import { notify } from '@state/notifications';
 import { OPERATION_COMPLETED } from '@state/runningOperations';
 import {
+  BULK_SCHEDULE_OPERATION,
   CANCEL_OPERATION_SCHEDULE,
   FETCH_OPERATION_SCHEDULES,
   OPERATION_SCHEDULES_CHANGED,
   SCHEDULE_OPERATION,
   UPDATE_OPERATION_SCHEDULE,
   fetchOperationSchedules as fetchOperationSchedulesAction,
+  setOperationScheduleConflicts,
   setOperationScheduleSubmissionErrors,
   setOperationScheduleSubmitted,
   setOperationSchedules,
@@ -139,6 +143,59 @@ export function* cancelOperationSchedule({ payload: { schedule } }) {
   }
 }
 
+// Warnings of the schedules of a bulk request, each one with the name of its
+// target
+function* bulkWarnings(targetType, schedules) {
+  const named = yield all(
+    schedules.map(({ target_id: targetID, warnings = [] }) =>
+      call(function* nameWarnings() {
+        const targetName = yield call(getTargetName, targetType, targetID);
+        return warnings.map((warning) => ({ ...warning, targetName }));
+      })
+    )
+  );
+
+  return flatMap(named);
+}
+
+export function* bulkScheduleOperation({ payload: { request, confirmed } }) {
+  const { target_type: targetType, target_ids: targetIDs, operation } = request;
+
+  yield put(startOperationScheduleSubmission());
+
+  try {
+    if (!confirmed) {
+      const { data: existing } = yield call(
+        getOperationSchedulesOfTargets,
+        targetIDs,
+        operation
+      );
+
+      if (existing.length > 0) {
+        yield put(setOperationScheduleConflicts({ conflicts: existing }));
+        return;
+      }
+    }
+
+    const {
+      data: { schedules },
+    } = yield call(createBulkOperationSchedules, request);
+    const warnings = yield call(bulkWarnings, targetType, schedules);
+
+    yield put(setOperationScheduleSubmitted({ operation, warnings }));
+    yield put(
+      notify({
+        text: `Operation ${getOperationLabel(operation)} scheduled for ${countTargets(targetIDs.length, targetType)}`,
+        icon: '📅',
+      })
+    );
+  } catch (error) {
+    yield put(
+      setOperationScheduleSubmissionErrors({ errors: requestErrors(error) })
+    );
+  }
+}
+
 // The schedules of a target change after any change, run, or end of one of
 // them, also by other users: the displayed targets are fetched again.
 // Operations name their target groupID.
@@ -156,6 +213,7 @@ export function* watchOperationSchedules() {
   yield takeEvery(SCHEDULE_OPERATION, scheduleOperation);
   yield takeEvery(UPDATE_OPERATION_SCHEDULE, updateOperationSchedule);
   yield takeEvery(CANCEL_OPERATION_SCHEDULE, cancelOperationSchedule);
+  yield takeEvery(BULK_SCHEDULE_OPERATION, bulkScheduleOperation);
   yield takeEvery(
     [OPERATION_SCHEDULES_CHANGED, OPERATION_COMPLETED],
     refreshOperationSchedules

@@ -10,11 +10,13 @@ import {
 
 import operationSchedulesReducer, {
   forgetOperationSchedules,
+  SUBMISSION_CONFLICTS,
   SUBMISSION_FAILED,
   SUBMISSION_IDLE,
   SUBMISSION_SUBMITTING,
   SUBMISSION_SUCCEEDED,
   resetOperationScheduleSubmission,
+  setOperationScheduleConflicts,
   setOperationScheduleSubmissionErrors,
   setOperationScheduleSubmitted,
   setOperationSchedules,
@@ -28,6 +30,7 @@ const idleSubmission = {
   operation: null,
   errors: [],
   warnings: [],
+  conflicts: [],
 };
 
 describe('operationSchedules reducer', () => {
@@ -112,9 +115,9 @@ describe('operationSchedules reducer', () => {
         setOperationScheduleSubmitted({ operation: 'reboot', warnings })
       ).submission
     ).toEqual({
+      ...idleSubmission,
       status: SUBMISSION_SUCCEEDED,
       operation: 'reboot',
-      errors: [],
       warnings,
     });
 
@@ -150,6 +153,36 @@ describe('operationSchedules reducer', () => {
         state,
         setOperationScheduleSubmissionErrors({
           errors: [{ title: 'Invalid value', detail: 'is invalid' }],
+        })
+      ).submission
+    ).toEqual(idleSubmission);
+  });
+
+  it('should tell the targets that already have a schedule of the operation', () => {
+    const conflicts = operationScheduleFactory.buildList(2);
+    const submitting = operationSchedulesReducer(
+      undefined,
+      startOperationScheduleSubmission()
+    );
+
+    expect(
+      operationSchedulesReducer(
+        submitting,
+        setOperationScheduleConflicts({ conflicts })
+      ).submission
+    ).toEqual({
+      ...idleSubmission,
+      status: SUBMISSION_CONFLICTS,
+      conflicts,
+    });
+  });
+
+  it('should ignore the conflicts of a submission that was reset', () => {
+    expect(
+      operationSchedulesReducer(
+        undefined,
+        setOperationScheduleConflicts({
+          conflicts: operationScheduleFactory.buildList(1),
         })
       ).submission
     ).toEqual(idleSubmission);
