@@ -72,6 +72,111 @@ defmodule Trento.MaintenanceWindows.Coverage do
     |> Enum.uniq()
   end
 
+  @doc """
+  The targets that the windows of a target cover, the target included.
+  """
+  @spec covered(String.t(), String.t()) :: [target()]
+  def covered("host", host_id), do: [{"host", host_id}]
+
+  def covered("cluster", cluster_id),
+    do: [{"cluster", cluster_id} | hosts_of_clusters([cluster_id])]
+
+  def covered("database", database_id) do
+    clusters = clusters_managing_database(database_id)
+
+    [{"database", database_id}]
+    |> Kernel.++(Enum.map(clusters, &{"cluster", &1}))
+    |> Kernel.++(hosts_of_clusters(clusters))
+    |> Kernel.++(database_hosts(database_id))
+    |> Enum.uniq()
+  end
+
+  def covered("sap_system", sap_system_id) do
+    clusters = clusters_managing_sap_system(sap_system_id)
+
+    [{"sap_system", sap_system_id}]
+    |> Kernel.++(database_of_sap_system(sap_system_id))
+    |> Kernel.++(Enum.map(clusters, &{"cluster", &1}))
+    |> Kernel.++(hosts_of_clusters(clusters))
+    |> Kernel.++(application_hosts(sap_system_id))
+    |> Enum.uniq()
+  end
+
+  defp database_of_sap_system(sap_system_id) do
+    query =
+      from s in SapSystemReadModel,
+        join: d in DatabaseReadModel,
+        on: d.id == s.database_id and is_nil(d.deregistered_at),
+        where: s.id == ^sap_system_id,
+        select: d.id
+
+    case Repo.one(query) do
+      nil -> []
+      database_id -> covered("database", database_id)
+    end
+  end
+
+  defp hosts_of_clusters([]), do: []
+
+  defp hosts_of_clusters(cluster_ids) do
+    Repo.all(
+      from h in HostReadModel,
+        where: h.cluster_id in ^cluster_ids and is_nil(h.deregistered_at),
+        select: h.id
+    )
+    |> Enum.map(&{"host", &1})
+  end
+
+  defp database_hosts(database_id) do
+    Repo.all(
+      from di in DatabaseInstanceReadModel,
+        join: h in HostReadModel,
+        on: h.id == di.host_id and is_nil(h.deregistered_at),
+        where: di.database_id == ^database_id,
+        distinct: true,
+        select: h.id
+    )
+    |> Enum.map(&{"host", &1})
+  end
+
+  defp application_hosts(sap_system_id) do
+    Repo.all(
+      from ai in ApplicationInstanceReadModel,
+        join: h in HostReadModel,
+        on: h.id == ai.host_id and is_nil(h.deregistered_at),
+        where: ai.sap_system_id == ^sap_system_id,
+        distinct: true,
+        select: h.id
+    )
+    |> Enum.map(&{"host", &1})
+  end
+
+  defp clusters_managing_database(database_id) do
+    Repo.all(
+      from di in DatabaseInstanceReadModel,
+        join: h in HostReadModel,
+        on: h.id == di.host_id and is_nil(h.deregistered_at),
+        join: c in ClusterReadModel,
+        on: c.id == h.cluster_id and is_nil(c.deregistered_at),
+        where: di.database_id == ^database_id and managed_by(c, di.sid, di.instance_number),
+        distinct: true,
+        select: c.id
+    )
+  end
+
+  defp clusters_managing_sap_system(sap_system_id) do
+    Repo.all(
+      from ai in ApplicationInstanceReadModel,
+        join: h in HostReadModel,
+        on: h.id == ai.host_id and is_nil(h.deregistered_at),
+        join: c in ClusterReadModel,
+        on: c.id == h.cluster_id and is_nil(c.deregistered_at),
+        where: ai.sap_system_id == ^sap_system_id and managed_by(c, ai.sid, ai.instance_number),
+        distinct: true,
+        select: c.id
+    )
+  end
+
   defp cluster_owners(host_id) do
     query =
       from h in HostReadModel,

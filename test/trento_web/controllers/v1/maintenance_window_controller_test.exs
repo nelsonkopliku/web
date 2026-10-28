@@ -147,6 +147,29 @@ defmodule TrentoWeb.V1.MaintenanceWindowControllerTest do
     |> assert_schema("UnprocessableEntityV1", api_spec)
   end
 
+  test "should refuse a manual checks execution during a window that forbids it", %{
+    conn: conn,
+    api_spec: api_spec
+  } do
+    %{id: host_id} = insert(:host, selected_checks: ["check_1"])
+
+    {:ok, _} =
+      Trento.Repo.insert(%Trento.MaintenanceWindows.MaintenanceWindow{
+        target_type: "host",
+        target_id: host_id,
+        starts_at: DateTime.add(DateTime.utc_now(), -10, :minute),
+        timezone: "Etc/UTC",
+        duration_minutes: 60,
+        forbid_checks_execution: true
+      })
+
+    assert %{errors: [%{detail: "Checks cannot be executed during a maintenance window"}]} =
+             conn
+             |> post("/api/v1/hosts/#{host_id}/checks/request_execution")
+             |> json_response(422)
+             |> assert_schema("UnprocessableEntityV1", api_spec)
+  end
+
   test "should require the maintenance windows ability to change windows", %{
     conn: conn,
     api_spec: api_spec
