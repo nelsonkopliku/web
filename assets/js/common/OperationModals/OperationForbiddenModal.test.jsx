@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { noop } from 'lodash';
 import { renderWithRouter } from '@lib/test-utils';
+import { faker } from '@faker-js/faker';
 import { hostFactory } from '@lib/test-utils/factories';
 import OperationForbiddenModal from './OperationForbiddenModal';
 
@@ -142,5 +143,37 @@ describe('OperationForbiddenModal', () => {
 
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(mockOnCancel).toHaveBeenCalled();
+  });
+
+  it('should tell the maintenance window that refuses the operation, with a link to its target', async () => {
+    const clusterID = faker.string.uuid();
+
+    await act(() =>
+      renderWithRouter(
+        <OperationForbiddenModal
+          operation="Reboot host"
+          errors={[
+            {
+              detail:
+                'Operations are not allowed during the maintenance window of {0}, until 2026-11-20 10:00 UTC',
+              metadata: [
+                { id: clusterID, label: 'hana_cluster', type: 'cluster' },
+              ],
+            },
+          ]}
+          isOpen
+          onCancel={noop}
+        />
+      )
+    );
+
+    const [item] = within(screen.getByRole('list')).getAllByRole('listitem');
+    expect(item.textContent).toBe(
+      'Operations are not allowed during the maintenance window of hana_cluster, until 2026-11-20 10:00 UTC'
+    );
+    expect(screen.getByRole('link', { name: 'hana_cluster' })).toHaveAttribute(
+      'href',
+      `/clusters/${clusterID}`
+    );
   });
 });

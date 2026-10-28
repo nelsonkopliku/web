@@ -4,8 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { capitalize, get, noop } from 'lodash';
 
-import { OPERATION_NOT_ALLOWED_HOST } from '@lib/operations';
-import { isHeartbeatPassing } from '@lib/model/hosts';
 import { getEnsaVersionLabel, APPLICATION_TYPE } from '@lib/model/sapSystems';
 import { formatDateTime } from '@lib/timezones';
 
@@ -70,8 +68,6 @@ const getNodeDetailsTableConfig = (
               userAbilities={userAbilities}
               menuPosition="bottom"
               transparent
-              disabled={!isHeartbeatPassing(item)}
-              disabledTooltip={OPERATION_NOT_ALLOWED_HOST}
               operations={getHostOperations(item)}
             />
             <AttributesDetails title="Node Details" attributes={attributes} />
@@ -93,6 +89,7 @@ function AscsErsClusterDetails({
   lastExecution,
   userAbilities = [],
   timezone,
+  nextExecutionAt,
   navigate = () => {},
   getClusterHostOperations = noop,
 }) {
@@ -202,6 +199,7 @@ function AscsErsClusterDetails({
             data={executionData}
             catalogDataEmpty={catalogData?.length === 0}
             timezone={timezone}
+            nextExecutionAt={nextExecutionAt}
             loading={catalogLoading || executionLoading}
             error={catalogError || executionError}
             onCheckClick={(health) =>

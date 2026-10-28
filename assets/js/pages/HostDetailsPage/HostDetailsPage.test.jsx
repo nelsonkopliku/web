@@ -13,7 +13,14 @@ import {
   defaultInitialState,
   withState,
 } from '@lib/test-utils';
-import { hostFactory } from '@lib/test-utils/factories';
+import {
+  catalogCheckFactory,
+  checksScheduleFactory,
+  hostFactory,
+} from '@lib/test-utils/factories';
+
+import { fetchMaintenanceWindows } from '@state/maintenanceWindows';
+import { forgetOperationSchedules } from '@state/operationSchedules';
 
 import HostDetailsPage from '.';
 
@@ -218,5 +225,104 @@ describe('HostDetailsPage', () => {
     expect(screen.getByText('Last Boot').nextSibling.textContent).toBe(
       '11 Jan 2024, 13:30:00'
     );
+  });
+
+  it('shows when the checks of the host are executed next', async () => {
+    const host = hostFactory.build();
+    const { id: hostID } = host;
+
+    axiosMock.reset();
+    axiosMock.onGet(`/api/v1/hosts/${hostID}/checks/schedule`).reply(
+      200,
+      checksScheduleFactory.build({
+        next_execution_at: '2026-11-02T16:00:00Z',
+      })
+    );
+    axiosMock.onGet(/\/api\/v1\/charts.*/gm).reply(200, {});
+    axiosMock.onGet(/\/api\/v1\/hosts.*/gm).reply(200, {});
+
+    const state = {
+      ...defaultInitialState,
+      user: { ...defaultInitialState.user, timezone: 'Europe/Berlin' },
+      hostsList: { hosts: [host] },
+      catalog: {
+        loading: false,
+        data: catalogCheckFactory.buildList(2),
+        error: null,
+      },
+      lastExecutions: {
+        [hostID]: { data: null, loading: false, error: null },
+      },
+      softwareUpdates: {
+        settingsConfigured: false,
+        softwareUpdates: {},
+      },
+    };
+
+    const [StatefulHostDetails] = withState(<HostDetailsPage />, state);
+
+    await act(async () =>
+      renderWithRouterMatch(StatefulHostDetails, {
+        path: 'hosts/:hostID',
+        route: `/hosts/${hostID}`,
+      })
+    );
+
+    expect(
+      screen.getByText('Next execution: 02 Nov 2026, 17:00:00')
+    ).toBeVisible();
+  });
+
+  it('forgets the scheduled operations of the host when it is left', async () => {
+    const host = hostFactory.build();
+    const state = {
+      ...defaultInitialState,
+      hostsList: { hosts: [host] },
+      lastExecutions: {
+        [host.id]: { data: null, loading: false, error: null },
+      },
+      softwareUpdates: { settingsConfigured: false, softwareUpdates: {} },
+    };
+
+    const [StatefulHostDetails, store] = withState(<HostDetailsPage />, state);
+    const { unmount } = await act(async () =>
+      renderWithRouterMatch(StatefulHostDetails, {
+        path: 'hosts/:hostID',
+        route: `/hosts/${host.id}`,
+      })
+    );
+    unmount();
+
+    expect(store.getActions()).toContainEqual(
+      forgetOperationSchedules({ targetID: host.id })
+    );
+  });
+
+  it('fetches the maintenance windows that cover the host', async () => {
+    const host = hostFactory.build();
+
+    const [StatefulHostDetails, store] = withState(<HostDetailsPage />, {
+      ...defaultInitialState,
+      hostsList: { hosts: [host] },
+      lastExecutions: {
+        [host.id]: { data: null, loading: false, error: null },
+      },
+      softwareUpdates: {
+        settingsConfigured: false,
+        softwareUpdates: {},
+      },
+    });
+
+    await act(async () =>
+      renderWithRouterMatch(StatefulHostDetails, {
+        path: 'hosts/:hostID',
+        route: `/hosts/${host.id}`,
+      })
+    );
+
+    expect(store.getActions()).toContainEqual(
+      fetchMaintenanceWindows({ targetType: 'host', targetID: host.id })
+    );
+    expect(screen.getByText('Maintenance Windows')).toBeVisible();
   });
 });

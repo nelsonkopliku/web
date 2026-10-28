@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { all, call, put, select, takeEvery } from 'redux-saga/effects';
+import {
+  all,
+  call,
+  put,
+  race,
+  select,
+  take,
+  takeEvery,
+} from 'redux-saga/effects';
 import { noop } from 'lodash';
 
 import {
@@ -29,6 +37,7 @@ import { notify } from '@state/notifications';
 import {
   OPERATION_COMPLETED,
   OPERATION_REQUESTED,
+  OPERATION_STARTED,
   UPDATE_RUNNING_OPERATIONS,
   removeRunningOperation,
   setForbiddenOperation,
@@ -163,6 +172,17 @@ export function* completeOperation({ payload }) {
   }
 }
 
+const putRunningOperation = (runningOperation) =>
+  put(
+    setRunningOperation({
+      groupID: runningOperation.group_id,
+      operation: getOperationInternalName(runningOperation.operation),
+      // metadata: temporary solution to reconcile information of running operations
+      // the long term goal is to have a homogeneous shape for metadata in the state
+      metadata: { targets: runningOperation.targets },
+    })
+  );
+
 export function* updateRunningOperations() {
   try {
     const {
@@ -170,26 +190,38 @@ export function* updateRunningOperations() {
     } = yield call(getOperationExecutions, {
       status: 'running',
     });
-    yield all(
-      runningOperations.map((runningOperation) => {
-        const operation = getOperationInternalName(runningOperation.operation);
-        return put(
-          setRunningOperation({
-            groupID: runningOperation.group_id,
-            operation,
-            // metadata: temporary solution to reconcile information of running operations
-            // the long term goal is to have a homogeneous shape for metadata in the state
-            metadata: { targets: runningOperation.targets },
-          })
-        );
-      })
+    yield all(runningOperations.map(putRunningOperation));
+  } catch {
+    /* empty */
+  }
+}
+
+// The server requests the scheduled operations: they are only known from the
+// operation started broadcast. The running operation of the group is loaded,
+// with its targets, and replaces a refused request of the same group. When
+// the operation completes before the load ends, the loaded state is stale and
+// is dropped.
+export function* startedOperation({ payload: { groupID } }) {
+  try {
+    const { loaded } = yield race({
+      loaded: call(getOperationExecutions, { status: 'running' }),
+      completed: take(
+        ({ type, payload }) =>
+          type === OPERATION_COMPLETED && payload.groupID === groupID
+      ),
+    });
+    const runningOperation = loaded?.data.items.find(
+      ({ group_id: id }) => id === groupID
     );
+
+    if (runningOperation) yield putRunningOperation(runningOperation);
   } catch {
     /* empty */
   }
 }
 
 export function* watchOperationEvents() {
+  yield takeEvery(OPERATION_STARTED, startedOperation);
   yield takeEvery(OPERATION_COMPLETED, completeOperation);
   yield takeEvery(OPERATION_REQUESTED, requestOperation);
   yield takeEvery(UPDATE_RUNNING_OPERATIONS, updateRunningOperations);

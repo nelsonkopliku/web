@@ -4,6 +4,7 @@
 import React from 'react';
 
 import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import { faker } from '@faker-js/faker';
@@ -16,7 +17,12 @@ import {
 import { networkClient } from '@lib/network';
 import MockAdapter from 'axios-mock-adapter';
 
-import { hostFactory, selectableCheckFactory } from '@lib/test-utils/factories';
+import {
+  checksScheduleFactory,
+  hostFactory,
+  maintenanceWindowFactory,
+  selectableCheckFactory,
+} from '@lib/test-utils/factories';
 
 import HostSettingsPage from './HostSettingsPage';
 
@@ -137,5 +143,90 @@ describe('HostSettingsPage component', () => {
     });
     const startExecutionButton = screen.getByText('Start Execution');
     expect(startExecutionButton).toBeEnabled();
+  });
+
+  it('should render the check execution frequency of the host', async () => {
+    const hosts = hostFactory.buildList(2);
+    const { id: hostID } = hosts[0];
+    const state = {
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities: [{ name: 'all', resource: 'check_frequency' }] },
+    };
+
+    axiosMock.onGet(`/api/v1/hosts/${hostID}/checks/schedule`).reply(
+      200,
+      checksScheduleFactory.build({
+        interval: '6h',
+        effective_interval: '6h',
+        global_interval: '5m',
+      })
+    );
+
+    const [StatefulHostSettingsPage] = withState(<HostSettingsPage />, state);
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulHostSettingsPage, {
+        path: 'hosts/:hostID/settings',
+        route: `/hosts/${hostID}/settings`,
+      });
+    });
+
+    expect(
+      screen.getByText(
+        'Configure how often the checks of this host are executed.'
+      )
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText('checks-execution-frequency')
+    ).toHaveTextContent(
+      'Every 6 hours (overrides the system setting: every 5 minutes)'
+    );
+    expect(screen.getByRole('button', { name: 'Edit Settings' })).toBeEnabled();
+  });
+
+  it('should not start an execution during a maintenance window that forbids it', async () => {
+    const user = userEvent.setup();
+    const hosts = hostFactory.buildList(1, {
+      selected_checks: [faker.string.uuid()],
+    });
+    const { id: hostID } = hosts[0];
+
+    const [StatefulHostSettingsPage] = withState(<HostSettingsPage />, {
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities: [{ name: 'all', resource: 'all' }] },
+      maintenanceWindows: {
+        byTarget: {
+          [hostID]: {
+            targetType: 'host',
+            loading: false,
+            error: false,
+            windows: [
+              maintenanceWindowFactory.build({
+                active: true,
+                forbids: ['checks_execution'],
+              }),
+            ],
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulHostSettingsPage, {
+        path: 'hosts/:hostID/settings',
+        route: `/hosts/${hostID}/settings`,
+      });
+    });
+
+    const startExecution = screen.getByRole('button', {
+      name: 'Start Execution',
+    });
+    expect(startExecution).toBeDisabled();
+    await user.hover(startExecution);
+    expect(
+      screen.getByText('Checks cannot be executed during a maintenance window')
+    ).toBeVisible();
   });
 });
