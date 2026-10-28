@@ -136,9 +136,6 @@ config :trento, :tickers,
     mfa: {Trento.Heartbeats, :dispatch_heartbeat_failed_commands, []}
   ]
 
-# How often every host and cluster gets a checks execution, see Trento.Infrastructure.Jobs
-config :trento, :checks_execution_cron, "*/5 * * * *"
-
 # Daily pruning of the discovery events older than 10 days, see Trento.Infrastructure.Jobs
 config :trento, :discovery_events_pruning, schedule: "0 0 * * *", older_than: 10
 

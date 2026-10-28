@@ -3,21 +3,21 @@
 
 defmodule Trento.Infrastructure.Jobs do
   @moduledoc """
-  Oban configuration. The crontab entries that a deployment can change come
-  from their own configuration keys, so that every environment sets them
-  without repeating the whole crontab: the checks execution and the pruning
-  of the discovery events.
+  Oban configuration. The pruning of the discovery events, which a
+  deployment can change, comes from its own configuration key, so that every
+  environment sets it without repeating the whole crontab. The checks
+  execution job runs every minute: `Trento.ChecksScheduling` decides which
+  targets are due.
   """
 
   alias Trento.Infrastructure.Jobs.{ChecksExecutionJob, DiscoveryEventsPruningJob}
 
   @spec oban_config() :: keyword()
   def oban_config do
-    checks_cron = Application.fetch_env!(:trento, :checks_execution_cron)
     pruning = Application.fetch_env!(:trento, :discovery_events_pruning)
 
     entries = [
-      {checks_cron, ChecksExecutionJob, queue: :checks},
+      {"* * * * *", ChecksExecutionJob, queue: :checks},
       {Keyword.fetch!(pruning, :schedule), DiscoveryEventsPruningJob,
        args: %{older_than: Keyword.fetch!(pruning, :older_than)}}
     ]
