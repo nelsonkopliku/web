@@ -18,7 +18,7 @@ defmodule Trento.Operations.SchedulesPolicy do
   def authorize(:index, _, _), do: true
 
   def authorize(action, %User{} = user, %{target_type: target_type, operation: operation})
-      when action in [:create, :update, :delete] do
+      when action in [:create, :bulk_create, :update, :delete] do
     case Requests.parse(target_type, operation) do
       {:ok, target_type, operation} -> Requests.allowed?(user, target_type, operation)
       :error -> true
