@@ -21,7 +21,7 @@ defmodule Trento.MaintenanceWindows do
   alias Trento.Clusters.Projections.ClusterReadModel
   alias Trento.Databases.Projections.DatabaseReadModel
   alias Trento.Hosts.Projections.HostReadModel
-  alias Trento.MaintenanceWindows.Commands.ScheduleMaintenanceWindow
+  alias Trento.MaintenanceWindows.Commands.{ChangeMaintenanceWindow, ScheduleMaintenanceWindow}
 
   alias Trento.MaintenanceWindows.Projections.{
     MaintenanceWindowProjector,
@@ -56,6 +56,37 @@ defmodule Trento.MaintenanceWindows do
         WindowActivity.record(
           :maintenance_window_scheduled,
           window || provisional(command),
+          actor
+        )
+      end)
+    end
+  end
+
+  @doc """
+  Replaces the timing and the forbidden actions of a window. The change
+  applies at once, also to an ongoing window, which can keep its start.
+  """
+  @spec update_window(String.t(), map(), String.t(), module()) ::
+          {:ok, MaintenanceWindowReadModel.t()}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :consistency_timeout}
+          | {:error, any()}
+  def update_window(window_id, attrs, actor, date_service \\ DateService) do
+    changeset =
+      ChangeMaintenanceWindow.changeset(
+        %ChangeMaintenanceWindow{},
+        Map.merge(attrs, %{window_id: window_id, requested_at: date_service.utc_now()})
+      )
+
+    with {:ok, current} <- get_window(window_id),
+         {:ok, command} <- Ecto.Changeset.apply_action(changeset, :update) do
+      command
+      |> dispatch([])
+      |> saved(changeset, window_id, fn window ->
+        WindowActivity.record(
+          :maintenance_window_changed,
+          window || provisional(command, current),
           actor
         )
       end)
@@ -236,27 +267,35 @@ defmodule Trento.MaintenanceWindows do
       {:error,
        Ecto.Changeset.add_error(changeset, :starts_at, "leaves no occurrence that is not over")}
 
+  defp saved({:error, :maintenance_window_not_found}, _, _, _), do: {:error, :not_found}
+
   defp saved({:error, _} = error, _, _, _), do: error
 
   # The window as the read model will show it, to log a change that the read
   # model does not show yet.
   defp provisional(%ScheduleMaintenanceWindow{} = command) do
-    recurrence = command.recurrence
-
-    %MaintenanceWindowReadModel{
+    provisional(command, %MaintenanceWindowReadModel{
       id: command.window_id,
       target_type: command.target_type,
       target_id: command.target_id,
-      starts_at: command.starts_at,
-      timezone: command.timezone,
-      duration_minutes: command.duration_minutes,
-      frequency: recurrence && Atom.to_string(recurrence.frequency),
-      interval: (recurrence && recurrence.interval) || 1,
-      weekdays: (recurrence && recurrence.weekdays) || [],
-      ends_on: recurrence && recurrence.ends_on,
-      forbid_checks_execution: :checks_execution in command.forbids,
-      forbid_operations: :operations in command.forbids,
       bulk_id: command.bulk_id
+    })
+  end
+
+  defp provisional(command, %MaintenanceWindowReadModel{} = current) do
+    recurrence = command.recurrence
+
+    %MaintenanceWindowReadModel{
+      current
+      | starts_at: command.starts_at,
+        timezone: command.timezone,
+        duration_minutes: command.duration_minutes,
+        frequency: recurrence && Atom.to_string(recurrence.frequency),
+        interval: (recurrence && recurrence.interval) || 1,
+        weekdays: (recurrence && recurrence.weekdays) || [],
+        ends_on: recurrence && recurrence.ends_on,
+        forbid_checks_execution: :checks_execution in command.forbids,
+        forbid_operations: :operations in command.forbids
     }
   end
 end

@@ -1548,6 +1548,19 @@ defmodule Trento.Factory do
     }
   end
 
+  def maintenance_window_factory do
+    %Trento.MaintenanceWindows.Projections.MaintenanceWindowReadModel{
+      id: Faker.UUID.v4(),
+      target_type: "host",
+      target_id: Faker.UUID.v4(),
+      starts_at: DateTime.add(DateTime.utc_now(), 2, :day),
+      timezone: "Etc/UTC",
+      duration_minutes: 60,
+      forbid_operations: true,
+      created_by: "admin"
+    }
+  end
+
   def alerting_settings_factory do
     %AlertingSettings{
       type: :alerting_settings,
