@@ -21,13 +21,17 @@ import PageHeader from '@common/PageHeader';
 
 import ChecksSelection, { useChecksSelection } from '@pages/ChecksSelection';
 import ChecksSelectionHeader from '@pages/ChecksSelection/ChecksSelectionHeader';
+import TargetChecksExecutionSection from '@pages/ChecksSelection/TargetChecksExecutionSection';
+import { useChecksSchedule } from '@pages/ChecksSelection/hooks';
+import { executionBlockedReason } from '@lib/model/checksSchedule';
 
 function HostSettingsPage() {
   const dispatch = useDispatch();
   const { hostID } = useParams();
   const [selection, setSelection] = useState([]);
 
-  const { abilities } = useSelector(getUserProfile);
+  const { abilities, timezone } = useSelector(getUserProfile);
+  const checksSchedule = useChecksSchedule(TARGET_HOST, hostID);
   const host = useSelector(getHost(hostID));
   const selectedChecks = useSelector((state) =>
     getHostSelectedChecks(state, hostID)
@@ -98,6 +102,7 @@ function HostSettingsPage() {
         selection={selection}
         userAbilities={abilities}
         checkSelectionPermittedFor={['all:host_checks_selection']}
+        executionBlockedReason={executionBlockedReason(checksSchedule.schedule)}
         checkExecutionPermittedFor={['all:host_checks_execution']}
         onSaveSelection={saveSelection}
         onStartExecution={requestChecksExecution}
@@ -106,6 +111,12 @@ function HostSettingsPage() {
         arch={arch}
         provider={provider}
         agentVersion={agentVersion}
+      />
+      <TargetChecksExecutionSection
+        targetType={TARGET_HOST}
+        checksSchedule={checksSchedule}
+        timezone={timezone}
+        userAbilities={abilities}
       />
       <ChecksSelection
         groupID={hostID}
