@@ -199,11 +199,12 @@ defmodule Trento.Clusters do
     end
   end
 
-  @spec request_operation(atom(), String.t(), map()) :: {:ok, String.t()} | {:error, any}
-  def request_operation(operation, cluster_id, params)
-      when operation in ClusterOperations.values() do
-    operation_id = UUID.uuid4()
+  @spec request_operation(atom(), String.t(), map(), String.t()) ::
+          {:ok, String.t()} | {:error, any}
+  def request_operation(operation, cluster_id, params, operation_id \\ UUID.uuid4())
 
+  def request_operation(operation, cluster_id, params, operation_id)
+      when operation in ClusterOperations.values() do
     # Design decision: in order to keep things simpler, the first node is selected as designated
     # controller (is_dc) on this function. It does not matter in which cluster node the commands
     # are executed, as long as they are executed only in one node.
@@ -232,7 +233,7 @@ defmodule Trento.Clusters do
     end
   end
 
-  def request_operation(_, _, _), do: {:error, :operation_not_found}
+  def request_operation(_, _, _, _), do: {:error, :operation_not_found}
 
   @spec request_host_operation(atom(), String.t(), String.t()) ::
           {:ok, String.t()} | {:error, any}

@@ -164,11 +164,12 @@ defmodule Trento.Hosts do
     end
   end
 
-  @spec request_operation(atom(), String.t(), map()) :: {:ok, String.t()} | {:error, any}
-  def request_operation(operation, host_id, params)
-      when operation in HostOperations.values() do
-    operation_id = UUID.uuid4()
+  @spec request_operation(atom(), String.t(), map(), String.t()) ::
+          {:ok, String.t()} | {:error, any}
+  def request_operation(operation, host_id, params, operation_id \\ UUID.uuid4())
 
+  def request_operation(operation, host_id, params, operation_id)
+      when operation in HostOperations.values() do
     case Operations.request_operation(
            operation_id,
            host_id,
@@ -180,7 +181,7 @@ defmodule Trento.Hosts do
     end
   end
 
-  def request_operation(_, _, _), do: {:error, :operation_not_found}
+  def request_operation(_, _, _, _), do: {:error, :operation_not_found}
 
   @spec enrich_host_read_model_query(Ecto.Query.t()) :: Ecto.Query.t()
   defp enrich_host_read_model_query(query) do

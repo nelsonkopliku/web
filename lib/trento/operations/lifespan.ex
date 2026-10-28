@@ -7,16 +7,26 @@ defmodule Trento.Operations.Lifespan do
 
   A schedule handles a few commands per occurrence, hours or days apart: its
   process stops after a while without commands and is rebuilt from its short
-  stream when the next command comes. A cancelled schedule stops at once.
+  stream when the next command comes. A cancelled or ended schedule stops at
+  once.
   """
 
   @behaviour Commanded.Aggregates.AggregateLifespan
 
-  alias Trento.Operations.Events.OperationScheduleCancelled
+  alias Trento.Operations.Events.{
+    OperationScheduleCancelled,
+    ScheduledOperationRequested,
+    ScheduledOperationRequestFailed
+  }
 
   @idle_timeout :timer.minutes(10)
 
   def after_event(%OperationScheduleCancelled{}), do: :stop
+
+  def after_event(%event{next_run_at: nil})
+      when event in [ScheduledOperationRequested, ScheduledOperationRequestFailed],
+      do: :stop
+
   def after_event(_event), do: @idle_timeout
 
   def after_command(_command), do: @idle_timeout

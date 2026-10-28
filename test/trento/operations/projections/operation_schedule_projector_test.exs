@@ -8,7 +8,9 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
   alias Trento.Operations.Events.{
     OperationScheduleCancelled,
     OperationScheduleChanged,
-    OperationScheduled
+    OperationScheduled,
+    ScheduledOperationRequested,
+    ScheduledOperationRequestFailed
   }
 
   alias Trento.Operations.Projections.{
@@ -164,5 +166,62 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
       event: "operation_schedules_changed",
       payload: %{target_id: ^target_id}
     }
+  end
+
+  test "should move a schedule to its next occurrence after a run" do
+    target_id = UUID.uuid4()
+    %{id: schedule_id} = insert(:operation_schedule, target_id: target_id, frequency: :daily)
+
+    project(%ScheduledOperationRequested{
+      schedule_id: schedule_id,
+      run_at: @starts_at,
+      operation_id: UUID.uuid4(),
+      occurrences: 3,
+      next_run_at: ~U[2026-11-10 02:00:00.000000Z]
+    })
+
+    assert %OperationScheduleReadModel{
+             next_run_at: ~U[2026-11-10 02:00:00.000000Z],
+             occurrences: 3
+           } = Repo.get!(OperationScheduleReadModel, schedule_id)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "operation_schedules_changed",
+      payload: %{target_id: ^target_id}
+    }
+  end
+
+  test "should remove a schedule that ended after a run" do
+    target_id = UUID.uuid4()
+    %{id: schedule_id} = insert(:operation_schedule, target_id: target_id)
+
+    project(%ScheduledOperationRequestFailed{
+      schedule_id: schedule_id,
+      run_at: @starts_at,
+      reason: :policies,
+      errors: [],
+      occurrences: 1,
+      next_run_at: nil
+    })
+
+    assert nil == Repo.get(OperationScheduleReadModel, schedule_id)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "operation_schedules_changed",
+      payload: %{target_id: ^target_id}
+    }
+  end
+
+  test "should ignore the outcome of a run of a cancelled schedule" do
+    project(%ScheduledOperationRequested{
+      schedule_id: UUID.uuid4(),
+      run_at: @starts_at,
+      operation_id: UUID.uuid4(),
+      occurrences: 0,
+      next_run_at: nil
+    })
+
+    assert [] == Repo.all(OperationScheduleReadModel)
+    refute_receive %Phoenix.Socket.Broadcast{event: "operation_schedules_changed"}
   end
 end
