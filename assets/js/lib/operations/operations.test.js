@@ -14,6 +14,7 @@ import {
   describeOperationParams,
   isSchedulable,
   getOperationPermittedFor,
+  countTargets,
 } from '.';
 
 describe('operations', () => {
@@ -199,6 +200,22 @@ describe('operation abilities', () => {
     'should tell the abilities that permit $operation',
     ({ operation, permitted }) => {
       expect(getOperationPermittedFor(operation)).toEqual(permitted);
+    }
+  );
+});
+
+describe('targets count', () => {
+  it.each`
+    count | targetType      | label
+    ${1}  | ${'host'}       | ${'1 host'}
+    ${3}  | ${'host'}       | ${'3 hosts'}
+    ${2}  | ${'cluster'}    | ${'2 clusters'}
+    ${2}  | ${'sap_system'} | ${'2 SAP systems'}
+    ${1}  | ${'database'}   | ${'1 database'}
+  `(
+    'should count $count $targetType as "$label"',
+    ({ count, targetType, label }) => {
+      expect(countTargets(count, targetType)).toBe(label);
     }
   );
 });
