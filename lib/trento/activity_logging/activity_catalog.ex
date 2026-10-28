@@ -45,14 +45,17 @@ defmodule Trento.ActivityLog.ActivityCatalog do
   ]
 
   # Activities that the application emits itself, when no connection, domain
-  # event or queue event carries them: a schedule created for many targets at
-  # once, an operation requested by the scheduler.
+  # event or queue event carries them: a schedule or a maintenance window
+  # created for many targets at once, an operation requested by the scheduler.
   @application_activities [
     :operation_scheduled,
     :operation_schedule_changed,
     :operation_schedule_cancelled,
     :scheduled_operation_requested,
-    :scheduled_operation_request_failed
+    :scheduled_operation_request_failed,
+    :maintenance_window_scheduled,
+    :maintenance_window_changed,
+    :maintenance_window_deleted
   ]
 
   @type activity_type :: atom()
