@@ -18,10 +18,11 @@ const matchesSite =
       (params) => get(params, 'site', null) === site
     )(metadata);
 
+// The entries stay available while an operation runs, so that they can be
+// scheduled. Only the status of the instances disables them.
 export const getDatabaseOperations = (
   database,
   runningOperations,
-  disabled,
   setOperationModelOpen
 ) => [
   {
@@ -32,7 +33,7 @@ export const getDatabaseOperations = (
       DATABASE_START,
       matchesSite(null)
     ),
-    disabled: disabled || every(database.instances, { status: 'green' }),
+    disabled: every(database.instances, { status: 'green' }),
     permitted: ['start:database'],
     onClick: () => {
       setOperationModelOpen({ open: true, operation: DATABASE_START });
@@ -46,7 +47,7 @@ export const getDatabaseOperations = (
       DATABASE_STOP,
       matchesSite(null)
     ),
-    disabled: disabled || every(database.instances, { status: 'gray' }),
+    disabled: every(database.instances, { status: 'gray' }),
     permitted: ['stop:database'],
     onClick: () => {
       setOperationModelOpen({ open: true, operation: DATABASE_STOP });
@@ -58,7 +59,6 @@ export const getDatabaseSiteOperations = curry(
   (
     database,
     runningOperations,
-    disabled,
     setOperationModelOpen,
     setCurrentOperationSite,
     site
@@ -76,7 +76,7 @@ export const getDatabaseSiteOperations = curry(
           DATABASE_START,
           matchesSite(site)
         ),
-        disabled: disabled || every(siteInstances, { status: 'green' }),
+        disabled: every(siteInstances, { status: 'green' }),
         permitted: ['start:database'],
         onClick: () => {
           setCurrentOperationSite(site);
@@ -91,7 +91,7 @@ export const getDatabaseSiteOperations = curry(
           DATABASE_STOP,
           matchesSite(site)
         ),
-        disabled: disabled || every(siteInstances, { status: 'gray' }),
+        disabled: every(siteInstances, { status: 'gray' }),
         permitted: ['stop:database'],
         onClick: () => {
           setCurrentOperationSite(site);
