@@ -9,6 +9,7 @@ defmodule Trento.EventHandlersSupervisor do
   alias Trento.Infrastructure.Commanded.EventHandlers.{
     ActivityLogEventHandler,
     AlertsEventHandler,
+    ChecksSchedulesCleanupEventHandler,
     DatabaseDeregistrationEventHandler,
     DatabaseRestoreEventHandler,
     OperationSchedulesCleanupEventHandler,
@@ -35,6 +36,7 @@ defmodule Trento.EventHandlersSupervisor do
       DatabaseDeregistrationEventHandler,
       DatabaseRestoreEventHandler,
       OperationSchedulesCleanupEventHandler,
+      ChecksSchedulesCleanupEventHandler,
       SapSystemDatabaseHealthEventHandler,
       SapSystemDatabaseStaleAtEventHandler,
       SaptuneStatusUpdateEventHandler
