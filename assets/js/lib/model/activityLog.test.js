@@ -359,6 +359,53 @@ describe('activityLog', () => {
       });
     });
 
+    describe('maintenance window activities', () => {
+      const window = {
+        correlation_id: 'window-id',
+        target_type: 'cluster',
+        target_id: 'cluster-id',
+        cluster_id: 'cluster-id',
+        name: 'hana_cluster',
+        starts_at: '2026-11-20T22:00:00Z',
+        timezone: 'Europe/Berlin',
+        duration_minutes: 120,
+        recurrence: null,
+        forbids: ['checks_execution', 'operations'],
+      };
+
+      it.each`
+        type                              | message
+        ${'maintenance_window_scheduled'} | ${'Maintenance window scheduled for hana_cluster: 20 Nov 2026, 23:00 – 01:00 (Europe/Berlin), forbidding check execution and operations'}
+        ${'maintenance_window_changed'}   | ${'Maintenance window of hana_cluster changed: 20 Nov 2026, 23:00 – 01:00 (Europe/Berlin), forbidding check execution and operations'}
+        ${'maintenance_window_deleted'}   | ${'Maintenance window of hana_cluster deleted: 20 Nov 2026, 23:00 – 01:00 (Europe/Berlin), forbidding check execution and operations'}
+      `('should describe a $type entry', ({ type, message }) => {
+        expect(toMessage({ type, metadata: window })).toBe(message);
+        expect(toResource({ type, metadata: window })).toBe('Cluster');
+      });
+
+      it('should describe a maintenance window entry without its details', () => {
+        expect(
+          toMessage({ type: 'maintenance_window_deleted', metadata: {} })
+        ).toBe('Maintenance window deleted');
+      });
+
+      it('should tell that a maintenance window prevented a scheduled operation', () => {
+        expect(
+          toMessage({
+            type: 'scheduled_operation_request_failed',
+            metadata: {
+              operation: 'reboot',
+              target_type: 'host',
+              hostname: 'vmhana01',
+              reason: 'maintenance_window',
+            },
+          })
+        ).toBe(
+          'Scheduled operation Reboot host for vmhana01 not requested: a maintenance window forbids operations'
+        );
+      });
+    });
+
     describe('checks execution frequency activities', () => {
       it.each`
         metadata                    | message
