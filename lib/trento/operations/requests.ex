@@ -58,6 +58,28 @@ defmodule Trento.Operations.Requests do
 
   @sap_instance_operations [:sap_instance_start, :sap_instance_stop]
 
+  @doc """
+  The names of the target types that have schedulable operations.
+  """
+  @spec target_type_names() :: [String.t()]
+  def target_type_names, do: Enum.map(Map.keys(@schedulable), &Atom.to_string/1)
+
+  @doc """
+  The names of the operations that can be scheduled. Without `bulk: true`,
+  SAP instance operations are included: they name the instance in their params,
+  so a bulk request over several SAP systems cannot carry them.
+  """
+  @spec schedulable_operation_names(keyword()) :: [String.t()]
+  def schedulable_operation_names(opts \\ []) do
+    excluded = if Keyword.get(opts, :bulk, false), do: @sap_instance_operations, else: []
+
+    @schedulable
+    |> Map.values()
+    |> List.flatten()
+    |> Kernel.--(excluded)
+    |> Enum.map(&Atom.to_string/1)
+  end
+
   @spec schedulable_operations(target_type()) :: [atom()]
   def schedulable_operations(target_type), do: Map.get(@schedulable, target_type, [])
 
