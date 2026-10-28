@@ -240,6 +240,11 @@ export default {
         'Maintenance windows of the host, with the callbacks of useMaintenanceWindows',
       control: { type: 'object' },
     },
+    checksExecutionBlockedReason: {
+      description:
+        'Why the checks of the host cannot be executed now, for example during a maintenance window',
+      control: { type: 'text' },
+    },
     nextExecutionAt: {
       description:
         'When the checks of the host are executed next: a date, null when periodic executions are disabled, undefined while unknown',
@@ -355,6 +360,15 @@ export const WithMaintenanceWindows = {
       ],
       error: false,
     },
+  },
+};
+
+export const ChecksBlockedByMaintenance = {
+  args: {
+    ...Default.args,
+    selectedChecks: [faker.string.uuid()],
+    checksExecutionBlockedReason:
+      'Checks cannot be executed during a maintenance window',
   },
 };
 

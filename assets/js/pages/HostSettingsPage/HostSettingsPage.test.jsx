@@ -4,6 +4,7 @@
 import React from 'react';
 
 import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 import { faker } from '@faker-js/faker';
@@ -19,6 +20,7 @@ import MockAdapter from 'axios-mock-adapter';
 import {
   checksScheduleFactory,
   hostFactory,
+  maintenanceWindowFactory,
   selectableCheckFactory,
 } from '@lib/test-utils/factories';
 
@@ -181,5 +183,50 @@ describe('HostSettingsPage component', () => {
       'Every 6 hours (overrides the system setting: every 5 minutes)'
     );
     expect(screen.getByRole('button', { name: 'Edit Settings' })).toBeEnabled();
+  });
+
+  it('should not start an execution during a maintenance window that forbids it', async () => {
+    const user = userEvent.setup();
+    const hosts = hostFactory.buildList(1, {
+      selected_checks: [faker.string.uuid()],
+    });
+    const { id: hostID } = hosts[0];
+
+    const [StatefulHostSettingsPage] = withState(<HostSettingsPage />, {
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities: [{ name: 'all', resource: 'all' }] },
+      maintenanceWindows: {
+        byTarget: {
+          [hostID]: {
+            targetType: 'host',
+            loading: false,
+            error: false,
+            windows: [
+              maintenanceWindowFactory.build({
+                active: true,
+                forbids: ['checks_execution'],
+              }),
+            ],
+          },
+        },
+      },
+    });
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulHostSettingsPage, {
+        path: 'hosts/:hostID/settings',
+        route: `/hosts/${hostID}/settings`,
+      });
+    });
+
+    const startExecution = screen.getByRole('button', {
+      name: 'Start Execution',
+    });
+    expect(startExecution).toBeDisabled();
+    await user.hover(startExecution);
+    expect(
+      screen.getByText('Checks cannot be executed during a maintenance window')
+    ).toBeVisible();
   });
 });
