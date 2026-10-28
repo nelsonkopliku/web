@@ -7,20 +7,17 @@ import SettingsLoader, {
   calculateStatus as calculateSettingsLoaderStatus,
 } from '@common/SettingsLoader';
 
-import { useChecksSchedule } from './hooks';
 import TargetChecksExecution from './TargetChecksExecution';
 import TargetChecksExecutionModal from './TargetChecksExecutionModal';
 
 /**
- * Check execution settings of a host or a cluster, in its check settings view
+ * Check execution settings of a host or a cluster, in its check settings view.
+ * `checksSchedule` is the state of useChecksSchedule, that the view shares
+ * with the start of the executions.
  */
 function TargetChecksExecutionSection({
   targetType,
-  targetID,
-  timezone,
-  userAbilities,
-}) {
-  const {
+  checksSchedule: {
     schedule,
     fetchLoading,
     fetchError,
@@ -29,8 +26,10 @@ function TargetChecksExecutionSection({
     fetchSchedule,
     saveSchedule,
     clearSubmitErrors,
-  } = useChecksSchedule(targetType, targetID);
-
+  },
+  timezone,
+  userAbilities,
+}) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const save = async (changes) => {
