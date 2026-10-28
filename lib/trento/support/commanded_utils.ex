@@ -7,6 +7,8 @@ defmodule Trento.Support.CommandedUtils do
 
   def dispatch(command), do: commanded().dispatch(command)
 
+  def dispatch(command, opts), do: commanded().dispatch(command, opts)
+
   # The correlation of the current request, with more dispatch options
   def correlated_dispatch(command, opts) when is_list(opts) do
     correlation_id = Process.get(:correlation_id)

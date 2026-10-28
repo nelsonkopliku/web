@@ -5,7 +5,11 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
   use ExUnit.Case
   use Trento.DataCase
 
-  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
+  alias Trento.Operations.Events.{
+    OperationScheduleCancelled,
+    OperationScheduleChanged,
+    OperationScheduled
+  }
 
   alias Trento.Operations.Projections.{
     OperationScheduleProjector,
@@ -140,6 +144,21 @@ defmodule Trento.Operations.Projections.OperationScheduleProjectorTest do
              occurrences: 0,
              created_by: "admin"
            } = Repo.get!(OperationScheduleReadModel, schedule_id)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "operation_schedules_changed",
+      payload: %{target_id: ^target_id}
+    }
+  end
+
+  test "should remove a cancelled schedule and tell the UI" do
+    target_id = UUID.uuid4()
+    %{id: schedule_id} = insert(:operation_schedule, target_id: target_id)
+    %{id: kept_id} = insert(:operation_schedule, target_id: target_id)
+
+    project(%OperationScheduleCancelled{schedule_id: schedule_id})
+
+    assert [%OperationScheduleReadModel{id: ^kept_id}] = Repo.all(OperationScheduleReadModel)
 
     assert_receive %Phoenix.Socket.Broadcast{
       event: "operation_schedules_changed",
