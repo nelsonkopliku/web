@@ -4,12 +4,21 @@
 import React from 'react';
 import { faker } from '@faker-js/faker';
 import { noop } from 'lodash';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { formatDateTime } from '@lib/timezones';
 
-import { hostFactory, clusterFactory } from '@lib/test-utils/factories';
+import {
+  hostFactory,
+  clusterFactory,
+  operationScheduleFactory,
+} from '@lib/test-utils/factories';
+import {
+  initialScheduleSubmission,
+  SUBMISSION_FAILED,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
 import { renderWithRouter } from '@lib/test-utils';
 import {
   CLUSTER_MAINTENANCE_CHANGE,
@@ -625,5 +634,132 @@ describe('ClusterDetails ClusterDetails component', () => {
         }
       }
     );
+  });
+
+  describe('cluster maintenance scheduling', () => {
+    const cluster = clusterFactory.build({
+      details: { maintenance_mode: false },
+    });
+    const hosts = hostFactory.buildList(2, {
+      cluster_host_status: 'online',
+      heartbeat: 'passing',
+    });
+
+    const scheduleMaintenance = async (user) => {
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Cluster Maintenance' })
+      );
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'Periodic' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '03:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+    };
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should schedule the maintenance of the cluster with its options', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const props = {
+        clusterID: cluster.id,
+        clusterName: cluster.name,
+        details: cluster.details,
+        hasSelectedChecks: true,
+        hosts,
+        selectedChecks: [],
+        userAbilities,
+        userTimezone: 'Europe/Berlin',
+        operationsEnabled: true,
+        onScheduleOperation,
+      };
+
+      const { rerender } = renderWithRouter(<ClusterDetails {...props} />);
+
+      await scheduleMaintenance(user);
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'cluster',
+        target_id: cluster.id,
+        operation: CLUSTER_MAINTENANCE_CHANGE,
+        params: { maintenance: true },
+        starts_at: '2099-11-20T02:00:00.000Z',
+        timezone: 'Europe/Berlin',
+        recurrence: {
+          frequency: 'daily',
+          interval: 1,
+          weekdays: [],
+          ends_on: null,
+          max_occurrences: null,
+        },
+      });
+
+      rerender(
+        <ClusterDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_FAILED,
+            errors: [{ title: 'Forbidden', detail: 'Not allowed' }],
+          }}
+        />
+      );
+      expect(screen.getByText('Not allowed')).toBeVisible();
+
+      rerender(
+        <ClusterDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: CLUSTER_MAINTENANCE_CHANGE,
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('should warn when the maintenance is already scheduled', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={cluster.id}
+          clusterName={cluster.name}
+          details={cluster.details}
+          hasSelectedChecks
+          hosts={hosts}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          operationsEnabled
+          operationSchedules={[
+            operationScheduleFactory.build({
+              target_type: 'cluster',
+              target_id: cluster.id,
+              operation: CLUSTER_MAINTENANCE_CHANGE,
+              params: { maintenance: true },
+            }),
+          ]}
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      await scheduleMaintenance(user);
+
+      expect(
+        screen.getByText(
+          'Maintenance change is already scheduled for this target:'
+        )
+      ).toBeVisible();
+      expect(onScheduleOperation).not.toHaveBeenCalled();
+    });
   });
 });
