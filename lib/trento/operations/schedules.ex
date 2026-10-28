@@ -263,7 +263,7 @@ defmodule Trento.Operations.Schedules do
 
     case Requests.authorize(target_type, schedule.target_id, operation, schedule.params) do
       :ok -> {:ok, []}
-      {:error, :forbidden, errors} -> {:ok, errors}
+      {:error, reason, errors} when reason in [:forbidden, :maintenance_window] -> {:ok, errors}
       {:error, :not_found} -> {:error, :not_found}
     end
   end
