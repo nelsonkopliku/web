@@ -36,6 +36,11 @@ import {
   initialScheduleSubmission,
   SUBMISSION_SUCCEEDED,
 } from '@state/operationSchedules';
+import {
+  bulkScheduleMaintenanceWindows,
+  setMaintenanceWindowSubmitted,
+  startMaintenanceWindowSubmission,
+} from '@state/maintenanceWindows';
 
 import HostsList from './HostsList';
 
@@ -435,8 +440,142 @@ describe('HostsLists component', () => {
         screen.queryByLabelText(`Select ${host1.hostname}`)
       ).not.toBeInTheDocument();
       expect(
+        screen.queryByRole('button', { name: /Schedule Maintenance/ })
+      ).not.toBeInTheDocument();
+      expect(
         screen.queryByRole('button', { name: 'Schedule Reboot' })
       ).not.toBeInTheDocument();
+    });
+
+    it('should schedule maintenance on the selected hosts, with a premium mark', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+
+      const [StatefulHostsList, store] = withState(
+        <HostsList />,
+        stateWith([host1, host2, host3])
+      );
+      renderWithRouter(StatefulHostsList);
+
+      const scheduleMaintenance = screen.getByRole('button', {
+        name: /Schedule Maintenance/,
+      });
+      expect(scheduleMaintenance).toBeDisabled();
+      expect(within(scheduleMaintenance).getByText('Premium')).toBeVisible();
+
+      await user.click(screen.getByLabelText(`Select ${host2.hostname}`));
+      await user.click(screen.getByLabelText(`Select ${host3.hostname}`));
+      await user.click(scheduleMaintenance);
+
+      expect(screen.getByText(/forbidden actions on 2 hosts/)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '22:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleMaintenanceWindows({
+          request: {
+            target_type: 'host',
+            target_ids: [host2.id, host3.id],
+            starts_at: '2099-11-20T22:00:00.000Z',
+            timezone: 'Etc/UTC',
+            duration_minutes: 60,
+            recurrence: null,
+            forbids: ['checks_execution', 'operations'],
+          },
+        })
+      );
+    });
+
+    it('should keep the hosts of the open maintenance modal when the list changes', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+      let state = stateWith([host1, host2]);
+
+      const [StatefulHostsList, store] = withState(<HostsList />, () => state);
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host2.hostname}`));
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+
+      // A host registers: the rows change and the selection is cleared
+      state = stateWith([host1, host2, host3]);
+      act(() => {
+        store.dispatch({ type: 'HOST_REGISTERED' });
+      });
+
+      expect(screen.getByText(/forbidden actions on 1 host/)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '22:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleMaintenanceWindows({
+          request: expect.objectContaining({ target_ids: [host2.id] }),
+        })
+      );
+    });
+
+    it('should close the maintenance modal and forget the selection once the windows are scheduled', async () => {
+      const user = userEvent.setup();
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList, store] = withState(
+        <HostsList />,
+        stateWith([host1]),
+        true
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+      expect(screen.getByRole('dialog')).toBeVisible();
+
+      await act(async () => {
+        store.dispatch(startMaintenanceWindowSubmission());
+        store.dispatch(setMaintenanceWindowSubmitted());
+      });
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+    });
+
+    it('should not allow scheduling maintenance without the maintenance windows ability', async () => {
+      const user = userEvent.setup();
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1], {
+          user: {
+            abilities: [{ name: 'reboot', resource: 'host' }],
+            timezone: 'Etc/UTC',
+          },
+        })
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+
+      expect(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      ).toBeDisabled();
     });
   });
 

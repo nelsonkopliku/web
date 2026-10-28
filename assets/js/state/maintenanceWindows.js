@@ -99,6 +99,8 @@ export const SCHEDULE_MAINTENANCE_WINDOW = 'SCHEDULE_MAINTENANCE_WINDOW';
 export const UPDATE_MAINTENANCE_WINDOW = 'UPDATE_MAINTENANCE_WINDOW';
 export const DELETE_MAINTENANCE_WINDOW = 'DELETE_MAINTENANCE_WINDOW';
 export const MAINTENANCE_WINDOWS_CHANGED = 'MAINTENANCE_WINDOWS_CHANGED';
+export const BULK_SCHEDULE_MAINTENANCE_WINDOWS =
+  'BULK_SCHEDULE_MAINTENANCE_WINDOWS';
 
 // Payload: { targetType, targetID }
 export const fetchMaintenanceWindows = createAction(FETCH_MAINTENANCE_WINDOWS);
@@ -112,6 +114,11 @@ export const scheduleMaintenanceWindow = createAction(
 export const updateMaintenanceWindow = createAction(UPDATE_MAINTENANCE_WINDOW);
 // Payload: { window }
 export const deleteMaintenanceWindow = createAction(DELETE_MAINTENANCE_WINDOW);
+// Payload: { request }, with target_type, target_ids, starts_at, timezone,
+// duration_minutes, recurrence and forbids: one window per target
+export const bulkScheduleMaintenanceWindows = createAction(
+  BULK_SCHEDULE_MAINTENANCE_WINDOWS
+);
 // Payload: { targetType, targetID }, broadcast by the server after any change
 // of the windows of a target
 export const maintenanceWindowsChanged = createAction(

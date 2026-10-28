@@ -5,15 +5,18 @@ import { all, call, put, select, takeEvery } from 'redux-saga/effects';
 import { get, map } from 'lodash';
 
 import {
+  createBulkMaintenanceWindows,
   createMaintenanceWindow,
   deleteMaintenanceWindow as deleteMaintenanceWindowRequest,
   getMaintenanceWindows,
   updateMaintenanceWindow as updateMaintenanceWindowRequest,
 } from '@lib/api/maintenanceWindows';
 import { defaultGlobalError } from '@lib/api/validationErrors';
+import { countTargets } from '@lib/operations';
 
 import { notify } from '@state/notifications';
 import {
+  BULK_SCHEDULE_MAINTENANCE_WINDOWS,
   DELETE_MAINTENANCE_WINDOW,
   FETCH_MAINTENANCE_WINDOWS,
   MAINTENANCE_WINDOWS_CHANGED,
@@ -118,10 +121,25 @@ export function* deleteMaintenanceWindow({ payload: { window } }) {
   );
 }
 
+export function* bulkScheduleMaintenanceWindows({ payload: { request } }) {
+  yield call(
+    submitWindowChange,
+    call(createBulkMaintenanceWindows, request),
+    () => ({
+      text: `Maintenance window scheduled for ${countTargets(request.target_ids.length, request.target_type)}`,
+      icon: '🛠️',
+    })
+  );
+}
+
 export function* watchMaintenanceWindows() {
   yield takeEvery(FETCH_MAINTENANCE_WINDOWS, fetchMaintenanceWindows);
   yield takeEvery(SCHEDULE_MAINTENANCE_WINDOW, scheduleMaintenanceWindow);
   yield takeEvery(UPDATE_MAINTENANCE_WINDOW, updateMaintenanceWindow);
   yield takeEvery(DELETE_MAINTENANCE_WINDOW, deleteMaintenanceWindow);
+  yield takeEvery(
+    BULK_SCHEDULE_MAINTENANCE_WINDOWS,
+    bulkScheduleMaintenanceWindows
+  );
   yield takeEvery(MAINTENANCE_WINDOWS_CHANGED, refreshMaintenanceWindows);
 }
