@@ -13,6 +13,7 @@ defmodule TrentoWeb.OpenApi.V1.Schema.SchedulingTest do
     BulkOperationSchedules,
     ChecksSchedule,
     CreateOperationScheduleRequest,
+    ExceptionWindow,
     OperationSchedule,
     OperationScheduleCollection,
     PolicyWarning,
@@ -26,6 +27,7 @@ defmodule TrentoWeb.OpenApi.V1.Schema.SchedulingTest do
     BulkOperationSchedules,
     ChecksSchedule,
     CreateOperationScheduleRequest,
+    ExceptionWindow,
     OperationSchedule,
     OperationScheduleCollection,
     PolicyWarning,
@@ -55,6 +57,7 @@ defmodule TrentoWeb.OpenApi.V1.Schema.SchedulingTest do
 
   test "should accept null for the global interval and for a one-time schedule", %{spec: spec} do
     assert_schema(%{interval: nil}, "UpdateChecksScheduleRequestV1", spec)
+    assert_schema(%{interval: nil, exception_window: nil}, "UpdateChecksScheduleRequestV1", spec)
 
     assert_schema(
       %{
