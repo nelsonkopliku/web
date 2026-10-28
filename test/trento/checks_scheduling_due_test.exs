@@ -116,6 +116,24 @@ defmodule Trento.ChecksSchedulingDueTest do
              end)
   end
 
+  test "should skip a target in its exception window" do
+    %{id: in_window} = host!()
+
+    settings!(in_window,
+      window_starts_at: ~U[2026-11-02 09:00:00.000000Z],
+      window_timezone: "Etc/UTC",
+      window_duration_minutes: 120
+    )
+
+    assert [] ==
+             requested_target_ids(fn ->
+               ChecksScheduling.request_due_executions(DateService.Mock)
+             end)
+
+    assert ChecksScheduling.in_exception_window?(in_window, DateService.Mock)
+    refute ChecksScheduling.in_exception_window?(UUID.uuid4(), DateService.Mock)
+  end
+
   test "should request nothing when periodic executions are disabled globally" do
     {:ok, _} = Trento.Settings.update_checks_execution_settings(%{interval: "disabled"})
     host!()
