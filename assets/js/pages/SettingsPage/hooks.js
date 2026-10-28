@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { useState, useEffect } from 'react';
-import { isEmpty, omitBy, isNil } from 'lodash';
+import { get as getIn, isEmpty, omitBy, isNil } from 'lodash';
 import { useDispatch } from 'react-redux';
 
 import { dismissNotification, notify } from '@state/notifications';
@@ -23,6 +23,65 @@ import {
   updateSettings as updateAlertingSettings,
   sendTestEmail as sendAlertingTestEmail,
 } from '@lib/api/alertingSettings';
+import {
+  getChecksExecutionSettings,
+  updateChecksExecutionSettings,
+} from '@lib/api/checksSchedule';
+import { defaultGlobalError } from '@lib/api/validationErrors';
+
+export const useChecksExecutionSettings = () => {
+  const [settings, setSettings] = useState({});
+  // Loading from the start, so that nothing shows before the first fetch
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitErrors, setSubmitErrors] = useState([]);
+
+  async function fetch() {
+    setFetchLoading(true);
+    setFetchError(false);
+
+    try {
+      const { data } = await getChecksExecutionSettings();
+      setSettings(data);
+    } catch {
+      setFetchError(true);
+    } finally {
+      setFetchLoading(false);
+    }
+  }
+
+  async function submit(newSettings) {
+    setSubmitLoading(true);
+    setSubmitErrors([]);
+
+    try {
+      const { data } = await updateChecksExecutionSettings(newSettings);
+      setSettings(data);
+    } catch (error) {
+      setSubmitErrors(
+        getIn(error, ['response', 'data', 'errors'], [defaultGlobalError])
+      );
+    } finally {
+      setSubmitLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetch();
+  }, []);
+
+  return {
+    settings,
+    fetchLoading,
+    fetchError,
+    submitLoading,
+    submitErrors,
+    fetch,
+    submit,
+    clearSubmitErrors: () => setSubmitErrors([]),
+  };
+};
 
 export const useSuseMultiLinuxManagerSettings = () => {
   const dispatch = useDispatch();
