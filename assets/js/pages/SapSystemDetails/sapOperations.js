@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { curry, every, get, find, flow } from 'lodash';
+import { curry, every, get, flow } from 'lodash';
 
 import {
   SAP_INSTANCE_START,
@@ -31,52 +31,45 @@ export const getSapInstanceOperations = curry(
     setOperationModelOpen,
     setCurrentOperationInstance,
     instance
-  ) => {
-    const disabled = find(
-      runningOperations,
-      ({ groupID }) =>
-        groupID === instance.sap_system_id || groupID === instance.host_id
-    );
-
-    return [
-      {
-        value: 'Start instance',
-        running: isOperationRunning(
-          runningOperations,
-          instance.host_id,
-          SAP_INSTANCE_START,
-          matchesInstanceNumber(instance.instance_number)
-        ),
-        disabled: disabled || instance.status === 'green',
-        permitted: ['start:application_instance'],
-        onClick: () => {
-          setCurrentOperationInstance(instance);
-          setOperationModelOpen({ open: true, operation: SAP_INSTANCE_START });
-        },
+  ) => [
+    {
+      value: 'Start instance',
+      running: isOperationRunning(
+        runningOperations,
+        instance.host_id,
+        SAP_INSTANCE_START,
+        matchesInstanceNumber(instance.instance_number)
+      ),
+      disabled: instance.status === 'green',
+      permitted: ['start:application_instance'],
+      onClick: () => {
+        setCurrentOperationInstance(instance);
+        setOperationModelOpen({ open: true, operation: SAP_INSTANCE_START });
       },
-      {
-        value: 'Stop instance',
-        running: isOperationRunning(
-          runningOperations,
-          instance.host_id,
-          SAP_INSTANCE_STOP,
-          matchesInstanceNumber(instance.instance_number)
-        ),
-        disabled: disabled || instance.status === 'gray',
-        permitted: ['stop:application_instance'],
-        onClick: () => {
-          setCurrentOperationInstance(instance);
-          setOperationModelOpen({ open: true, operation: SAP_INSTANCE_STOP });
-        },
+    },
+    {
+      value: 'Stop instance',
+      running: isOperationRunning(
+        runningOperations,
+        instance.host_id,
+        SAP_INSTANCE_STOP,
+        matchesInstanceNumber(instance.instance_number)
+      ),
+      disabled: instance.status === 'gray',
+      permitted: ['stop:application_instance'],
+      onClick: () => {
+        setCurrentOperationInstance(instance);
+        setOperationModelOpen({ open: true, operation: SAP_INSTANCE_STOP });
       },
-    ];
-  }
+    },
+  ]
 );
 
+// The entries stay available while an operation runs, so that they can be
+// scheduled. Only the status of the instances disables them.
 export const getSapSystemOperations = (
   sapSystem,
   runningOperations,
-  disabled,
   setOperationModelOpen
 ) => [
   {
@@ -86,7 +79,7 @@ export const getSapSystemOperations = (
       sapSystem.id,
       SAP_SYSTEM_START
     ),
-    disabled: disabled || every(sapSystem.instances, { status: 'green' }),
+    disabled: every(sapSystem.instances, { status: 'green' }),
     permitted: ['start:sap_system'],
     onClick: () => {
       setOperationModelOpen({ open: true, operation: SAP_SYSTEM_START });
@@ -99,7 +92,7 @@ export const getSapSystemOperations = (
       sapSystem.id,
       SAP_SYSTEM_STOP
     ),
-    disabled: disabled || every(sapSystem.instances, { status: 'gray' }),
+    disabled: every(sapSystem.instances, { status: 'gray' }),
     permitted: ['stop:sap_system'],
     onClick: () => {
       setOperationModelOpen({ open: true, operation: SAP_SYSTEM_STOP });
