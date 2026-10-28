@@ -62,7 +62,7 @@ import {
   updateLastExecution,
 } from '@state/lastExecutions';
 
-import { operationCompleted } from '@state/runningOperations';
+import { operationCompleted, operationStarted } from '@state/runningOperations';
 import { operationSchedulesChanged } from '@state/operationSchedules';
 
 import { userUpdated, userLocked, userDeleted } from '@state/user';
@@ -254,6 +254,15 @@ const executionEvents = [
 ];
 
 const operationEvents = [
+  {
+    name: 'operation_started',
+    action: operationStarted,
+    transform: ({
+      operation_id: operationID,
+      group_id: groupID,
+      operation_type: operation,
+    }) => ({ operationID, groupID, operation }),
+  },
   {
     name: 'operation_completed',
     action: operationCompleted,
