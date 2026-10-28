@@ -48,6 +48,13 @@ defmodule TrentoWeb.FallbackController do
     |> render(:"409", reason: "Alerting settings can not be set, enforced by ENV.")
   end
 
+  def call(conn, {:error, :in_exception_window}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(json: ErrorJSON)
+    |> render(:"422", reason: "Checks cannot be executed during exception window")
+  end
+
   def call(conn, {:error, :missing_target}) do
     conn
     |> put_status(:unprocessable_entity)

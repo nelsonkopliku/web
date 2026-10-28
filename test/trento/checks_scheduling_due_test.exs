@@ -10,7 +10,12 @@ defmodule Trento.ChecksSchedulingDueTest do
 
   alias Trento.ChecksScheduling
   alias Trento.ChecksScheduling.ExecutionRequest
-  alias Trento.ChecksScheduling.Projections.TargetChecksIntervalReadModel
+
+  alias Trento.ChecksScheduling.Projections.{
+    TargetChecksExceptionWindowReadModel,
+    TargetChecksIntervalReadModel
+  }
+
   alias Trento.Infrastructure.Messaging.Adapter.Mock, as: Messaging
   alias Trento.Support.DateService
 
@@ -35,6 +40,16 @@ defmodule Trento.ChecksSchedulingDueTest do
         target_id: target_id,
         target_type: "host",
         interval: interval
+      })
+    end
+
+    if window_starts_at = attrs[:window_starts_at] do
+      Repo.insert!(%TargetChecksExceptionWindowReadModel{
+        target_id: target_id,
+        target_type: "host",
+        starts_at: window_starts_at,
+        timezone: attrs[:window_timezone],
+        duration_minutes: attrs[:window_duration_minutes]
       })
     end
 
@@ -127,6 +142,24 @@ defmodule Trento.ChecksSchedulingDueTest do
              requested_target_ids(fn ->
                ChecksScheduling.request_due_executions(DateService.Mock)
              end)
+  end
+
+  test "should skip a target in its exception window" do
+    %{id: in_window} = host!()
+
+    settings!(in_window,
+      window_starts_at: ~U[2026-11-02 09:00:00.000000Z],
+      window_timezone: "Etc/UTC",
+      window_duration_minutes: 120
+    )
+
+    assert [] ==
+             requested_target_ids(fn ->
+               ChecksScheduling.request_due_executions(DateService.Mock)
+             end)
+
+    assert ChecksScheduling.in_exception_window?(in_window, DateService.Mock)
+    refute ChecksScheduling.in_exception_window?(UUID.uuid4(), DateService.Mock)
   end
 
   test "should request nothing when periodic executions are disabled globally" do
