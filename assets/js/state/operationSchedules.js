@@ -7,12 +7,15 @@ export const SUBMISSION_IDLE = 'idle';
 export const SUBMISSION_SUBMITTING = 'submitting';
 export const SUBMISSION_SUCCEEDED = 'succeeded';
 export const SUBMISSION_FAILED = 'failed';
+// Some targets of a bulk schedule already have a schedule of the operation
+export const SUBMISSION_CONFLICTS = 'conflicts';
 
 export const initialScheduleSubmission = {
   status: SUBMISSION_IDLE,
   operation: null,
   errors: [],
   warnings: [],
+  conflicts: [],
 };
 
 const initialState = {
@@ -86,6 +89,15 @@ export const operationSchedulesSlice = createSlice({
         errors,
       };
     },
+    setOperationScheduleConflicts: (state, { payload: { conflicts } }) => {
+      if (!isSubmittingSchedule(state.submission)) return;
+
+      state.submission = {
+        ...initialScheduleSubmission,
+        status: SUBMISSION_CONFLICTS,
+        conflicts,
+      };
+    },
     resetOperationScheduleSubmission: (state) => {
       state.submission = initialScheduleSubmission;
     },
@@ -97,6 +109,7 @@ export const SCHEDULE_OPERATION = 'SCHEDULE_OPERATION';
 export const UPDATE_OPERATION_SCHEDULE = 'UPDATE_OPERATION_SCHEDULE';
 export const CANCEL_OPERATION_SCHEDULE = 'CANCEL_OPERATION_SCHEDULE';
 export const OPERATION_SCHEDULES_CHANGED = 'OPERATION_SCHEDULES_CHANGED';
+export const BULK_SCHEDULE_OPERATION = 'BULK_SCHEDULE_OPERATION';
 
 export const fetchOperationSchedules = createAction(FETCH_OPERATION_SCHEDULES);
 // Payload: the schedule request, with target_type, target_id, operation,
@@ -107,6 +120,11 @@ export const scheduleOperation = createAction(SCHEDULE_OPERATION);
 export const updateOperationSchedule = createAction(UPDATE_OPERATION_SCHEDULE);
 // Payload: { schedule }
 export const cancelOperationSchedule = createAction(CANCEL_OPERATION_SCHEDULE);
+// Payload: { request, confirmed }, the bulk request with target_type,
+// target_ids, operation, params, starts_at, timezone and recurrence. Unless
+// confirmed, the targets that already have a schedule of the operation are
+// told first.
+export const bulkScheduleOperation = createAction(BULK_SCHEDULE_OPERATION);
 // Payload: { targetID }, broadcast by the server after any change of the
 // schedules of a target
 export const operationSchedulesChanged = createAction(
@@ -121,6 +139,7 @@ export const {
   startOperationScheduleSubmission,
   setOperationScheduleSubmitted,
   setOperationScheduleSubmissionErrors,
+  setOperationScheduleConflicts,
   resetOperationScheduleSubmission,
 } = operationSchedulesSlice.actions;
 
