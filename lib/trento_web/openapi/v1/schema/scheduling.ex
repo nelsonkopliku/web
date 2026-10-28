@@ -60,11 +60,45 @@ defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.Recurrence do
   )
 end
 
+defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.ExceptionWindow do
+  @moduledoc false
+
+  require OpenApiSpex
+  alias OpenApiSpex.Schema
+  alias TrentoWeb.OpenApi.V1.Schema.Scheduling.Recurrence
+
+  OpenApiSpex.schema(
+    %{
+      title: "ChecksExceptionWindowV1",
+      description:
+        "Time window in which checks are not executed against a target. One-time when recurrence is null.",
+      type: :object,
+      nullable: true,
+      additionalProperties: false,
+      properties: %{
+        starts_at: %Schema{type: :string, format: :"date-time"},
+        timezone: %Schema{type: :string, example: "Europe/Berlin"},
+        duration_minutes: %Schema{type: :integer, minimum: 1},
+        recurrence: Recurrence
+      },
+      required: [:starts_at, :timezone, :duration_minutes],
+      example: %{
+        starts_at: "2026-11-02T22:00:00Z",
+        timezone: "Europe/Berlin",
+        duration_minutes: 120,
+        recurrence: %{frequency: "weekly", interval: 1, weekdays: [1, 5]}
+      }
+    },
+    struct?: false
+  )
+end
+
 defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.ChecksSchedule do
   @moduledoc false
 
   require OpenApiSpex
   alias OpenApiSpex.Schema
+  alias TrentoWeb.OpenApi.V1.Schema.Scheduling.ExceptionWindow
 
   @intervals Trento.ChecksScheduling.Interval.values()
 
@@ -93,22 +127,29 @@ defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.ChecksSchedule do
           type: :string,
           format: :"date-time",
           nullable: true,
-          description: "Null when periodic executions are disabled for the target."
-        }
+          description:
+            "Null when periodic executions are disabled for the target. Falls after the exception window."
+        },
+        exception_window: ExceptionWindow,
+        in_exception_window: %Schema{type: :boolean}
       },
       required: [
         :interval,
         :effective_interval,
         :global_interval,
         :last_requested_at,
-        :next_execution_at
+        :next_execution_at,
+        :exception_window,
+        :in_exception_window
       ],
       example: %{
         interval: "6h",
         effective_interval: "6h",
         global_interval: "15m",
         last_requested_at: "2026-11-02T10:00:00Z",
-        next_execution_at: "2026-11-02T16:00:00Z"
+        next_execution_at: "2026-11-02T16:00:00Z",
+        exception_window: nil,
+        in_exception_window: false
       }
     },
     struct?: false
@@ -120,13 +161,15 @@ defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.UpdateChecksScheduleRequest do
 
   require OpenApiSpex
   alias OpenApiSpex.Schema
+  alias TrentoWeb.OpenApi.V1.Schema.Scheduling.ExceptionWindow
 
   @intervals Trento.ChecksScheduling.Interval.values()
 
   OpenApiSpex.schema(
     %{
       title: "UpdateChecksScheduleRequestV1",
-      description: "New checks execution interval of a host or cluster.",
+      description:
+        "New checks execution interval of a host or cluster, and optionally its exception window: null removes it, no value keeps it.",
       type: :object,
       additionalProperties: false,
       properties: %{
@@ -135,7 +178,8 @@ defmodule TrentoWeb.OpenApi.V1.Schema.Scheduling.UpdateChecksScheduleRequest do
           enum: @intervals,
           nullable: true,
           description: "Null to use the global interval."
-        }
+        },
+        exception_window: ExceptionWindow
       },
       required: [:interval],
       example: %{interval: nil}
