@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { get } from 'lodash';
 import { pipe, map, omit } from 'lodash/fp';
 
 import { notify } from '@state/notifications';
@@ -13,6 +14,11 @@ import {
   resetCheckCustomization,
   saveCheckCustomization,
 } from '@lib/api/checks';
+import {
+  getChecksSchedule,
+  updateChecksSchedule,
+} from '@lib/api/checksSchedule';
+import { defaultGlobalError } from '@lib/api/validationErrors';
 
 const setCheckCustomized = (customized) => (check) => ({
   ...check,
@@ -138,5 +144,90 @@ export const useChecksSelection = () => {
     resetChecksCustomization,
     saveChecksCustomization,
     customizationStatus,
+  };
+};
+
+/**
+ * Checks execution frequency of a host or a cluster, and when its checks are
+ * executed next. The next execution moves when an execution of the target
+ * starts or completes, so the schedule is fetched again then, without the
+ * loading state: what shows the schedule, and an open modal, stay.
+ * `saveSchedule` resolves to whether the change was saved.
+ */
+export const useChecksSchedule = (targetType, targetID) => {
+  const [schedule, setSchedule] = useState(null);
+  const [fetchLoading, setFetchLoading] = useState(Boolean(targetID));
+  const [fetchError, setFetchError] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitErrors, setSubmitErrors] = useState([]);
+
+  // Responses can arrive out of order: only the latest request counts
+  const latestRequest = useRef(0);
+  const shownTarget = useRef(null);
+  const target = `${targetType}/${targetID}`;
+
+  const lastExecutionStatus = useSelector((state) =>
+    get(state, ['lastExecutions', targetID, 'data', 'status'])
+  );
+
+  const fetchSchedule = async () => {
+    latestRequest.current += 1;
+    const request = latestRequest.current;
+    const isLatest = () => request === latestRequest.current;
+
+    if (shownTarget.current !== target) setFetchLoading(true);
+    setFetchError(false);
+
+    try {
+      const { data } = await getChecksSchedule(targetType, targetID);
+      if (isLatest()) {
+        shownTarget.current = target;
+        setSchedule(data);
+      }
+    } catch {
+      if (isLatest()) setFetchError(true);
+    } finally {
+      if (isLatest()) setFetchLoading(false);
+    }
+  };
+
+  const saveSchedule = async (changes) => {
+    latestRequest.current += 1;
+    const request = latestRequest.current;
+
+    setSubmitLoading(true);
+    setSubmitErrors([]);
+
+    try {
+      const { data } = await updateChecksSchedule(
+        targetType,
+        targetID,
+        changes
+      );
+      if (request === latestRequest.current) setSchedule(data);
+      return true;
+    } catch (error) {
+      setSubmitErrors(
+        get(error, ['response', 'data', 'errors'], [defaultGlobalError])
+      );
+      return false;
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (targetID) fetchSchedule();
+  }, [targetType, targetID, lastExecutionStatus]);
+
+  return {
+    schedule,
+    fetchLoading,
+    fetchError,
+    submitLoading,
+    submitErrors,
+    fetchSchedule,
+    saveSchedule,
+    clearSubmitErrors: () => setSubmitErrors([]),
   };
 };
