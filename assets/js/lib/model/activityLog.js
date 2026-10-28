@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { has } from 'lodash';
+import { has, lowerFirst } from 'lodash';
 import {
   defaultTo,
   entries,
@@ -14,10 +14,18 @@ import {
 } from 'lodash/fp';
 import {
   OPERATION_REQUEST_FAILED,
+  describeOperationParams,
   getOperationLabel,
   getOperationResourceType,
 } from '@lib/operations';
 import { isPermitted } from './users';
+import { DISABLED, describeFrequency } from './checksSchedule';
+import { describeOccurrences } from './recurrence';
+import { DEFAULT_TIMEZONE, formatDateTime } from '@lib/timezones';
+import {
+  describeForbids,
+  describeMaintenanceWindow,
+} from './maintenanceWindows';
 
 export const LOGIN_ATTEMPT = 'login_attempt';
 export const RESOURCE_TAGGING = 'resource_tagging';
@@ -168,6 +176,32 @@ export const CLUSTER_HOST_OPERATION_REQUESTED =
 export const SAP_SYSTEM_OPERATION_REQUESTED = 'sap_system_operation_requested';
 export const DATABASE_OPERATION_REQUESTED = 'database_operation_requested';
 export const OPERATION_COMPLETED = 'operation_completed';
+export const OPERATION_SCHEDULED = 'operation_scheduled';
+export const OPERATION_SCHEDULE_CHANGED = 'operation_schedule_changed';
+export const OPERATION_SCHEDULE_CANCELLED = 'operation_schedule_cancelled';
+export const SCHEDULED_OPERATION_REQUESTED = 'scheduled_operation_requested';
+export const SCHEDULED_OPERATION_REQUEST_FAILED =
+  'scheduled_operation_request_failed';
+
+// Maintenance windows
+export const MAINTENANCE_WINDOW_SCHEDULED = 'maintenance_window_scheduled';
+export const MAINTENANCE_WINDOW_CHANGED = 'maintenance_window_changed';
+export const MAINTENANCE_WINDOW_DELETED = 'maintenance_window_deleted';
+
+// Checks execution frequency
+export const CHECKS_EXECUTION_SETTINGS_UPDATED =
+  'checks_execution_settings_updated';
+export const HOST_CHECKS_FREQUENCY_CHANGED = 'host_checks_frequency_changed';
+export const CLUSTER_CHECKS_FREQUENCY_CHANGED =
+  'cluster_checks_frequency_changed';
+
+const SCHEDULED_REQUEST_FAILURE_REASONS = {
+  not_available: 'Trento was not available at the scheduled time',
+  policies: 'the operation policies did not pass',
+  already_running: 'another operation was running',
+  target_not_found: 'the target is gone',
+  maintenance_window: 'a maintenance window forbids operations',
+};
 
 // Check Customization
 const CHECK_CUSTOMIZATION_APPLIED = 'check_customization_applied';
@@ -241,6 +275,95 @@ export const resourceNameFromMetadata = (resourceType, metadata) =>
     database: metadata?.sid,
     sap_system: metadata?.sid,
   });
+
+const scheduleResourceType = (entry) =>
+  resolveResourceType(
+    entry,
+    entry.metadata?.target_type,
+    operationResourceType(entry)
+  );
+
+// The backend adds the name of the target to the metadata
+const targetNameFromMetadata = (metadata) =>
+  metadata.target_type
+    ? metadata[resourceTypesToNameKeyMap[metadata.target_type]]
+    : (metadata.hostname ?? metadata.name ?? metadata.sid);
+
+const forTarget = (metadata) => {
+  const name = targetNameFromMetadata(metadata);
+  return name ? ` for ${name}` : '';
+};
+
+const operationWithOptions = ({ operation, params }) => {
+  const options = describeOperationParams(params);
+  const label = getOperationLabel(operation);
+
+  return options ? `${label} (${options})` : label;
+};
+
+// Schedules are described in their own timezone
+const scheduleTiming = (metadata) =>
+  metadata.starts_at && metadata.timezone
+    ? `: ${describeOccurrences(metadata, metadata.timezone)} (${metadata.timezone})`
+    : '';
+
+// The run of a schedule, in the timezone of the schedule when known
+const plannedFor = ({ run_at: runAt, timezone = DEFAULT_TIMEZONE }) =>
+  runAt ? `, planned for ${formatDateTime(runAt, timezone)} (${timezone})` : '';
+
+const failedRequestMessage = (metadata) => {
+  const run = plannedFor(metadata);
+  const reason =
+    SCHEDULED_REQUEST_FAILURE_REASONS[metadata.reason] || metadata.reason;
+
+  return `Scheduled operation ${operationWithOptions(metadata)}${forTarget(metadata)}${run}${run ? ',' : ''} not requested: ${reason}`;
+};
+
+const targetResourceType = (entry) =>
+  resolveResourceType(
+    entry,
+    entry.metadata?.target_type,
+    'Unable to determine target type'
+  );
+
+// Maintenance windows are described in their own timezone
+const windowDetails = (metadata) =>
+  metadata.starts_at && metadata.timezone && metadata.forbids
+    ? `: ${describeMaintenanceWindow(metadata)}, forbidding ${lowerFirst(describeForbids(metadata.forbids))}`
+    : '';
+
+const ofTarget = (metadata) => {
+  const name = targetNameFromMetadata(metadata);
+  return name ? ` of ${name}` : '';
+};
+
+const frequencyChange = (metadata) => {
+  if (metadata.interval === DISABLED) return 'disabled';
+  if (!metadata.interval) return 'reset to the system setting';
+  return `changed to ${lowerFirst(describeFrequency(metadata.interval))}`;
+};
+
+const checksSettingsMessage = (metadata) => {
+  if (!has(metadata, 'interval') || metadata.interval === null) {
+    return 'Check execution settings updated';
+  }
+
+  return metadata.interval === DISABLED
+    ? 'Periodic check executions disabled'
+    : `Check execution frequency ${frequencyChange(metadata)}`;
+};
+
+const targetFrequencyMessage = (targetType, name, metadata) => {
+  const target = name ? `${targetType} ${name}` : `the ${targetType}`;
+
+  if (!has(metadata, 'interval')) {
+    return `Check execution frequency of ${target} changed`;
+  }
+
+  return metadata.interval === DISABLED
+    ? `Periodic check executions of ${target} disabled`
+    : `Check execution frequency of ${target} ${frequencyChange(metadata)}`;
+};
 
 const userManagement = ['all:all', 'all:users'];
 
@@ -392,6 +515,23 @@ export const ACTIVITY_TYPES_CONFIG = {
     label: 'Activity Log Settings Updated',
     message: (_entry) => `Activity log settings were updated`,
     resource: (_entry) => 'Activity Log Settings',
+  },
+  [CHECKS_EXECUTION_SETTINGS_UPDATED]: {
+    label: 'Check Execution Settings Updated',
+    message: ({ metadata }) => checksSettingsMessage(metadata),
+    resource: (_entry) => 'Check Execution Settings',
+  },
+  [HOST_CHECKS_FREQUENCY_CHANGED]: {
+    label: 'Host Check Execution Frequency Changed',
+    message: ({ metadata }) =>
+      targetFrequencyMessage('host', metadata.hostname, metadata),
+    resource: hostResourceType,
+  },
+  [CLUSTER_CHECKS_FREQUENCY_CHANGED]: {
+    label: 'Cluster Check Execution Frequency Changed',
+    message: ({ metadata }) =>
+      targetFrequencyMessage('cluster', metadata.name, metadata),
+    resource: clusterResourceType,
   },
   // Host events
   [HEARTBEAT_FAILED]: {
@@ -824,6 +964,53 @@ export const ACTIVITY_TYPES_CONFIG = {
     message: ({ metadata }) =>
       `Operation ${getOperationLabel(metadata.operation)} requested`,
     resource: databaseResourceType,
+  },
+  [OPERATION_SCHEDULED]: {
+    label: 'Operation Scheduled',
+    message: ({ metadata }) =>
+      `Operation ${operationWithOptions(metadata)} scheduled${forTarget(metadata)}${scheduleTiming(metadata)}`,
+    resource: scheduleResourceType,
+  },
+  [OPERATION_SCHEDULE_CHANGED]: {
+    label: 'Operation Schedule Changed',
+    message: ({ metadata }) =>
+      `Schedule of operation ${operationWithOptions(metadata)}${forTarget(metadata)} changed${scheduleTiming(metadata)}`,
+    resource: scheduleResourceType,
+  },
+  [OPERATION_SCHEDULE_CANCELLED]: {
+    label: 'Operation Schedule Cancelled',
+    message: ({ metadata }) =>
+      `Schedule of operation ${operationWithOptions(metadata)}${forTarget(metadata)} cancelled`,
+    resource: scheduleResourceType,
+  },
+  [SCHEDULED_OPERATION_REQUESTED]: {
+    label: 'Scheduled Operation Requested',
+    message: ({ metadata }) =>
+      `Scheduled operation ${operationWithOptions(metadata)} requested${forTarget(metadata)}${plannedFor(metadata)}`,
+    resource: scheduleResourceType,
+  },
+  [SCHEDULED_OPERATION_REQUEST_FAILED]: {
+    label: 'Scheduled Operation Request Failed',
+    message: ({ metadata }) => failedRequestMessage(metadata),
+    resource: scheduleResourceType,
+  },
+  [MAINTENANCE_WINDOW_SCHEDULED]: {
+    label: 'Maintenance Window Scheduled',
+    message: ({ metadata }) =>
+      `Maintenance window scheduled${forTarget(metadata)}${windowDetails(metadata)}`,
+    resource: targetResourceType,
+  },
+  [MAINTENANCE_WINDOW_CHANGED]: {
+    label: 'Maintenance Window Changed',
+    message: ({ metadata }) =>
+      `Maintenance window${ofTarget(metadata)} changed${windowDetails(metadata)}`,
+    resource: targetResourceType,
+  },
+  [MAINTENANCE_WINDOW_DELETED]: {
+    label: 'Maintenance Window Deleted',
+    message: ({ metadata }) =>
+      `Maintenance window${ofTarget(metadata)} deleted${windowDetails(metadata)}`,
+    resource: targetResourceType,
   },
   [OPERATION_COMPLETED]: {
     label: 'Operation Completed',

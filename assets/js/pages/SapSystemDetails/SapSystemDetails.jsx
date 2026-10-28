@@ -9,6 +9,10 @@ import { getFromConfig } from '@lib/config';
 import { APPLICATION_TYPE } from '@lib/model/sapSystems';
 import { getEnrichedSapSystemDetails } from '@state/selectors/sapSystem';
 import { getRunningOperationsList } from '@state/selectors/runningOperations';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 import { getUserProfile } from '@state/selectors/user';
 import { deregisterApplicationInstance } from '@state/sapSystems';
 import {
@@ -16,9 +20,18 @@ import {
   updateRunningOperations,
   removeRunningOperation,
 } from '@state/runningOperations';
+import {
+  cancelOperationSchedule,
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+  updateOperationSchedule,
+} from '@state/operationSchedules';
 
 import BackButton from '@common/BackButton';
 import { GenericSystemDetails } from '@pages/SapSystemDetails';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
 
 import {
   getSapSystemOperations,
@@ -37,9 +50,23 @@ function SapSystemDetails() {
 
   const runningOperations = useSelector(getRunningOperationsList);
 
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(id));
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows('sap_system', id);
+
   useEffect(() => {
     operationsEnabled && dispatch(updateRunningOperations());
   }, [dispatch]);
+
+  useEffect(() => {
+    operationsEnabled && dispatch(fetchOperationSchedules({ targetID: id }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: id }));
+    };
+  }, [dispatch, id]);
 
   if (!sapSystem) {
     return <div>Not Found</div>;
@@ -63,6 +90,23 @@ function SapSystemDetails() {
           dispatch(deregisterApplicationInstance(instance));
         }}
         onRequestOperation={(payload) => dispatch(operationRequested(payload))}
+        operationSchedules={operationSchedules}
+        maintenanceWindows={maintenanceWindows}
+        scheduleSubmission={scheduleSubmission}
+        onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+        operationSchedulesError={operationSchedulesError}
+        onUpdateSchedule={(schedule, changes) =>
+          dispatch(updateOperationSchedule({ schedule, changes }))
+        }
+        onCancelSchedule={(schedule) =>
+          dispatch(cancelOperationSchedule({ schedule }))
+        }
+        onRetryOperationSchedules={() =>
+          dispatch(fetchOperationSchedules({ targetID: id }))
+        }
+        onResetScheduleSubmission={() =>
+          dispatch(resetOperationScheduleSubmission())
+        }
         onCleanForbiddenOperation={(groupID) =>
           dispatch(removeRunningOperation({ groupID }))
         }

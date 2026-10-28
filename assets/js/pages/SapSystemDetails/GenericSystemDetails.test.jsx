@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { faker } from '@faker-js/faker';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -13,6 +13,7 @@ import {
   SAP_SYSTEM_STOP,
   DATABASE_START,
   DATABASE_STOP,
+  waiveOperationDisclaimer,
 } from '@lib/operations';
 
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
@@ -23,6 +24,8 @@ import userEvent from '@testing-library/user-event';
 import {
   clusterFactory,
   hostFactory,
+  operationScheduleFactory,
+  maintenanceWindowFactory,
   sapSystemApplicationInstanceFactory,
   sapSystemFactory,
   databaseInstanceFactory,
@@ -33,6 +36,12 @@ import {
   getDatabaseOperations,
   getDatabaseSiteOperations,
 } from '@pages/DatabaseDetails/databaseOperations';
+
+import {
+  initialScheduleSubmission,
+  SUBMISSION_FAILED,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
 
 import { GenericSystemDetails } from './GenericSystemDetails';
 import {
@@ -76,12 +85,11 @@ expect.extend({
       };
     }
 
-    const isDisabled = opItem.hasAttribute('disabled');
-    if (!isDisabled) {
+    if (opItem.hasAttribute('disabled')) {
       return {
         pass: false,
         message: () =>
-          `Expected menuitem "${operation}" to be disabled but it was enabled.`,
+          `Expected menuitem "${operation}" to stay enabled while running, but it was disabled.`,
       };
     }
 
@@ -98,7 +106,7 @@ expect.extend({
     return {
       pass: true,
       message: () =>
-        `Expected menuitem "${operation}" not to be running (disabled with svg), but it was.`,
+        `Expected menuitem "${operation}" not to be running (enabled with svg), but it was.`,
     };
   },
 });
@@ -1056,7 +1064,7 @@ describe('GenericSystemDetails', () => {
       expect(menuItemText).toBeRunning(operation);
 
       await user.click(siteOpButton2);
-      expect(menuItemText).toHaveMenuitem({ enabled: false });
+      expect(menuItemText).toHaveMenuitem({ enabled: true });
     }
   );
 
@@ -1064,7 +1072,7 @@ describe('GenericSystemDetails', () => {
     { index: 0, scenario: 'an operation in the same host' },
     { index: 1, scenario: 'system operation' },
   ])(
-    'should disable instance operations if a $scenario is running',
+    'should keep instance operations available if a $scenario is running',
     async ({ index }) => {
       const user = userEvent.setup();
       const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
@@ -1108,12 +1116,13 @@ describe('GenericSystemDetails', () => {
 
       await user.click(opButton);
 
+      // only the instance status disables an entry, a started instance here
       expect('Start instance').toHaveMenuitem({ enabled: false });
-      expect('Stop instance').toHaveMenuitem({ enabled: false });
+      expect('Stop instance').toHaveMenuitem({ enabled: true });
     }
   );
 
-  it('should disable systems operations if an instance operation is running', async () => {
+  it('should keep systems operations available if an instance operation is running', async () => {
     const user = userEvent.setup();
     const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
     const hostID = hosts[0].id;
@@ -1150,9 +1159,80 @@ describe('GenericSystemDetails', () => {
     const opButton = screen.getByRole('button', { name: 'Operations' });
     await user.click(opButton);
 
-    expect('Start system').toHaveMenuitem({ enabled: false });
+    // only the instances status disables an entry, a stopped system here
+    expect('Start system').toHaveMenuitem({ enabled: true });
     expect('Stop system').toHaveMenuitem({ enabled: false });
   });
+
+  it.each([
+    {
+      scenario: 'a system operation, while one runs on the system',
+      groupID: (sapSystem) => sapSystem.id,
+      openMenu: (user) =>
+        user.click(screen.getByRole('button', { name: 'Operations' })),
+      menuItem: 'Start system',
+      label: 'SAP system start',
+    },
+    {
+      scenario: 'an instance operation, while one runs on its host',
+      groupID: (_sapSystem, hostID) => hostID,
+      openMenu: (user) =>
+        user.click(within(screen.getAllByRole('table')[0]).getByRole('button')),
+      menuItem: 'Start instance',
+      label: 'SAP instance start',
+    },
+  ])(
+    'should refuse a request now of $scenario',
+    async ({ groupID, openMenu, menuItem, label }) => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onRequestOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const hostID = hosts[0].id;
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({
+            status: 'gray',
+            host_id: hostID,
+            host: hosts[0],
+          }),
+        ],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          cleanUpPermittedFor={[]}
+          runningOperations={[
+            {
+              groupID: groupID(sapSystem, hostID),
+              operation: SAP_SYSTEM_STOP,
+              forbidden: false,
+            },
+          ]}
+          getInstanceOperations={getSapInstanceOperations}
+          getSystemOperations={getSapSystemOperations}
+          operationsEnabled
+          onRequestOperation={onRequestOperation}
+        />
+      );
+
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: menuItem }));
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(onRequestOperation).not.toHaveBeenCalled();
+      expect(
+        screen.getByText(
+          `Unable to run ${label} operation now. Another operation is already running for this target.`
+        )
+      ).toBeVisible();
+    }
+  );
 
   it('should show forbidden operation modal', async () => {
     const user = userEvent.setup();
@@ -1209,7 +1289,7 @@ describe('GenericSystemDetails', () => {
     expect(mockCleanForbiddenOperation).toHaveBeenCalled();
   });
 
-  it('should disable instance operations if the host heartbeat is not passing', async () => {
+  it('should keep instance operations available if the host heartbeat is not passing', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(1, { heartbeat: 'critical' });
@@ -1235,13 +1315,14 @@ describe('GenericSystemDetails', () => {
     const { getByRole } = within(layoutTable);
     const opButton = getByRole('button');
 
+    expect(opButton).toBeEnabled();
     await user.hover(opButton);
     expect(
       screen.queryByText('Trento agent is not currently running in the host')
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable SAP system operations if all the hosts heartbeat is not passing', async () => {
+  it('should keep SAP system operations available when no host heartbeat passes', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(2, { heartbeat: 'critical' });
@@ -1267,15 +1348,17 @@ describe('GenericSystemDetails', () => {
       name: 'Operations',
     });
 
+    // the operations can be scheduled, the policies refuse a request now
+    expect(operationsButton).toBeEnabled();
     await user.hover(operationsButton);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts in the SAP system'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable database operations if all the hosts heartbeat in a site is not passing', async () => {
+  it('should keep database operations available when no host heartbeat of a site passes', async () => {
     const user = userEvent.setup();
 
     const host1 = hostFactory.build({ heartbeat: 'critical' });
@@ -1309,15 +1392,16 @@ describe('GenericSystemDetails', () => {
       name: 'Operations',
     });
 
+    expect(operationsButton).toBeEnabled();
     await user.hover(operationsButton);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts of some database site'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable database site operations if all the hosts in the site heartbeat is not passing', async () => {
+  it('should keep database site operations available when no host heartbeat of the site passes', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(1, { heartbeat: 'critical' });
@@ -1344,12 +1428,13 @@ describe('GenericSystemDetails', () => {
 
     const { getByRole } = within(siteTables[0].previousSibling);
     const siteOpButton1 = getByRole('button');
+    expect(siteOpButton1).toBeEnabled();
     await user.hover(siteOpButton1);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts in the database site'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   describe('forbidden actions', () => {
@@ -1629,4 +1714,301 @@ describe('GenericSystemDetails', () => {
       }
     );
   });
+
+  describe('scheduling', () => {
+    const chooseOneTime = async (user, date, time) => {
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'One Time' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: date },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: time },
+      });
+    };
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should schedule a database start on the database', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+
+      const database = databaseFactory.build({
+        hosts,
+        instances: [
+          databaseInstanceFactory.build({ status: 'gray', host: hosts[0] }),
+        ],
+      });
+
+      const props = {
+        title: faker.string.uuid(),
+        system: database,
+        type: DATABASE_TYPE,
+        userAbilities: [{ name: 'all', resource: 'all' }],
+        userTimezone: 'Etc/UTC',
+        cleanUpPermittedFor: [],
+        getSystemOperations: getDatabaseOperations,
+        operationsEnabled: true,
+        onScheduleOperation,
+      };
+
+      const { rerender } = renderWithRouter(
+        <GenericSystemDetails {...props} />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Start database' })
+      );
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'database',
+        target_id: database.id,
+        operation: DATABASE_START,
+        params: { timeout: 300 },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+      expect(screen.getByRole('dialog')).toBeVisible();
+
+      rerender(
+        <GenericSystemDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: DATABASE_START,
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('should schedule the start of a SAP instance on the SAP system', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const instance = sapSystemApplicationInstanceFactory.build({
+        status: 'gray',
+        host: hosts[0],
+        host_id: hosts[0].id,
+      });
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [instance],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          getInstanceOperations={getSapInstanceOperations}
+          operationsEnabled
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      const [layoutTable] = screen.getAllByRole('table');
+      const [opButton] = within(layoutTable).getAllByRole('button');
+      await user.click(opButton);
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Start instance' })
+      );
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'sap_system',
+        target_id: sapSystem.id,
+        operation: SAP_INSTANCE_START,
+        params: {
+          host_id: instance.host_id,
+          instance_number: instance.instance_number,
+        },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+    });
+
+    it('should keep the modal open with the errors of a refused schedule', async () => {
+      const user = userEvent.setup();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({
+            status: 'green',
+            host: hosts[0],
+          }),
+        ],
+      });
+
+      const props = {
+        title: faker.string.uuid(),
+        system: sapSystem,
+        type: APPLICATION_TYPE,
+        userAbilities: [{ name: 'all', resource: 'all' }],
+        userTimezone: 'Etc/UTC',
+        cleanUpPermittedFor: [],
+        getSystemOperations: getSapSystemOperations,
+        operationsEnabled: true,
+      };
+
+      const { rerender } = renderWithRouter(
+        <GenericSystemDetails {...props} />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Stop system' }));
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      rerender(
+        <GenericSystemDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_FAILED,
+            errors: [
+              {
+                title: 'Invalid value',
+                detail: 'must be less than or equal to 43200',
+                source: { pointer: '/params/timeout' },
+              },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByRole('dialog')).toBeVisible();
+      expect(
+        screen.getByText('Params/timeout: must be less than or equal to 43200')
+      ).toBeVisible();
+    });
+  });
+
+  describe('scheduled operations', () => {
+    it('should list, change and cancel the scheduled operations of the SAP system', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onUpdateSchedule = jest.fn();
+      const onCancelSchedule = jest.fn();
+      const hosts = hostFactory.buildList(1);
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({ host: hosts[0] }),
+        ],
+      });
+      const schedule = operationScheduleFactory.build({
+        target_type: 'sap_system',
+        target_id: sapSystem.id,
+        operation: SAP_SYSTEM_STOP,
+        params: { instance_type: 'all', timeout: 300 },
+        starts_at: '2099-11-20T03:00:00Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+        next_run_at: '2099-11-20T03:00:00Z',
+      });
+      const rowLabel =
+        'the schedule of SAP system stop, next run 20 Nov 2099, 03:00:00';
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          operationsEnabled
+          operationSchedules={[schedule]}
+          onUpdateSchedule={onUpdateSchedule}
+          onCancelSchedule={onCancelSchedule}
+        />
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: `Edit ${rowLabel}` })
+      );
+      expect(
+        screen.getByText(`Stop SAP system ${sapSystem.sid}`)
+      ).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+      expect(onUpdateSchedule).toHaveBeenCalledWith(schedule, {
+        params: { instance_type: 'all', timeout: 300 },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+
+      await user.click(
+        screen.getByRole('button', { name: `Cancel ${rowLabel}` })
+      );
+      await user.click(
+        screen.getByRole('button', { name: 'Yes, Cancel Schedule' })
+      );
+      expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
+    });
+  });
+
+  it.each([
+    { type: APPLICATION_TYPE, label: 'SAP system' },
+    { type: DATABASE_TYPE, label: 'HANA database' },
+  ])(
+    'should show the maintenance windows of the $label',
+    async ({ type, label }) => {
+      const user = userEvent.setup();
+      const hosts = hostFactory.buildList(1);
+      const system = (
+        type === DATABASE_TYPE ? databaseFactory : sapSystemFactory
+      ).build({
+        hosts,
+        instances: [
+          (type === DATABASE_TYPE
+            ? databaseInstanceFactory
+            : sapSystemApplicationInstanceFactory
+          ).build({ host: hosts[0] }),
+        ],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={system}
+          type={type}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          maintenanceWindows={{
+            windows: [maintenanceWindowFactory.build({ active: false })],
+            error: false,
+          }}
+        />
+      );
+
+      expect(screen.getByText('Maintenance Windows')).toBeVisible();
+
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+      expect(
+        screen.getByText(
+          new RegExp(`forbidden actions on ${label} ${system.sid}`)
+        )
+      ).toBeVisible();
+    }
+  );
 });

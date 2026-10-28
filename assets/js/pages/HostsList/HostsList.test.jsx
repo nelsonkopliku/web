@@ -3,7 +3,13 @@
 
 import React from 'react';
 import { Link } from 'react-router';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { faker } from '@faker-js/faker';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -24,6 +30,17 @@ import {
 
 import { filterTable, clearFilter } from '@lib/test-utils/table';
 import { readViewSetting, writeViewSetting } from '@lib/viewSettings';
+
+import {
+  bulkScheduleOperation,
+  initialScheduleSubmission,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
+import {
+  bulkScheduleMaintenanceWindows,
+  setMaintenanceWindowSubmitted,
+  startMaintenanceWindowSubmission,
+} from '@state/maintenanceWindows';
 
 import HostsList from './HostsList';
 
@@ -192,6 +209,373 @@ describe('HostsLists component', () => {
       expect(
         within(rows[1]).getByRole('img', { name: /health/i })
       ).not.toHaveAttribute('data-stale');
+    });
+  });
+
+  describe('bulk scheduling', () => {
+    const abilities = [{ name: 'all', resource: 'all' }];
+
+    const stateWith = (hosts, overrides = {}) => ({
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities, timezone: 'Etc/UTC' },
+      ...overrides,
+    });
+
+    beforeEach(() => {
+      global.config.operationsEnabled = true;
+    });
+
+    afterEach(() => {
+      delete global.config.operationsEnabled;
+    });
+
+    it('should schedule a reboot on the selected hosts', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+
+      const [StatefulHostsList, store] = withState(
+        <HostsList />,
+        stateWith([host1, host2, host3])
+      );
+      renderWithRouter(StatefulHostsList);
+
+      expect(
+        screen.getByRole('button', { name: 'Schedule Reboot' })
+      ).toBeDisabled();
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      await user.click(screen.getByLabelText(`Select ${host3.hostname}`));
+
+      expect(screen.getByText('2 hosts selected')).toBeVisible();
+
+      await user.click(screen.getByRole('button', { name: 'Schedule Reboot' }));
+
+      expect(screen.getByText(/^Reboot host on 2 hosts\./)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '03:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleOperation({
+          request: {
+            target_type: 'host',
+            target_ids: [host1.id, host3.id],
+            operation: 'reboot',
+            params: {},
+            starts_at: '2099-11-20T03:00:00.000Z',
+            timezone: 'Etc/UTC',
+            recurrence: null,
+          },
+          confirmed: false,
+        })
+      );
+    });
+
+    it('should keep the hosts of the open modal when the list changes', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+      let state = stateWith([host1, host2]);
+
+      const [StatefulHostsList, store] = withState(<HostsList />, () => state);
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      await user.click(screen.getByRole('button', { name: 'Schedule Reboot' }));
+
+      // A host registers: the rows change and the selection is cleared
+      state = stateWith([host1, host2, host3]);
+      act(() => {
+        store.dispatch({ type: 'HOST_REGISTERED' });
+      });
+
+      expect(screen.getByText('No hosts selected')).toBeInTheDocument();
+      expect(screen.getByText(/^Reboot host on 1 host\./)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '03:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleOperation({
+          request: expect.objectContaining({ target_ids: [host1.id] }),
+          confirmed: false,
+        })
+      );
+    });
+
+    it('should clear the selection', async () => {
+      const user = userEvent.setup();
+      const [host1, host2] = hostFactory.buildList(2);
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1, host2])
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      expect(screen.getByText('1 host selected')).toBeVisible();
+
+      await user.click(screen.getByRole('button', { name: 'Clear selection' }));
+
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+      expect(
+        screen.getByLabelText(`Select ${host1.hostname}`)
+      ).not.toBeChecked();
+    });
+
+    it('should forget the selection when another page is shown', async () => {
+      const user = userEvent.setup();
+      const hosts = hostFactory.buildList(12);
+
+      const [StatefulHostsList] = withState(<HostsList />, stateWith(hosts));
+      renderWithRouter(StatefulHostsList);
+
+      const [firstCheckbox] = screen.getAllByRole('checkbox', {
+        name: /^Select /,
+      });
+      await user.click(firstCheckbox);
+      expect(screen.getByText('1 host selected')).toBeVisible();
+
+      await user.click(screen.getByLabelText('next-page'));
+
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+    });
+
+    it('should forget the selection when the filters change', async () => {
+      const user = userEvent.setup();
+      const host1 = hostFactory.build({ health: 'passing' });
+      const host2 = hostFactory.build({ health: 'critical' });
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1, host2])
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      expect(screen.getByText('1 host selected')).toBeVisible();
+
+      await filterTable(user, 'Health', 'passing');
+
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+    });
+
+    it('should not allow scheduling without the reboot ability', async () => {
+      const user = userEvent.setup();
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1], {
+          user: {
+            abilities: [{ name: 'all', resource: 'host_tags' }],
+            timezone: 'Etc/UTC',
+          },
+        })
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+
+      expect(
+        screen.getByRole('button', { name: 'Schedule Reboot' })
+      ).toBeDisabled();
+    });
+
+    it('should tell the policies of the scheduled hosts that would not pass now', async () => {
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1], {
+          operationSchedules: {
+            byTarget: {},
+            submission: {
+              ...initialScheduleSubmission,
+              status: SUBMISSION_SUCCEEDED,
+              operation: 'reboot',
+              warnings: [
+                {
+                  message: 'Trento agent is not currently running in the host',
+                  metadata: [],
+                  targetName: host1.hostname,
+                },
+              ],
+            },
+          },
+        })
+      );
+      await act(async () => {
+        renderWithRouter(StatefulHostsList);
+      });
+
+      expect(screen.getByText('Operation Scheduled')).toBeVisible();
+      expect(
+        screen.getByText(
+          `${host1.hostname}: Trento agent is not currently running in the host`
+        )
+      ).toBeVisible();
+    });
+
+    it('should not offer a selection when operations are disabled', () => {
+      delete global.config.operationsEnabled;
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList] = withState(<HostsList />, stateWith([host1]));
+      renderWithRouter(StatefulHostsList);
+
+      expect(
+        screen.queryByLabelText(`Select ${host1.hostname}`)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Schedule Maintenance/ })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Schedule Reboot' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('should schedule maintenance on the selected hosts, with a premium mark', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+
+      const [StatefulHostsList, store] = withState(
+        <HostsList />,
+        stateWith([host1, host2, host3])
+      );
+      renderWithRouter(StatefulHostsList);
+
+      const scheduleMaintenance = screen.getByRole('button', {
+        name: /Schedule Maintenance/,
+      });
+      expect(scheduleMaintenance).toBeDisabled();
+      expect(within(scheduleMaintenance).getByText('Premium')).toBeVisible();
+
+      await user.click(screen.getByLabelText(`Select ${host2.hostname}`));
+      await user.click(screen.getByLabelText(`Select ${host3.hostname}`));
+      await user.click(scheduleMaintenance);
+
+      expect(screen.getByText(/forbidden actions on 2 hosts/)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '22:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleMaintenanceWindows({
+          request: {
+            target_type: 'host',
+            target_ids: [host2.id, host3.id],
+            starts_at: '2099-11-20T22:00:00.000Z',
+            timezone: 'Etc/UTC',
+            duration_minutes: 60,
+            recurrence: null,
+            forbids: ['checks_execution', 'operations'],
+          },
+        })
+      );
+    });
+
+    it('should keep the hosts of the open maintenance modal when the list changes', async () => {
+      const user = userEvent.setup();
+      const [host1, host2, host3] = hostFactory.buildList(3);
+      let state = stateWith([host1, host2]);
+
+      const [StatefulHostsList, store] = withState(<HostsList />, () => state);
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host2.hostname}`));
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+
+      // A host registers: the rows change and the selection is cleared
+      state = stateWith([host1, host2, host3]);
+      act(() => {
+        store.dispatch({ type: 'HOST_REGISTERED' });
+      });
+
+      expect(screen.getByText(/forbidden actions on 1 host/)).toBeVisible();
+
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: '2099-11-20' },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: '22:00' },
+      });
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(store.getActions()).toContainEqual(
+        bulkScheduleMaintenanceWindows({
+          request: expect.objectContaining({ target_ids: [host2.id] }),
+        })
+      );
+    });
+
+    it('should close the maintenance modal and forget the selection once the windows are scheduled', async () => {
+      const user = userEvent.setup();
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList, store] = withState(
+        <HostsList />,
+        stateWith([host1]),
+        true
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+      expect(screen.getByRole('dialog')).toBeVisible();
+
+      await act(async () => {
+        store.dispatch(startMaintenanceWindowSubmission());
+        store.dispatch(setMaintenanceWindowSubmitted());
+      });
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+      expect(screen.getByText('No hosts selected')).toBeVisible();
+    });
+
+    it('should not allow scheduling maintenance without the maintenance windows ability', async () => {
+      const user = userEvent.setup();
+      const [host1] = hostFactory.buildList(1);
+
+      const [StatefulHostsList] = withState(
+        <HostsList />,
+        stateWith([host1], {
+          user: {
+            abilities: [{ name: 'reboot', resource: 'host' }],
+            timezone: 'Etc/UTC',
+          },
+        })
+      );
+      renderWithRouter(StatefulHostsList);
+
+      await user.click(screen.getByLabelText(`Select ${host1.hostname}`));
+
+      expect(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      ).toBeDisabled();
     });
   });
 

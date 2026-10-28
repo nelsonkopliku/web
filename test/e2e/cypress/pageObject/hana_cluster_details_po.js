@@ -82,7 +82,7 @@ const criticalChecksValue =
 const actionNotAuthorizedTooltip =
   'span:contains("You are not authorized for this action")';
 
-const checkSelectionButton = 'button:contains("Check Selection")';
+const checkSettingsButton = 'button:contains("Check Settings")';
 const startExecutionButton = 'button:contains("Start Execution")';
 const saveChecksSelectionButton = 'button:contains("Save Checks Selection")';
 const checkCategorySwitch = 'button[class*="check-switch"]';
@@ -153,7 +153,7 @@ export const clickCriticalChecksButton = () =>
   cy.get(criticalChecksButton).click();
 
 export const clickCheckSelectionButton = () =>
-  cy.get(checkSelectionButton).click();
+  cy.get(checkSettingsButton).click();
 
 export const clickSaveChecksSelectionButton = () =>
   cy.get(saveChecksSelectionButton).click();

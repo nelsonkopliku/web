@@ -239,4 +239,58 @@ describe('lastExecutions saga', () => {
     );
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+
+  describe('executions refused by the server', () => {
+    const refusal = {
+      errors: [
+        {
+          title: 'Unprocessable Entity',
+          detail: 'Checks cannot be executed during a maintenance window',
+        },
+      ],
+    };
+
+    it('should tell why the execution of the checks of a host was refused', async () => {
+      const host = hostFactory.build();
+      axiosMock
+        .onPost(triggerHostChecksExecutionURL(host.id))
+        .reply(422, refusal);
+
+      const dispatched = await recordSaga(
+        requestHostExecution,
+        { payload: { checks: [], host } },
+        {},
+        { router: { navigate: jest.fn() } }
+      );
+
+      expect(dispatched).toContainEqual(
+        notify({
+          text: `Unable to start execution for host: ${host.hostname}. Checks cannot be executed during a maintenance window`,
+          icon: '❌',
+        })
+      );
+    });
+
+    it('should tell why the execution of the checks of a cluster was refused', async () => {
+      const clusterID = faker.string.uuid();
+      const clusterName = faker.animal.cat();
+      axiosMock
+        .onPost(triggerClusterChecksExecutionURL(clusterID))
+        .reply(422, refusal);
+
+      const dispatched = await recordSaga(
+        requestExecution,
+        { payload: { clusterID, hosts: [], checks: [] } },
+        { clustersList: { clusters: [{ id: clusterID, name: clusterName }] } },
+        { router: { navigate: jest.fn() } }
+      );
+
+      expect(dispatched).toContainEqual(
+        notify({
+          text: `Unable to start execution for cluster: ${clusterName}. Checks cannot be executed during a maintenance window`,
+          icon: '❌',
+        })
+      );
+    });
+  });
 });
