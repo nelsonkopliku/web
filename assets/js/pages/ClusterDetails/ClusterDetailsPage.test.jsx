@@ -3,15 +3,28 @@
 
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import MockAdapter from 'axios-mock-adapter';
+
+import { networkClient } from '@lib/network';
 import { withState, renderWithRouterMatch } from '@lib/test-utils';
 
-import { clusterFactory } from '@lib/test-utils/factories';
+import {
+  catalogCheckFactory,
+  checksScheduleFactory,
+  clusterFactory,
+} from '@lib/test-utils/factories';
 
 import { ClusterDetailsPage } from './ClusterDetailsPage';
 
+const axiosMock = new MockAdapter(networkClient);
+
 describe('ClusterDetails ClusterDetailsPage component', () => {
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
   it.each([
     {
       type: 'hana_scale_up',
@@ -35,7 +48,7 @@ describe('ClusterDetails ClusterDetailsPage component', () => {
     },
   ])(
     'should display the $type details based on cluster type',
-    ({ type, label, scenario }) => {
+    async ({ type, label, scenario }) => {
       const cluster = clusterFactory.build({
         type,
         details: { hana_scenario: scenario },
@@ -59,12 +72,55 @@ describe('ClusterDetails ClusterDetailsPage component', () => {
         initialState
       );
 
-      renderWithRouterMatch(statefulClusterDetailsPage, {
-        path: 'clusters/:clusterID',
-        route: `/clusters/${cluster.id}`,
+      // The page fetches the checks schedule of the cluster
+      await act(async () => {
+        renderWithRouterMatch(statefulClusterDetailsPage, {
+          path: 'clusters/:clusterID',
+          route: `/clusters/${cluster.id}`,
+        });
       });
 
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   );
+
+  it('should show that no execution is planned when periodic executions of the cluster are disabled', async () => {
+    const cluster = clusterFactory.build({
+      type: 'hana_scale_up',
+      details: { hana_scenario: 'performance_optimized' },
+    });
+    axiosMock.onGet(`/api/v1/clusters/${cluster.id}/checks/schedule`).reply(
+      200,
+      checksScheduleFactory.build({
+        interval: 'disabled',
+        effective_interval: 'disabled',
+        next_execution_at: null,
+      })
+    );
+
+    const [statefulClusterDetailsPage] = withState(<ClusterDetailsPage />, {
+      clustersList: { clusters: [cluster] },
+      hostsList: { hosts: [] },
+      sapSystemsList: { sapSystems: [], applicationInstances: [] },
+      databasesList: { databases: [], databaseInstances: [] },
+      lastExecutions: {
+        [cluster.id]: { data: null, loading: false, error: null },
+      },
+      catalog: {
+        data: catalogCheckFactory.buildList(2),
+        loading: false,
+        error: null,
+      },
+      user: { abilities: [{ name: 'all', resource: 'all' }] },
+    });
+
+    await act(async () => {
+      renderWithRouterMatch(statefulClusterDetailsPage, {
+        path: 'clusters/:clusterID',
+        route: `/clusters/${cluster.id}`,
+      });
+    });
+
+    expect(screen.getByText('No execution planned')).toBeVisible();
+  });
 });

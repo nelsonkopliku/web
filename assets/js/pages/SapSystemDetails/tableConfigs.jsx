@@ -5,9 +5,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { isEmpty } from 'lodash';
 
-import { OPERATION_NOT_ALLOWED_HOST } from '@lib/operations';
 import { STALE_ROW } from '@lib/tables';
-import { isHeartbeatPassing } from '@lib/model/hosts';
 
 import HostLink from '@common/HostLink';
 import ProviderLabel from '@common/ProviderLabel';
@@ -102,8 +100,6 @@ export const getSystemInstancesTableConfiguration = ({
                 userAbilities={userAbilities}
                 menuPosition="bottom end"
                 transparent
-                disabled={!isHeartbeatPassing(item.host)}
-                disabledTooltip={OPERATION_NOT_ALLOWED_HOST}
                 operations={operations}
               />
             </div>

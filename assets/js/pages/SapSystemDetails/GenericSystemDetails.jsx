@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   find,
@@ -15,7 +15,6 @@ import {
   upperCase,
   filter,
   overSome,
-  isEmpty,
   every,
   maxBy,
 } from 'lodash';
@@ -34,10 +33,8 @@ import {
   SAP_SYSTEM_STOP,
   DATABASE_START,
   DATABASE_STOP,
-  OPERATION_NOT_ALLOWED_DATABASE,
-  OPERATION_NOT_ALLOWED_SAP_SYSTEM,
-  OPERATION_NOT_ALLOWED_SITE,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 import {
   APPLICATION_TYPE,
@@ -45,7 +42,6 @@ import {
   getEnsaVersionLabel,
   getSapSystemType,
 } from '@lib/model/sapSystems';
-import { isSomeHostHeartbeatPassing } from '@lib/model/hosts';
 import { STALE_ROW } from '@lib/tables';
 import { formatDateTime } from '@lib/timezones';
 
@@ -53,7 +49,9 @@ import ListView from '@common/ListView';
 import Table from '@common/Table';
 import { DetailsViewHeader } from '@common/PageHeader';
 import {
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
+  ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
   SapStartStopOperationModal,
 } from '@common/OperationModals';
@@ -61,7 +59,19 @@ import OperationsButton from '@common/OperationsButton';
 import HealthIcon from '@common/HealthIcon';
 import SapSystemLink from '@common/SapSystemLink';
 
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
 import DeregistrationModal from '@pages/DeregistrationModal';
+
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
+import { isGroupBusy } from '@state/selectors/runningOperations';
 
 import Pill from '@common/Pill';
 import Banner from '@common/Banners';
@@ -83,8 +93,6 @@ const getUniqueHosts = (hosts) =>
       }, new Map())
       .values()
   );
-
-const mapInstancesHosts = (instances) => map(instances, ({ host }) => host);
 
 // Returns an active instance (stale_at === null) if available,
 // otherwise returns the most recently stale instance (highest stale_at)
@@ -131,6 +139,14 @@ export function GenericSystemDetails({
   getSiteOperations = noop,
   onInstanceCleanUp = noop,
   onRequestOperation = noop,
+  operationSchedules = [],
+  operationSchedulesError = false,
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
+  onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
 }) {
   const [cleanUpModalOpen, setCleanUpModalOpen] = useState(false);
@@ -140,6 +156,29 @@ export function GenericSystemDetails({
   const [currentOperationInstance, setCurrentOperationInstance] =
     useState(undefined);
   const [currentOperationSite, setCurrentOperationSite] = useState(undefined);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
+
+  const closeOperationModal = (prevState) => {
+    setCurrentOperationInstance(undefined);
+    setCurrentOperationSite(undefined);
+
+    return { ...prevState, open: false };
+  };
+
+  const openOperationModal = (modalState) => {
+    onResetScheduleSubmission();
+    setOperationModelOpen(modalState);
+  };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) {
+      setOperationModelOpen(closeOperationModal);
+      setEditingSchedule(null);
+    }
+  }, [scheduleSubmitted]);
 
   if (!system) {
     return <div>Not Found</div>;
@@ -158,26 +197,25 @@ export function GenericSystemDetails({
       ({ groupID }) => instanceGroupIDs.includes(groupID),
     ])
   );
-  const operationsDisabled = !isEmpty(systemRunningOperations);
-
   const curriedGetInstanceOperations = getInstanceOperations(
     systemRunningOperations,
-    setOperationModelOpen,
+    openOperationModal,
     setCurrentOperationInstance
   );
 
+  // The menus stay available while an operation runs or when the agents do
+  // not report, so that the operations can be scheduled. A request now is
+  // refused then.
   const systemOperations = getSystemOperations(
     system,
     systemRunningOperations,
-    operationsDisabled,
-    setOperationModelOpen
+    openOperationModal
   );
 
   const curriedGetSiteOperations = getSiteOperations(
     system,
     systemRunningOperations,
-    operationsDisabled,
-    setOperationModelOpen,
+    openOperationModal,
     setCurrentOperationSite
   );
 
@@ -201,24 +239,9 @@ export function GenericSystemDetails({
     (instance) => instance.system_replication
   );
 
-  const someHostHeartbeatPassing =
-    type === APPLICATION_TYPE
-      ? isSomeHostHeartbeatPassing(system.hosts)
-      : every(sitedInstances, (instances, _site) =>
-          isSomeHostHeartbeatPassing(mapInstancesHosts(instances))
-        );
-
-  const operationNotAllowedMsg =
-    type === APPLICATION_TYPE
-      ? OPERATION_NOT_ALLOWED_SAP_SYSTEM
-      : OPERATION_NOT_ALLOWED_DATABASE;
-
-  const closeOperationModal = (prevState) => {
-    setCurrentOperationInstance(undefined);
-    setCurrentOperationSite(undefined);
-
-    return { ...prevState, open: false };
-  };
+  const existingSchedules = filter(operationSchedules, {
+    operation: operationModalOpen.operation,
+  });
 
   return (
     <div>
@@ -241,7 +264,13 @@ export function GenericSystemDetails({
         onCancel={() => onCleanForbiddenOperation(forbiddenOperationID)}
         errors={forbiddenErrors}
       />
+      <OperationAlreadyRunningModal
+        isOpen={!!alreadyRunning}
+        operation={getOperationLabel(alreadyRunning)}
+        onClose={() => setAlreadyRunning(null)}
+      />
       <SimpleAcceptanceOperationModal
+        key={`instance-${operationModalOpen.operation}-${operationModalOpen.open}`}
         operation={operationModalOpen.operation}
         descriptionResolverArgs={{
           instanceNumber: currentOperationInstance?.instance_number,
@@ -251,7 +280,33 @@ export function GenericSystemDetails({
           operationModalOpen.open &&
           instanceStartStopOperations.includes(operationModalOpen.operation)
         }
-        onRequest={(params) => {
+        schedulable={isSchedulable(operationModalOpen.operation)}
+        timezone={userTimezone}
+        existingSchedules={existingSchedules}
+        loading={isSubmittingSchedule(scheduleSubmission)}
+        errors={scheduleSubmission.errors}
+        onRequest={(params, schedule) => {
+          if (schedule) {
+            onScheduleOperation({
+              target_type: 'sap_system',
+              target_id: system.id,
+              operation: operationModalOpen.operation,
+              params: {
+                ...params,
+                host_id: currentOperationInstance.host_id,
+                instance_number: currentOperationInstance.instance_number,
+              },
+              ...schedule,
+            });
+            return;
+          }
+          if (
+            isGroupBusy(runningOperations, currentOperationInstance.host_id)
+          ) {
+            setAlreadyRunning(operationModalOpen.operation);
+            setOperationModelOpen(closeOperationModal);
+            return;
+          }
           onRequestOperation({
             groupID: currentOperationInstance.host_id,
             operation: operationModalOpen.operation,
@@ -269,6 +324,7 @@ export function GenericSystemDetails({
         }}
       />
       <SapStartStopOperationModal
+        key={`system-${operationModalOpen.operation}-${operationModalOpen.open}`}
         operation={operationModalOpen.operation}
         sid={system.sid}
         type={type}
@@ -277,7 +333,27 @@ export function GenericSystemDetails({
           operationModalOpen.open &&
           startStopOperations.includes(operationModalOpen.operation)
         }
-        onRequest={(params) => {
+        schedulable={isSchedulable(operationModalOpen.operation)}
+        timezone={userTimezone}
+        existingSchedules={existingSchedules}
+        loading={isSubmittingSchedule(scheduleSubmission)}
+        errors={scheduleSubmission.errors}
+        onRequest={(params, schedule) => {
+          if (schedule) {
+            onScheduleOperation({
+              target_type: type === DATABASE_TYPE ? 'database' : 'sap_system',
+              target_id: system.id,
+              operation: operationModalOpen.operation,
+              params,
+              ...schedule,
+            });
+            return;
+          }
+          if (isGroupBusy(runningOperations, system.id)) {
+            setAlreadyRunning(operationModalOpen.operation);
+            setOperationModelOpen(closeOperationModal);
+            return;
+          }
           onRequestOperation({
             groupID: system.id,
             operation: operationModalOpen.operation,
@@ -292,6 +368,23 @@ export function GenericSystemDetails({
         onCancel={() => {
           setOperationModelOpen(closeOperationModal);
         }}
+      />
+      <EditOperationScheduleModal
+        key={editingSchedule?.id}
+        schedule={editingSchedule}
+        isOpen={!!editingSchedule}
+        sid={system.sid}
+        type={type}
+        submission={scheduleSubmission}
+        onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+        onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+        onCancel={() => setEditingSchedule(null)}
+      />
+      <ScheduleWarningsModal
+        isOpen={hasScheduleWarnings(scheduleSubmission)}
+        operation={getOperationLabel(scheduleSubmission.operation)}
+        warnings={scheduleSubmission.warnings}
+        onClose={onResetScheduleSubmission}
       />
       <div className="flex flex-wrap">
         <div className="flex w-1/2 h-auto overflow-hidden overflow-ellipsis break-words">
@@ -312,8 +405,6 @@ export function GenericSystemDetails({
                 userAbilities={userAbilities}
                 operations={systemOperations}
                 menuPosition="bottom end"
-                disabled={!someHostHeartbeatPassing}
-                disabledTooltip={operationNotAllowedMsg}
               />
             </div>
           </div>
@@ -515,12 +606,6 @@ export function GenericSystemDetails({
                             userAbilities={userAbilities}
                             menuPosition="bottom end"
                             transparent
-                            disabled={
-                              !isSomeHostHeartbeatPassing(
-                                mapInstancesHosts(instances)
-                              )
-                            }
-                            disabledTooltip={OPERATION_NOT_ALLOWED_SITE}
                             operations={curriedGetSiteOperations(site)}
                           />
                         </div>
@@ -533,6 +618,23 @@ export function GenericSystemDetails({
           );
         })}
       </div>
+
+      {operationsEnabled && (
+        <OperationSchedules
+          schedules={operationSchedules}
+          error={operationSchedulesError}
+          timezone={userTimezone}
+          userAbilities={userAbilities}
+          submission={scheduleSubmission}
+          onEdit={(schedule) => {
+            onResetScheduleSubmission();
+            setEditingSchedule(schedule);
+          }}
+          onCancel={onCancelSchedule}
+          onRetry={onRetryOperationSchedules}
+          onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
 
       <div className="mt-8">
         <div>
