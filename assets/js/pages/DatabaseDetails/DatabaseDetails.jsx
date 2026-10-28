@@ -11,6 +11,7 @@ import { DATABASE_TYPE } from '@lib/model/sapSystems';
 import BackButton from '@common/BackButton';
 
 import { GenericSystemDetails } from '@pages/SapSystemDetails';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
 
 import { getEnrichedDatabaseDetails } from '@state/selectors/sapSystem';
 import { getRunningOperationsList } from '@state/selectors/runningOperations';
@@ -54,6 +55,7 @@ function DatabaseDetails() {
   const { schedules: operationSchedules, error: operationSchedulesError } =
     useSelector(getOperationSchedules(id));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows('database', id);
 
   useEffect(() => {
     operationsEnabled && dispatch(updateRunningOperations());
@@ -91,6 +93,7 @@ function DatabaseDetails() {
         }}
         onRequestOperation={(payload) => dispatch(operationRequested(payload))}
         operationSchedules={operationSchedules}
+        maintenanceWindows={maintenanceWindows}
         scheduleSubmission={scheduleSubmission}
         onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
         operationSchedulesError={operationSchedulesError}

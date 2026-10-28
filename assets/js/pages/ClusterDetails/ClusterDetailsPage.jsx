@@ -50,6 +50,7 @@ import {
 } from '@lib/model/clusters';
 
 import { useChecksSchedule } from '@pages/ChecksSelection';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
 
 import ClusterDetails from './ClusterDetails';
 import AscsErsClusterDetails from './AscsErsClusterDetails';
@@ -128,6 +129,7 @@ export function ClusterDetailsPage() {
   const { schedules: operationSchedules, error: operationSchedulesError } =
     useSelector(getOperationSchedules(clusterID));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows(TARGET_CLUSTER, clusterID);
 
   useEffect(() => {
     operationsEnabled &&
@@ -162,6 +164,7 @@ export function ClusterDetailsPage() {
       operationsEnabled={operationsEnabled}
       runningOperation={runningOperation}
       operationSchedules={operationSchedules}
+      maintenanceWindows={maintenanceWindows}
       scheduleSubmission={scheduleSubmission}
       onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
       operationSchedulesError={operationSchedulesError}

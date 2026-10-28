@@ -58,6 +58,7 @@ import {
   getSoftwareUpdatesErrorTooltip,
 } from './suseMultiLinuxManagerMessaging';
 import { useChecksSchedule } from '@pages/ChecksSelection';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
 
 import HostDetails from './HostDetails';
 
@@ -114,6 +115,7 @@ function HostDetailsPage() {
   const { schedules: operationSchedules, error: operationSchedulesError } =
     useSelector(getOperationSchedules(hostID));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows(TARGET_HOST, hostID);
 
   const getExportersStatus = async () => {
     const { data } = await networkClient.get(
@@ -191,6 +193,7 @@ function HostDetailsPage() {
       nextExecutionAt={checksSchedule?.next_execution_at}
       runningOperation={runningOperation}
       operationSchedules={operationSchedules}
+      maintenanceWindows={maintenanceWindows}
       scheduleSubmission={scheduleSubmission}
       onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
       operationSchedulesError={operationSchedulesError}
