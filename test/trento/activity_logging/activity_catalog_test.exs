@@ -160,7 +160,10 @@ defmodule Trento.ActivityLog.ActivityCatalogTest do
                :operation_schedule_changed,
                :operation_schedule_cancelled,
                :scheduled_operation_requested,
-               :scheduled_operation_request_failed
+               :scheduled_operation_request_failed,
+               :maintenance_window_scheduled,
+               :maintenance_window_changed,
+               :maintenance_window_deleted
              ] == ActivityCatalog.application_activities()
 
       for activity <- ActivityCatalog.application_activities() do
