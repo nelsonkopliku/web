@@ -6,7 +6,8 @@ defmodule Trento.ChecksScheduling do
   Periodic checks executions of hosts and clusters.
 
   A target uses its own interval, or the global one of
-  `Trento.Settings.get_checks_execution_settings/0`.
+  `Trento.Settings.get_checks_execution_settings/0`. The next execution of a
+  target falls after its exception window.
   """
 
   import Ecto.Query, only: [from: 2]
@@ -16,6 +17,7 @@ defmodule Trento.ChecksScheduling do
   alias Trento.Clusters.Projections.ClusterReadModel
   alias Trento.Hosts.Projections.HostReadModel
   alias Trento.Repo
+  alias Trento.Scheduling.Recurrence
   alias Trento.Settings
   alias Trento.Support.DateService
 
@@ -42,7 +44,7 @@ defmodule Trento.ChecksScheduling do
          {:ok, schedule} <-
            target_type
            |> load(target_id)
-           |> TargetSchedule.changeset(attrs)
+           |> TargetSchedule.changeset(attrs, now)
            |> Repo.insert_or_update() do
       {:ok, view(schedule, now)}
     end
@@ -89,6 +91,24 @@ defmodule Trento.ChecksScheduling do
   def effective_interval(%TargetSchedule{interval: interval}), do: interval
 
   @doc """
+  The end of the exception window occurrence covering `at`, nil outside the window.
+  """
+  @spec window_end(TargetSchedule.t(), DateTime.t()) :: DateTime.t() | nil
+  def window_end(%TargetSchedule{} = schedule, at) do
+    with %{} = window <- TargetSchedule.window_recurrence(schedule),
+         duration = schedule.window_duration_minutes,
+         from = DateTime.add(at, -duration * 60 - 1, :second),
+         %DateTime{} = start <- Recurrence.next_occurrence(window, from),
+         true <- DateTime.compare(start, at) != :gt,
+         ends_at = DateTime.add(start, duration, :minute),
+         :gt <- DateTime.compare(ends_at, at) do
+      ends_at
+    else
+      _ -> nil
+    end
+  end
+
+  @doc """
   When the next periodic execution runs, nil when they are disabled.
   """
   @spec next_execution_at(TargetSchedule.t(), DateTime.t()) :: DateTime.t() | nil
@@ -98,10 +118,13 @@ defmodule Trento.ChecksScheduling do
         nil
 
       minutes ->
-        case schedule.last_requested_at do
-          nil -> now
-          last -> Enum.max([DateTime.add(last, minutes, :minute), now], DateTime)
-        end
+        due =
+          case schedule.last_requested_at do
+            nil -> now
+            last -> Enum.max([DateTime.add(last, minutes, :minute), now], DateTime)
+          end
+
+        window_end(schedule, due) || due
     end
   end
 
@@ -171,7 +194,9 @@ defmodule Trento.ChecksScheduling do
       effective_interval: effective_interval(schedule),
       global_interval: Settings.get_checks_execution_settings().interval,
       last_requested_at: schedule.last_requested_at,
-      next_execution_at: next_execution_at(schedule, now)
+      next_execution_at: next_execution_at(schedule, now),
+      exception_window: TargetSchedule.exception_window(schedule),
+      in_exception_window: not is_nil(window_end(schedule, now))
     }
   end
 
