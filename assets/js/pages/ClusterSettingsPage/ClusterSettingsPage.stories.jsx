@@ -5,6 +5,7 @@ import { networkClient } from '@lib/network';
 import {
   abilityFactory,
   catalogFactory,
+  checksScheduleFactory,
   clusterFactory,
   userFactory,
 } from '@lib/test-utils/factories';
@@ -112,6 +113,27 @@ export default {
       axiosMock.onPost(/\/checks\/env\/checks_selection/).reply(200, {
         data: catalog.catalog || [],
       });
+      axiosMock.onGet(`/clusters/${cluster.id}/checks/schedule`).reply(
+        200,
+        checksScheduleFactory.build({
+          interval: '6h',
+          effective_interval: '6h',
+          global_interval: '15m',
+        })
+      );
+      axiosMock
+        .onPut(`/clusters/${cluster.id}/checks/schedule`)
+        .reply(({ data }) => {
+          const { interval } = JSON.parse(data);
+          return [
+            200,
+            checksScheduleFactory.build({
+              interval,
+              effective_interval: interval ?? '15m',
+              global_interval: '15m',
+            }),
+          ];
+        });
 
       return (
         <Provider store={mockStore}>
