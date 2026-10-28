@@ -220,6 +220,63 @@ defmodule Trento.MaintenanceWindows do
     do: query |> Repo.all() |> Enum.map(fn {id, name} -> {{target_type, id}, name} end)
 
   @doc """
+  Sets the same window on several registered targets of one type, with the
+  same bulk_id. All the windows are saved, or none.
+  """
+  @spec create_bulk_windows(map(), String.t(), module()) ::
+          {:ok, String.t(), [MaintenanceWindow.t()]}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+  def create_bulk_windows(%{target_ids: target_ids} = attrs, actor, date_service \\ DateService) do
+    bulk_id = UUID.uuid4()
+    now = date_service.utc_now()
+
+    common =
+      attrs
+      |> Map.delete(:target_ids)
+      |> Map.merge(%{bulk_id: bulk_id, created_by: actor})
+
+    changesets =
+      Enum.map(target_ids, fn target_id ->
+        MaintenanceWindow.changeset(
+          %MaintenanceWindow{},
+          Map.put(common, :target_id, target_id),
+          now
+        )
+      end)
+
+    with :ok <- validate_bulk(changesets),
+         {:ok, windows} <- insert_bulk(changesets) do
+      Enum.each(windows, &WindowActivity.record(:maintenance_window_scheduled, &1, actor))
+      {:ok, bulk_id, windows}
+    end
+  end
+
+  defp validate_bulk(changesets) do
+    Enum.reduce_while(changesets, :ok, fn changeset, :ok ->
+      with {:ok, window} <- Ecto.Changeset.apply_action(changeset, :insert),
+           :ok <- registered(window.target_type, window.target_id) do
+        {:cont, :ok}
+      else
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp insert_bulk(changesets) do
+    changesets
+    |> Enum.with_index()
+    |> Enum.reduce(Ecto.Multi.new(), fn {changeset, index}, multi ->
+      Ecto.Multi.insert(multi, index, changeset)
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, changes} -> {:ok, Enum.map(0..(length(changesets) - 1), &changes[&1])}
+      {:error, _, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  @doc """
   Tells whether a target is registered: a window can only be set on one.
   """
   @spec registered(String.t(), String.t()) :: :ok | {:error, :not_found}
