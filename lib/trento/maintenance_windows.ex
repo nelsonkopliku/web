@@ -40,6 +40,23 @@ defmodule Trento.MaintenanceWindows do
     end
   end
 
+  @doc """
+  Replaces the timing and the forbidden actions of a window. The change
+  applies at once, also to an ongoing window, which can keep its start.
+  """
+  @spec update_window(String.t(), map(), String.t(), module()) ::
+          {:ok, MaintenanceWindow.t()} | {:error, :not_found} | {:error, Ecto.Changeset.t()}
+  def update_window(window_id, attrs, actor, date_service \\ DateService) do
+    with {:ok, current} <- get_window(window_id),
+         {:ok, window} <-
+           current
+           |> MaintenanceWindow.update_changeset(attrs, date_service.utc_now())
+           |> Repo.update(stale_error_field: :id) do
+      WindowActivity.record(:maintenance_window_changed, window, actor)
+      {:ok, window}
+    end
+  end
+
   @type covering_window :: %{
           window: MaintenanceWindow.t(),
           target_name: String.t() | nil,
