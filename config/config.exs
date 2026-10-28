@@ -144,7 +144,7 @@ config :trento, :discovery_events_pruning, schedule: "0 0 * * *", older_than: 10
 
 config :trento, Oban,
   repo: Trento.Repo,
-  queues: [default: 5, checks: 1],
+  queues: [default: 5, checks: 1, operations: 5],
   pruner: [max_age: {7, :days}],
   lifeline: [rescue_after: {30, :minutes}],
   cron: [
