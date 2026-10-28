@@ -28,9 +28,10 @@ defmodule Trento.MaintenanceWindows do
     MaintenanceWindowReadModel
   }
 
-  alias Trento.MaintenanceWindows.WindowActivity
+  alias Trento.MaintenanceWindows.{Coverage, WindowActivity}
   alias Trento.Repo
   alias Trento.SapSystems.Projections.SapSystemReadModel
+  alias Trento.Scheduling.Recurrence
   alias Trento.Support.{CommandedUtils, DateService}
 
   require Logger
@@ -60,6 +61,124 @@ defmodule Trento.MaintenanceWindows do
       end)
     end
   end
+
+  @type covering_window :: %{
+          window: MaintenanceWindowReadModel.t(),
+          target_name: String.t() | nil,
+          inherited: boolean(),
+          active: boolean(),
+          current_occurrence: occurrence() | nil,
+          next_occurrence: occurrence() | nil
+        }
+
+  @type occurrence :: %{starts_at: DateTime.t(), ends_at: DateTime.t()}
+
+  @doc """
+  The windows that cover a target, set on it or inherited from the targets
+  that cover it, with an occurrence that is ongoing or ahead. The active ones
+  come first, then the next to start.
+  """
+  @spec list_covering_windows(String.t(), String.t(), module()) :: [covering_window()]
+  def list_covering_windows(target_type, target_id, date_service \\ DateService) do
+    now = date_service.utc_now()
+    owners = Coverage.owners(target_type, target_id)
+    names = target_names(owners)
+
+    owners
+    |> windows_of()
+    |> Enum.map(&covering(&1, {target_type, target_id}, names, now))
+    |> Enum.filter(&(&1.active or &1.next_occurrence != nil))
+    |> Enum.sort_by(&{not &1.active, sort_start(&1)})
+  end
+
+  @spec get_window(String.t()) :: {:ok, MaintenanceWindowReadModel.t()} | {:error, :not_found}
+  def get_window(window_id) do
+    case Repo.get(MaintenanceWindowReadModel, window_id) do
+      nil -> {:error, :not_found}
+      window -> {:ok, window}
+    end
+  end
+
+  @doc """
+  The occurrence of a window ongoing at `at`, and the next one after it.
+  """
+  @spec occurrences(MaintenanceWindowReadModel.t(), DateTime.t()) ::
+          {occurrence() | nil, occurrence() | nil}
+  def occurrences(%MaintenanceWindowReadModel{duration_minutes: duration} = window, at) do
+    recurrence = MaintenanceWindowReadModel.to_recurrence(window)
+
+    case Recurrence.next_occurrence(recurrence, DateTime.add(at, -duration, :minute)) do
+      nil ->
+        {nil, nil}
+
+      start ->
+        if DateTime.compare(start, at) == :gt do
+          {nil, occurrence(start, duration)}
+        else
+          {occurrence(start, duration),
+           recurrence |> Recurrence.next_occurrence(start) |> occurrence(duration)}
+        end
+    end
+  end
+
+  defp occurrence(nil, _), do: nil
+
+  defp occurrence(start, duration),
+    do: %{starts_at: start, ends_at: DateTime.add(start, duration, :minute)}
+
+  defp windows_of(owners) do
+    ids = Enum.map(owners, &elem(&1, 1))
+
+    from(w in MaintenanceWindowReadModel, where: w.target_id in ^ids)
+    |> Repo.all()
+    |> Enum.filter(&({&1.target_type, &1.target_id} in owners))
+  end
+
+  defp covering(%MaintenanceWindowReadModel{} = window, target, names, now) do
+    {current, next} = occurrences(window, now)
+
+    %{
+      window: window,
+      target_name: Map.get(names, {window.target_type, window.target_id}),
+      inherited: {window.target_type, window.target_id} != target,
+      active: current != nil,
+      current_occurrence: current,
+      next_occurrence: next
+    }
+  end
+
+  defp sort_start(%{current_occurrence: %{starts_at: starts_at}}),
+    do: DateTime.to_unix(starts_at, :microsecond)
+
+  defp sort_start(%{next_occurrence: %{starts_at: starts_at}}),
+    do: DateTime.to_unix(starts_at, :microsecond)
+
+  defp target_names(owners) do
+    owners
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> Enum.flat_map(fn {target_type, ids} -> names_of(target_type, ids) end)
+    |> Map.new()
+  end
+
+  defp names_of("host", ids),
+    do: named(from(h in HostReadModel, where: h.id in ^ids, select: {h.id, h.hostname}), "host")
+
+  defp names_of("cluster", ids),
+    do: named(from(c in ClusterReadModel, where: c.id in ^ids, select: {c.id, c.name}), "cluster")
+
+  defp names_of("database", ids),
+    do:
+      named(from(d in DatabaseReadModel, where: d.id in ^ids, select: {d.id, d.sid}), "database")
+
+  defp names_of("sap_system", ids),
+    do:
+      named(
+        from(s in SapSystemReadModel, where: s.id in ^ids, select: {s.id, s.sid}),
+        "sap_system"
+      )
+
+  defp named(query, target_type),
+    do: query |> Repo.all() |> Enum.map(fn {id, name} -> {{target_type, id}, name} end)
 
   @doc """
   Tells whether a target is registered: a window can only be set on one.
