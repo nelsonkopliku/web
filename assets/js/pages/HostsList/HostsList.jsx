@@ -1,17 +1,22 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { EOS_WARNING_OUTLINED } from 'eos-icons-react';
-import { uniqBy } from 'lodash';
+import { fromPairs, uniqBy } from 'lodash';
 import classNames from 'classnames';
 import semver from 'semver';
 
+import BulkScheduleModal from '@common/BulkScheduleModal';
+import Button from '@common/Button';
 import CleanUpButton from '@common/CleanUpButton';
+import DisabledGuard from '@common/DisabledGuard';
 import HealthIcon from '@common/HealthIcon';
 import HostLink from '@common/HostLink';
+import { Checkbox } from '@common/Input';
+import { ScheduleWarningsModal } from '@common/OperationModals';
 import PageHeader from '@common/PageHeader';
 import Pill from '@common/Pill';
 import ProviderLabel from '@common/ProviderLabel';
@@ -22,6 +27,13 @@ import Tooltip from '@common/Tooltip';
 
 import { post, del } from '@lib/network';
 import { agentVersionWarning } from '@lib/agent';
+import { getFromConfig } from '@lib/config';
+import {
+  HOST_REBOOT,
+  countTargets,
+  getOperationLabel,
+  getOperationPermittedFor,
+} from '@lib/operations';
 import { STALE_ROW } from '@lib/tables';
 
 import usePersistentSearchParams from '@hooks/usePersistentSearchParams';
@@ -35,6 +47,13 @@ import { addTagToHost, removeTagFromHost, deregisterHost } from '@state/hosts';
 import { getUserProfile } from '@state/selectors/user';
 import { hostsListSelector } from '@state/selectors/host';
 import { getInstanceID } from '@state/instances';
+import {
+  bulkScheduleOperation,
+  hasScheduleWarnings,
+  isScheduleSubmitted,
+  resetOperationScheduleSubmission,
+} from '@state/operationSchedules';
+import { getOperationScheduleSubmission } from '@state/selectors/operationSchedules';
 
 const compareAgentVersions = (a, b) => {
   const coercedA = semver.coerce(a);
@@ -62,8 +81,67 @@ function HostsList() {
   const [searchParams, setSearchParams] = usePersistentSearchParams('hosts');
   const [cleanUpModalOpen, setCleanUpModalOpen] = useState(false);
   const [hostToDeregister, setHostToDeregister] = useState(undefined);
+  // The selectable table of #4954 will replace this selection
+  const [selectedHostIDs, setSelectedHostIDs] = useState([]);
+  // The hosts of the bulk modal, taken from the selection when it opens: a
+  // change of the rows clears the selection, also while the modal is open
+  const [bulkHostIDs, setBulkHostIDs] = useState([]);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+
+  const operationsEnabled = getFromConfig('operationsEnabled');
 
   const dispatch = useDispatch();
+
+  // Only the hosts shown with the current filters and page can be selected:
+  // the selection is forgotten when they change, and leaves out the hosts
+  // that are gone
+  const selectedHosts = (hostsData || []).filter(({ id }) =>
+    selectedHostIDs.includes(id)
+  );
+  const clearSelection = () => setSelectedHostIDs([]);
+  const bulkHosts = (hostsData || []).filter(({ id }) =>
+    bulkHostIDs.includes(id)
+  );
+
+  const filtersQuery = searchParams.toString();
+  useEffect(() => {
+    clearSelection();
+  }, [filtersQuery]);
+
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) {
+      setBulkModalOpen(false);
+      clearSelection();
+    }
+  }, [scheduleSubmitted]);
+
+  useEffect(
+    () => () => dispatch(resetOperationScheduleSubmission()),
+    [dispatch]
+  );
+
+  const toggleHostSelection = (hostID) =>
+    setSelectedHostIDs((selected) =>
+      selected.includes(hostID)
+        ? selected.filter((id) => id !== hostID)
+        : [...selected, hostID]
+    );
+
+  const scheduleReboot = (schedule, { confirmed }) =>
+    dispatch(
+      bulkScheduleOperation({
+        request: {
+          target_type: 'host',
+          target_ids: bulkHosts.map(({ id }) => id),
+          operation: HOST_REBOOT,
+          params: {},
+          ...schedule,
+        },
+        confirmed,
+      })
+    );
 
   const openDeregistrationModal = (host) => {
     setHostToDeregister(host);
@@ -77,14 +155,33 @@ function HostsList() {
 
   const counters = getCounters(hostsData || []);
 
+  const selectionColumns = operationsEnabled
+    ? [
+        {
+          title: <span className="sr-only">Selection</span>,
+          key: 'id',
+          className: 'w-8',
+          render: (id, { hostname }) => (
+            <Checkbox
+              aria-label={`Select ${hostname}`}
+              checked={selectedHostIDs.includes(id)}
+              onChange={() => toggleHostSelection(id)}
+            />
+          ),
+        },
+      ]
+    : [];
+
   const config = {
     pagination: true,
     usePadding: false,
+    onPageChange: clearSelection,
     rowClassName: ({ staleAt }) =>
       classNames({
         [STALE_ROW]: !!staleAt,
       }),
     columns: [
+      ...selectionColumns,
       {
         title: 'Health',
         key: 'health',
@@ -254,6 +351,62 @@ function HostsList() {
           setCleanUpModalOpen(false);
         }}
       />
+      {operationsEnabled && (
+        <>
+          <BulkScheduleModal
+            key={`bulk-schedule-${bulkModalOpen}`}
+            isOpen={bulkModalOpen}
+            operation={HOST_REBOOT}
+            targetType="host"
+            targetsCount={bulkHosts.length}
+            timezone={timezone}
+            targetNames={fromPairs(
+              bulkHosts.map(({ id, hostname }) => [id, hostname])
+            )}
+            submission={scheduleSubmission}
+            onSchedule={scheduleReboot}
+            onCancel={() => setBulkModalOpen(false)}
+          />
+          <ScheduleWarningsModal
+            isOpen={hasScheduleWarnings(scheduleSubmission)}
+            operation={getOperationLabel(scheduleSubmission.operation)}
+            warnings={scheduleSubmission.warnings}
+            onClose={() => dispatch(resetOperationScheduleSubmission())}
+          />
+          <div className="flex justify-end items-center space-x-2 pb-2">
+            <span className="text-sm text-gray-500" aria-live="polite">
+              {selectedHosts.length === 0
+                ? 'No hosts selected'
+                : `${countTargets(selectedHosts.length, 'host')} selected`}
+            </span>
+            <Button
+              type="primary-white-fit"
+              size="small"
+              disabled={selectedHosts.length === 0}
+              onClick={clearSelection}
+            >
+              Clear selection
+            </Button>
+            <DisabledGuard
+              userAbilities={abilities}
+              permitted={getOperationPermittedFor(HOST_REBOOT)}
+            >
+              <Button
+                type="primary-white-fit"
+                size="small"
+                disabled={selectedHosts.length === 0}
+                onClick={() => {
+                  dispatch(resetOperationScheduleSubmission());
+                  setBulkHostIDs(selectedHosts.map(({ id }) => id));
+                  setBulkModalOpen(true);
+                }}
+              >
+                Schedule Reboot
+              </Button>
+            </DisabledGuard>
+          </div>
+        </>
+      )}
       <div className="bg-white rounded-lg shadow">
         <HealthSummary {...counters} className="px-4 py-2" />
         <Table
