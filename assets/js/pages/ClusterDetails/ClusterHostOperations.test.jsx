@@ -141,7 +141,7 @@ describe.each([
     }
   );
 
-  it('should disable operations if some operation is running', async () => {
+  it('should keep the operations available while an operation runs', async () => {
     const user = userEvent.setup();
     const clusterID = faker.string.uuid();
 
@@ -172,9 +172,9 @@ describe.each([
 
     await user.click(operationBtnHost1);
 
-    screen
-      .getAllByRole('menuitem')
-      .forEach((item) => expect(item).toBeDisabled());
+    expect(
+      screen.getByRole('menuitem', { name: 'Node maintenance' })
+    ).toBeEnabled();
   });
 
   const runningOperationsScenarios = [
@@ -244,7 +244,6 @@ describe.each([
       const menuItem = screen.getByRole('menuitem', {
         name: runningItem,
       });
-      expect(menuItem).toBeDisabled();
 
       const { getByTestId } = within(menuItem);
 
@@ -488,7 +487,7 @@ describe.each([
     }
   );
 
-  it('should disable node operations button if the host heartbeast is not passing', async () => {
+  it('should keep the node operations button available if the host heartbeat is not passing', async () => {
     const user = userEvent.setup();
     const clusterID = faker.string.uuid();
     // hosts is used for AscsClusterDetails and nodes for HanaClusterSite
@@ -527,10 +526,11 @@ describe.each([
       _detailsBtnHost2,
     ] = getAllByRole('button');
 
+    expect(operationBtnHost1).toBeEnabled();
     await user.hover(operationBtnHost1);
 
     expect(
       screen.queryByText('Trento agent is not currently running in the host')
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 });

@@ -84,12 +84,11 @@ expect.extend({
       };
     }
 
-    const isDisabled = opItem.hasAttribute('disabled');
-    if (!isDisabled) {
+    if (opItem.hasAttribute('disabled')) {
       return {
         pass: false,
         message: () =>
-          `Expected menuitem "${operation}" to be disabled but it was enabled.`,
+          `Expected menuitem "${operation}" to stay enabled while running, but it was disabled.`,
       };
     }
 
@@ -106,7 +105,7 @@ expect.extend({
     return {
       pass: true,
       message: () =>
-        `Expected menuitem "${operation}" not to be running (disabled with svg), but it was.`,
+        `Expected menuitem "${operation}" not to be running (enabled with svg), but it was.`,
     };
   },
 });
@@ -1064,7 +1063,7 @@ describe('GenericSystemDetails', () => {
       expect(menuItemText).toBeRunning(operation);
 
       await user.click(siteOpButton2);
-      expect(menuItemText).toHaveMenuitem({ enabled: false });
+      expect(menuItemText).toHaveMenuitem({ enabled: true });
     }
   );
 
@@ -1072,7 +1071,7 @@ describe('GenericSystemDetails', () => {
     { index: 0, scenario: 'an operation in the same host' },
     { index: 1, scenario: 'system operation' },
   ])(
-    'should disable instance operations if a $scenario is running',
+    'should keep instance operations available if a $scenario is running',
     async ({ index }) => {
       const user = userEvent.setup();
       const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
@@ -1116,12 +1115,13 @@ describe('GenericSystemDetails', () => {
 
       await user.click(opButton);
 
+      // only the instance status disables an entry, a started instance here
       expect('Start instance').toHaveMenuitem({ enabled: false });
-      expect('Stop instance').toHaveMenuitem({ enabled: false });
+      expect('Stop instance').toHaveMenuitem({ enabled: true });
     }
   );
 
-  it('should disable systems operations if an instance operation is running', async () => {
+  it('should keep systems operations available if an instance operation is running', async () => {
     const user = userEvent.setup();
     const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
     const hostID = hosts[0].id;
@@ -1158,9 +1158,80 @@ describe('GenericSystemDetails', () => {
     const opButton = screen.getByRole('button', { name: 'Operations' });
     await user.click(opButton);
 
-    expect('Start system').toHaveMenuitem({ enabled: false });
+    // only the instances status disables an entry, a stopped system here
+    expect('Start system').toHaveMenuitem({ enabled: true });
     expect('Stop system').toHaveMenuitem({ enabled: false });
   });
+
+  it.each([
+    {
+      scenario: 'a system operation, while one runs on the system',
+      groupID: (sapSystem) => sapSystem.id,
+      openMenu: (user) =>
+        user.click(screen.getByRole('button', { name: 'Operations' })),
+      menuItem: 'Start system',
+      label: 'SAP system start',
+    },
+    {
+      scenario: 'an instance operation, while one runs on its host',
+      groupID: (_sapSystem, hostID) => hostID,
+      openMenu: (user) =>
+        user.click(within(screen.getAllByRole('table')[0]).getByRole('button')),
+      menuItem: 'Start instance',
+      label: 'SAP instance start',
+    },
+  ])(
+    'should refuse a request now of $scenario',
+    async ({ groupID, openMenu, menuItem, label }) => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onRequestOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const hostID = hosts[0].id;
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({
+            status: 'gray',
+            host_id: hostID,
+            host: hosts[0],
+          }),
+        ],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          cleanUpPermittedFor={[]}
+          runningOperations={[
+            {
+              groupID: groupID(sapSystem, hostID),
+              operation: SAP_SYSTEM_STOP,
+              forbidden: false,
+            },
+          ]}
+          getInstanceOperations={getSapInstanceOperations}
+          getSystemOperations={getSapSystemOperations}
+          operationsEnabled
+          onRequestOperation={onRequestOperation}
+        />
+      );
+
+      await openMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: menuItem }));
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(onRequestOperation).not.toHaveBeenCalled();
+      expect(
+        screen.getByText(
+          `Unable to run ${label} operation now. Another operation is already running for this target.`
+        )
+      ).toBeVisible();
+    }
+  );
 
   it('should show forbidden operation modal', async () => {
     const user = userEvent.setup();
@@ -1217,7 +1288,7 @@ describe('GenericSystemDetails', () => {
     expect(mockCleanForbiddenOperation).toHaveBeenCalled();
   });
 
-  it('should disable instance operations if the host heartbeat is not passing', async () => {
+  it('should keep instance operations available if the host heartbeat is not passing', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(1, { heartbeat: 'critical' });
@@ -1243,13 +1314,14 @@ describe('GenericSystemDetails', () => {
     const { getByRole } = within(layoutTable);
     const opButton = getByRole('button');
 
+    expect(opButton).toBeEnabled();
     await user.hover(opButton);
     expect(
       screen.queryByText('Trento agent is not currently running in the host')
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable SAP system operations if all the hosts heartbeat is not passing', async () => {
+  it('should keep SAP system operations available when no host heartbeat passes', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(2, { heartbeat: 'critical' });
@@ -1275,15 +1347,17 @@ describe('GenericSystemDetails', () => {
       name: 'Operations',
     });
 
+    // the operations can be scheduled, the policies refuse a request now
+    expect(operationsButton).toBeEnabled();
     await user.hover(operationsButton);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts in the SAP system'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable database operations if all the hosts heartbeat in a site is not passing', async () => {
+  it('should keep database operations available when no host heartbeat of a site passes', async () => {
     const user = userEvent.setup();
 
     const host1 = hostFactory.build({ heartbeat: 'critical' });
@@ -1317,15 +1391,16 @@ describe('GenericSystemDetails', () => {
       name: 'Operations',
     });
 
+    expect(operationsButton).toBeEnabled();
     await user.hover(operationsButton);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts of some database site'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
-  it('should disable database site operations if all the hosts in the site heartbeat is not passing', async () => {
+  it('should keep database site operations available when no host heartbeat of the site passes', async () => {
     const user = userEvent.setup();
 
     const hosts = hostFactory.buildList(1, { heartbeat: 'critical' });
@@ -1352,12 +1427,13 @@ describe('GenericSystemDetails', () => {
 
     const { getByRole } = within(siteTables[0].previousSibling);
     const siteOpButton1 = getByRole('button');
+    expect(siteOpButton1).toBeEnabled();
     await user.hover(siteOpButton1);
     expect(
       screen.queryByText(
         'Trento agent is not currently running in any of the hosts in the database site'
       )
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   describe('forbidden actions', () => {

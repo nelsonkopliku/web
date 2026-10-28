@@ -15,7 +15,6 @@ import {
   upperCase,
   filter,
   overSome,
-  isEmpty,
   every,
   maxBy,
 } from 'lodash';
@@ -34,9 +33,6 @@ import {
   SAP_SYSTEM_STOP,
   DATABASE_START,
   DATABASE_STOP,
-  OPERATION_NOT_ALLOWED_DATABASE,
-  OPERATION_NOT_ALLOWED_SAP_SYSTEM,
-  OPERATION_NOT_ALLOWED_SITE,
   getOperationLabel,
   isSchedulable,
 } from '@lib/operations';
@@ -46,7 +42,6 @@ import {
   getEnsaVersionLabel,
   getSapSystemType,
 } from '@lib/model/sapSystems';
-import { isSomeHostHeartbeatPassing } from '@lib/model/hosts';
 import { STALE_ROW } from '@lib/tables';
 import { formatDateTime } from '@lib/timezones';
 
@@ -54,6 +49,7 @@ import ListView from '@common/ListView';
 import Table from '@common/Table';
 import { DetailsViewHeader } from '@common/PageHeader';
 import {
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
   ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
@@ -75,6 +71,7 @@ import {
   isScheduleSubmitted,
   isSubmittingSchedule,
 } from '@state/operationSchedules';
+import { isGroupBusy } from '@state/selectors/runningOperations';
 
 import Pill from '@common/Pill';
 import Banner from '@common/Banners';
@@ -96,8 +93,6 @@ const getUniqueHosts = (hosts) =>
       }, new Map())
       .values()
   );
-
-const mapInstancesHosts = (instances) => map(instances, ({ host }) => host);
 
 // Returns an active instance (stale_at === null) if available,
 // otherwise returns the most recently stale instance (highest stale_at)
@@ -162,6 +157,7 @@ export function GenericSystemDetails({
     useState(undefined);
   const [currentOperationSite, setCurrentOperationSite] = useState(undefined);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
 
   const closeOperationModal = (prevState) => {
     setCurrentOperationInstance(undefined);
@@ -201,25 +197,24 @@ export function GenericSystemDetails({
       ({ groupID }) => instanceGroupIDs.includes(groupID),
     ])
   );
-  const operationsDisabled = !isEmpty(systemRunningOperations);
-
   const curriedGetInstanceOperations = getInstanceOperations(
     systemRunningOperations,
     openOperationModal,
     setCurrentOperationInstance
   );
 
+  // The menus stay available while an operation runs or when the agents do
+  // not report, so that the operations can be scheduled. A request now is
+  // refused then.
   const systemOperations = getSystemOperations(
     system,
     systemRunningOperations,
-    operationsDisabled,
     openOperationModal
   );
 
   const curriedGetSiteOperations = getSiteOperations(
     system,
     systemRunningOperations,
-    operationsDisabled,
     openOperationModal,
     setCurrentOperationSite
   );
@@ -243,18 +238,6 @@ export function GenericSystemDetails({
     system.instances,
     (instance) => instance.system_replication
   );
-
-  const someHostHeartbeatPassing =
-    type === APPLICATION_TYPE
-      ? isSomeHostHeartbeatPassing(system.hosts)
-      : every(sitedInstances, (instances, _site) =>
-          isSomeHostHeartbeatPassing(mapInstancesHosts(instances))
-        );
-
-  const operationNotAllowedMsg =
-    type === APPLICATION_TYPE
-      ? OPERATION_NOT_ALLOWED_SAP_SYSTEM
-      : OPERATION_NOT_ALLOWED_DATABASE;
 
   const existingSchedules = filter(operationSchedules, {
     operation: operationModalOpen.operation,
@@ -280,6 +263,11 @@ export function GenericSystemDetails({
         isOpen={isForbidden}
         onCancel={() => onCleanForbiddenOperation(forbiddenOperationID)}
         errors={forbiddenErrors}
+      />
+      <OperationAlreadyRunningModal
+        isOpen={!!alreadyRunning}
+        operation={getOperationLabel(alreadyRunning)}
+        onClose={() => setAlreadyRunning(null)}
       />
       <SimpleAcceptanceOperationModal
         key={`instance-${operationModalOpen.operation}-${operationModalOpen.open}`}
@@ -310,6 +298,13 @@ export function GenericSystemDetails({
               },
               ...schedule,
             });
+            return;
+          }
+          if (
+            isGroupBusy(runningOperations, currentOperationInstance.host_id)
+          ) {
+            setAlreadyRunning(operationModalOpen.operation);
+            setOperationModelOpen(closeOperationModal);
             return;
           }
           onRequestOperation({
@@ -352,6 +347,11 @@ export function GenericSystemDetails({
               params,
               ...schedule,
             });
+            return;
+          }
+          if (isGroupBusy(runningOperations, system.id)) {
+            setAlreadyRunning(operationModalOpen.operation);
+            setOperationModelOpen(closeOperationModal);
             return;
           }
           onRequestOperation({
@@ -405,8 +405,6 @@ export function GenericSystemDetails({
                 userAbilities={userAbilities}
                 operations={systemOperations}
                 menuPosition="bottom end"
-                disabled={!someHostHeartbeatPassing}
-                disabledTooltip={operationNotAllowedMsg}
               />
             </div>
           </div>
@@ -608,12 +606,6 @@ export function GenericSystemDetails({
                             userAbilities={userAbilities}
                             menuPosition="bottom end"
                             transparent
-                            disabled={
-                              !isSomeHostHeartbeatPassing(
-                                mapInstancesHosts(instances)
-                              )
-                            }
-                            disabledTooltip={OPERATION_NOT_ALLOWED_SITE}
                             operations={curriedGetSiteOperations(site)}
                           />
                         </div>
