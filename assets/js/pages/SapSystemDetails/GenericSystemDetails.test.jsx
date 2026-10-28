@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { faker } from '@faker-js/faker';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -13,6 +13,7 @@ import {
   SAP_SYSTEM_STOP,
   DATABASE_START,
   DATABASE_STOP,
+  waiveOperationDisclaimer,
 } from '@lib/operations';
 
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
@@ -33,6 +34,12 @@ import {
   getDatabaseOperations,
   getDatabaseSiteOperations,
 } from '@pages/DatabaseDetails/databaseOperations';
+
+import {
+  initialScheduleSubmission,
+  SUBMISSION_FAILED,
+  SUBMISSION_SUCCEEDED,
+} from '@state/operationSchedules';
 
 import { GenericSystemDetails } from './GenericSystemDetails';
 import {
@@ -1628,5 +1635,188 @@ describe('GenericSystemDetails', () => {
         expect(label).toHaveMenuitem({ enabled: !forbidden });
       }
     );
+  });
+
+  describe('scheduling', () => {
+    const chooseOneTime = async (user, date, time) => {
+      await user.click(screen.getByText('Now'));
+      await user.click(screen.getByRole('option', { name: 'One Time' }));
+      fireEvent.change(screen.getByLabelText('Date'), {
+        target: { value: date },
+      });
+      fireEvent.change(screen.getByLabelText('Start Time'), {
+        target: { value: time },
+      });
+    };
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should schedule a database start on the database', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+
+      const database = databaseFactory.build({
+        hosts,
+        instances: [
+          databaseInstanceFactory.build({ status: 'gray', host: hosts[0] }),
+        ],
+      });
+
+      const props = {
+        title: faker.string.uuid(),
+        system: database,
+        type: DATABASE_TYPE,
+        userAbilities: [{ name: 'all', resource: 'all' }],
+        userTimezone: 'Etc/UTC',
+        cleanUpPermittedFor: [],
+        getSystemOperations: getDatabaseOperations,
+        operationsEnabled: true,
+        onScheduleOperation,
+      };
+
+      const { rerender } = renderWithRouter(
+        <GenericSystemDetails {...props} />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Start database' })
+      );
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'database',
+        target_id: database.id,
+        operation: DATABASE_START,
+        params: { timeout: 300 },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+      expect(screen.getByRole('dialog')).toBeVisible();
+
+      rerender(
+        <GenericSystemDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_SUCCEEDED,
+            operation: DATABASE_START,
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('should schedule the start of a SAP instance on the SAP system', async () => {
+      const user = userEvent.setup();
+      const onScheduleOperation = jest.fn();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const instance = sapSystemApplicationInstanceFactory.build({
+        status: 'gray',
+        host: hosts[0],
+        host_id: hosts[0].id,
+      });
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [instance],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={sapSystem}
+          type={APPLICATION_TYPE}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          getInstanceOperations={getSapInstanceOperations}
+          operationsEnabled
+          onScheduleOperation={onScheduleOperation}
+        />
+      );
+
+      const [layoutTable] = screen.getAllByRole('table');
+      const [opButton] = within(layoutTable).getAllByRole('button');
+      await user.click(opButton);
+      await user.click(
+        screen.getByRole('menuitem', { name: 'Start instance' })
+      );
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      expect(onScheduleOperation).toHaveBeenCalledWith({
+        target_type: 'sap_system',
+        target_id: sapSystem.id,
+        operation: SAP_INSTANCE_START,
+        params: {
+          host_id: instance.host_id,
+          instance_number: instance.instance_number,
+        },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+    });
+
+    it('should keep the modal open with the errors of a refused schedule', async () => {
+      const user = userEvent.setup();
+      const hosts = hostFactory.buildList(1, { heartbeat: 'passing' });
+      const sapSystem = sapSystemFactory.build({
+        hosts,
+        instances: [
+          sapSystemApplicationInstanceFactory.build({
+            status: 'green',
+            host: hosts[0],
+          }),
+        ],
+      });
+
+      const props = {
+        title: faker.string.uuid(),
+        system: sapSystem,
+        type: APPLICATION_TYPE,
+        userAbilities: [{ name: 'all', resource: 'all' }],
+        userTimezone: 'Etc/UTC',
+        cleanUpPermittedFor: [],
+        getSystemOperations: getSapSystemOperations,
+        operationsEnabled: true,
+      };
+
+      const { rerender } = renderWithRouter(
+        <GenericSystemDetails {...props} />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Stop system' }));
+      await chooseOneTime(user, '2099-11-20', '03:00');
+      await user.click(screen.getByRole('button', { name: 'Schedule' }));
+
+      rerender(
+        <GenericSystemDetails
+          {...props}
+          scheduleSubmission={{
+            ...initialScheduleSubmission,
+            status: SUBMISSION_FAILED,
+            errors: [
+              {
+                title: 'Invalid value',
+                detail: 'must be less than or equal to 43200',
+                source: { pointer: '/params/timeout' },
+              },
+            ],
+          }}
+        />
+      );
+
+      expect(screen.getByRole('dialog')).toBeVisible();
+      expect(
+        screen.getByText('Params/timeout: must be less than or equal to 43200')
+      ).toBeVisible();
+    });
   });
 });

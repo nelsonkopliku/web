@@ -19,6 +19,8 @@ import {
   hostFactory,
 } from '@lib/test-utils/factories';
 
+import { forgetOperationSchedules } from '@state/operationSchedules';
+
 import HostDetailsPage from '.';
 
 const axiosMock = new MockAdapter(networkClient);
@@ -268,5 +270,30 @@ describe('HostDetailsPage', () => {
     expect(
       screen.getByText('Next execution: 02 Nov 2026, 17:00:00')
     ).toBeVisible();
+  });
+
+  it('forgets the scheduled operations of the host when it is left', async () => {
+    const host = hostFactory.build();
+    const state = {
+      ...defaultInitialState,
+      hostsList: { hosts: [host] },
+      lastExecutions: {
+        [host.id]: { data: null, loading: false, error: null },
+      },
+      softwareUpdates: { settingsConfigured: false, softwareUpdates: {} },
+    };
+
+    const [StatefulHostDetails, store] = withState(<HostDetailsPage />, state);
+    const { unmount } = await act(async () =>
+      renderWithRouterMatch(StatefulHostDetails, {
+        path: 'hosts/:hostID',
+        route: `/hosts/${host.id}`,
+      })
+    );
+    unmount();
+
+    expect(store.getActions()).toContainEqual(
+      forgetOperationSchedules({ targetID: host.id })
+    );
   });
 });
