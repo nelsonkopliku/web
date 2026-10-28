@@ -234,6 +234,11 @@ export default {
       description: 'Callback to forget the last schedule submission',
       action: 'onResetScheduleSubmission',
     },
+    checksExecutionBlockedReason: {
+      description:
+        'Why the checks of the host cannot be executed now, for example during an exception window',
+      control: { type: 'text' },
+    },
     nextExecutionAt: {
       description:
         'When the checks of the host are executed next: a date, null when periodic executions are disabled, undefined while unknown',
@@ -330,6 +335,15 @@ export const WithScheduleWarnings = {
         },
       ],
     },
+  },
+};
+
+export const InExceptionWindow = {
+  args: {
+    ...Default.args,
+    selectedChecks: [faker.string.uuid()],
+    checksExecutionBlockedReason:
+      'Checks cannot be executed during exception window',
   },
 };
 

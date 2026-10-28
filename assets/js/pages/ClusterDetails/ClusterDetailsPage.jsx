@@ -50,6 +50,7 @@ import {
 } from '@lib/model/clusters';
 
 import { useChecksSchedule } from '@pages/ChecksSelection';
+import { executionBlockedReason } from '@lib/model/checksSchedule';
 
 import ClusterDetails from './ClusterDetails';
 import AscsErsClusterDetails from './AscsErsClusterDetails';
@@ -154,6 +155,7 @@ export function ClusterDetailsPage() {
       clusterName={getClusterName(cluster)}
       details={cluster.details}
       hasSelectedChecks={hasSelectedChecks}
+      checksExecutionBlockedReason={executionBlockedReason(checksSchedule)}
       hosts={clusterHosts}
       health={cluster.health}
       state={cluster.state}

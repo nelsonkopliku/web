@@ -182,4 +182,32 @@ describe('HostSettingsPage component', () => {
     );
     expect(screen.getByRole('button', { name: 'Edit Settings' })).toBeEnabled();
   });
+
+  it('should not start an execution while the host is in its exception window', async () => {
+    const hosts = hostFactory.buildList(1, {
+      selected_checks: [faker.string.uuid()],
+    });
+    const { id: hostID } = hosts[0];
+
+    axiosMock
+      .onGet(`/api/v1/hosts/${hostID}/checks/schedule`)
+      .reply(200, checksScheduleFactory.build({ in_exception_window: true }));
+
+    const [StatefulHostSettingsPage] = withState(<HostSettingsPage />, {
+      ...defaultInitialState,
+      hostsList: { hosts },
+      user: { abilities: [{ name: 'all', resource: 'all' }] },
+    });
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulHostSettingsPage, {
+        path: 'hosts/:hostID/settings',
+        route: `/hosts/${hostID}/settings`,
+      });
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'Start Execution' })
+    ).toBeDisabled();
+  });
 });

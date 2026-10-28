@@ -15,6 +15,7 @@ import {
   toInterval,
   windowFormErrors,
   windowToForm,
+  executionBlockedReason,
 } from './checksSchedule';
 
 describe('checksSchedule', () => {
@@ -187,5 +188,13 @@ describe('checksSchedule', () => {
         })
       ).toEqual({});
     });
+  });
+
+  it('should tell why the checks cannot be executed now', () => {
+    expect(executionBlockedReason(null)).toBeNull();
+    expect(executionBlockedReason({ in_exception_window: false })).toBeNull();
+    expect(executionBlockedReason({ in_exception_window: true })).toBe(
+      'Checks cannot be executed during exception window'
+    );
   });
 });

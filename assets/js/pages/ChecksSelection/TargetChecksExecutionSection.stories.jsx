@@ -13,7 +13,25 @@ import {
   checksScheduleFactory,
 } from '@lib/test-utils/factories';
 
+import { useChecksSchedule } from './hooks';
 import TargetChecksExecutionSection from './TargetChecksExecutionSection';
+
+// The view loads the checks schedule, and shares it with the section
+function TargetChecksExecutionSectionOfView({
+  targetType,
+  targetID,
+  ...props
+}) {
+  const checksSchedule = useChecksSchedule(targetType, targetID);
+
+  return (
+    <TargetChecksExecutionSection
+      targetType={targetType}
+      checksSchedule={checksSchedule}
+      {...props}
+    />
+  );
+}
 
 const hostID = faker.string.uuid();
 
@@ -26,6 +44,7 @@ const lastExecutionsSlice = createSlice({
 export default {
   title: 'Components/TargetChecksExecutionSection',
   component: TargetChecksExecutionSection,
+  render: (args) => <TargetChecksExecutionSectionOfView {...args} />,
   decorators: [
     (Story) => {
       const axiosMock = new MockAdapter(networkClient, {
@@ -71,7 +90,8 @@ export default {
       options: ['host', 'cluster'],
     },
     targetID: {
-      description: 'Identifier of the target',
+      description:
+        'Identifier of the target, whose checks schedule the view loads',
       control: { type: 'text' },
     },
     timezone: {
