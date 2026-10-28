@@ -6,14 +6,22 @@
 // in the timezone of the schedule. See Trento.Scheduling.Recurrence for the
 // rules.
 
-import { tz } from '@date-fns/tz';
+import { TZDate, tz } from '@date-fns/tz';
 import {
+  addDays,
   addHours,
+  addMinutes,
+  addMonths,
+  addWeeks,
+  addYears,
   format,
+  getISODay,
   isAfter,
   parse,
   parseISO,
+  set,
   startOfHour,
+  startOfISOWeek,
 } from 'date-fns';
 
 import { parseDateTimeLocalToUtc } from '@lib/timezones';
@@ -62,13 +70,17 @@ const endsSuffix = ({ ends_on: endsOn, max_occurrences: maxOccurrences }) => {
 
 /**
  * Human readable summary of a schedule, in the given timezone, for example
- * "Every 2 weeks on Saturdays, Sundays at 03:00, 5 times"
+ * "Every 2 weeks on Saturdays, Sundays at 03:00, 5 times". With a duration in
+ * minutes, each occurrence is shown as a time range.
  */
-export const describeOccurrences = (schedule, timezone) => {
+export const describeOccurrences = (schedule, timezone, { duration } = {}) => {
   const { starts_at: startsAt, recurrence } = schedule;
 
   const start = parseISO(startsAt);
-  const at = ` at ${inTimezone(start, 'HH:mm', timezone)}`;
+  const startTime = inTimezone(start, 'HH:mm', timezone);
+  const at = duration
+    ? `, ${startTime} – ${inTimezone(addMinutes(start, duration), 'HH:mm', timezone)}`
+    : ` at ${startTime}`;
 
   if (!recurrence) {
     return `${inTimezone(start, 'dd MMM yyyy', timezone)}${at}`;
@@ -157,4 +169,80 @@ export const formToRecurrence = (form, timezone, periodic) => {
       weekdays: frequency === 'weekly' ? form.weekdays : [],
     },
   };
+};
+
+// Occurrences are computed from the start, so that the shorter months move a
+// monthly occurrence to their last day without moving the next ones
+const STEPS = {
+  daily: addDays,
+  monthly: addMonths,
+  yearly: addYears,
+};
+
+// Enough for a daily schedule started more than two centuries ago
+const MAX_STEPS = 100000;
+
+const weeklyStarts = (start, weeks, weekdays) => {
+  const week = startOfISOWeek(addWeeks(start, weeks));
+  const days = weekdays.length > 0 ? weekdays : [getISODay(start)];
+
+  return days.map((day) =>
+    set(addDays(week, day - 1), {
+      hours: start.getHours(),
+      minutes: start.getMinutes(),
+    })
+  );
+};
+
+function* occurrenceStarts({ starts_at: startsAt, timezone, recurrence }) {
+  const start = new TZDate(parseISO(startsAt), timezone);
+
+  if (!recurrence) {
+    yield start;
+    return;
+  }
+
+  const {
+    frequency,
+    interval = 1,
+    weekdays = [],
+    ends_on: endsOn,
+    max_occurrences: maxOccurrences,
+  } = recurrence;
+  let count = 0;
+
+  for (let step = 0; step < MAX_STEPS; step += 1) {
+    const starts =
+      frequency === 'weekly'
+        ? weeklyStarts(start, step * interval, weekdays)
+        : [STEPS[frequency](start, step * interval)];
+
+    for (const occurrence of starts.filter((date) => date >= start)) {
+      if (endsOn && format(occurrence, 'yyyy-MM-dd') >= endsOn) return;
+      if (maxOccurrences && count >= maxOccurrences) return;
+
+      count += 1;
+      yield occurrence;
+    }
+  }
+}
+
+/**
+ * The occurrence of a schedule lasting some minutes that is active at the
+ * given time, or the next one: { startsAt, endsAt }, or null when there is
+ * none. Occurrences keep their local time in the timezone of the schedule.
+ */
+export const occurrenceAround = (schedule, durationMinutes, now) => {
+  for (const startsAt of occurrenceStarts(schedule)) {
+    const endsAt = addMinutes(startsAt, durationMinutes);
+
+    if (endsAt > now) {
+      return {
+        startsAt: new Date(startsAt.getTime()),
+        endsAt: new Date(endsAt.getTime()),
+      };
+    }
+  }
+
+  return null;
 };
