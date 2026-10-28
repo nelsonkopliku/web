@@ -16,7 +16,10 @@ import { defaultGlobalError } from '@lib/api/validationErrors';
 import { countTargets, getOperationLabel } from '@lib/operations';
 
 import { notify } from '@state/notifications';
-import { OPERATION_COMPLETED } from '@state/runningOperations';
+import {
+  OPERATION_COMPLETED,
+  OPERATION_STARTED,
+} from '@state/runningOperations';
 import {
   BULK_SCHEDULE_OPERATION,
   CANCEL_OPERATION_SCHEDULE,
@@ -215,7 +218,7 @@ export function* watchOperationSchedules() {
   yield takeEvery(CANCEL_OPERATION_SCHEDULE, cancelOperationSchedule);
   yield takeEvery(BULK_SCHEDULE_OPERATION, bulkScheduleOperation);
   yield takeEvery(
-    [OPERATION_SCHEDULES_CHANGED, OPERATION_COMPLETED],
+    [OPERATION_SCHEDULES_CHANGED, OPERATION_STARTED, OPERATION_COMPLETED],
     refreshOperationSchedules
   );
 }
