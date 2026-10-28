@@ -48,6 +48,26 @@ defmodule TrentoWeb.FallbackController do
     |> render(:"409", reason: "Alerting settings can not be set, enforced by ENV.")
   end
 
+  def call(conn, {:error, :missing_target}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(json: ErrorJSON)
+    |> render(:"422", reason: "Either target_id or target_ids is required.")
+  end
+
+  def call(conn, {:error, {:invalid_params, cast_errors}}) do
+    errors = Enum.map(cast_errors, &%{&1 | path: [:params | &1.path]})
+
+    OpenApiSpex.Plug.JsonRenderErrorV2.call(conn, errors)
+  end
+
+  # The change is saved, the read model does not show it yet
+  def call(conn, {:error, :consistency_timeout}) do
+    conn
+    |> put_status(:accepted)
+    |> json(%{})
+  end
+
   def call(conn, {:error, :alerting_disabled}) do
     conn
     |> put_status(:unprocessable_entity)
