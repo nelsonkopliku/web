@@ -13,6 +13,7 @@ import { hookWrapperWithState } from '@lib/test-utils';
 import { networkClient } from '@lib/network';
 import {
   checksScheduleFactory,
+  exceptionWindowFactory,
   selectableCheckFactory,
 } from '@lib/test-utils/factories';
 import lastExecutionsReducer, {
@@ -474,6 +475,44 @@ describe('useChecksSchedule', () => {
 
     expect(result.current.schedule).toEqual(latest);
     expect(result.current.fetchLoading).toBe(false);
+  });
+
+  it('should fetch the checks schedule again when the exception window starts', async () => {
+    jest.useFakeTimers({ now: new Date('2026-10-12T21:59:00Z') });
+    const exceptionWindow = exceptionWindowFactory.build({
+      starts_at: '2026-10-12T22:00:00Z',
+      duration_minutes: 60,
+    });
+    axiosMock
+      .onGet(scheduleURL)
+      .replyOnce(
+        200,
+        checksScheduleFactory.build({
+          exception_window: exceptionWindow,
+          in_exception_window: false,
+        })
+      )
+      .onGet(scheduleURL)
+      .replyOnce(
+        200,
+        checksScheduleFactory.build({
+          exception_window: exceptionWindow,
+          in_exception_window: true,
+        })
+      );
+
+    try {
+      const { result } = await renderScheduleHook('host', hostID);
+      expect(result.current.schedule.in_exception_window).toBe(false);
+
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(61 * 1000);
+      });
+
+      expect(result.current.schedule.in_exception_window).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('should save the frequency of the target', async () => {

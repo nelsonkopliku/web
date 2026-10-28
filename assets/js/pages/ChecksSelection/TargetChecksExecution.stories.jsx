@@ -6,6 +6,7 @@ import { action } from 'storybook/actions';
 import {
   abilityFactory,
   checksScheduleFactory,
+  exceptionWindowFactory,
 } from '@lib/test-utils/factories';
 
 import TargetChecksExecution from './TargetChecksExecution';
@@ -21,7 +22,7 @@ export default {
     },
     schedule: {
       description:
-        'Checks schedule of the target: `interval` (null for the system setting), `effective_interval` and `global_interval`',
+        'Checks schedule of the target: `interval` (null for the system setting), `effective_interval`, `global_interval` and `exception_window`',
       control: { type: 'object' },
     },
     userAbilities: {
@@ -75,5 +76,18 @@ export const EditUnauthorized = {
   args: {
     ...SystemSetting.args,
     userAbilities: [],
+  },
+};
+
+export const WithExceptionWindow = {
+  args: {
+    ...SystemSetting.args,
+    schedule: checksScheduleFactory.build({
+      exception_window: exceptionWindowFactory.build({
+        timezone: 'Europe/Berlin',
+        duration_minutes: 90,
+        recurrence: { frequency: 'weekly', interval: 1, weekdays: [1, 5] },
+      }),
+    }),
   },
 };
