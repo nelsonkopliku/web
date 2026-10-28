@@ -21,7 +21,12 @@ defmodule Trento.MaintenanceWindows do
   alias Trento.Clusters.Projections.ClusterReadModel
   alias Trento.Databases.Projections.DatabaseReadModel
   alias Trento.Hosts.Projections.HostReadModel
-  alias Trento.MaintenanceWindows.Commands.{ChangeMaintenanceWindow, ScheduleMaintenanceWindow}
+
+  alias Trento.MaintenanceWindows.Commands.{
+    ChangeMaintenanceWindow,
+    DeleteMaintenanceWindow,
+    ScheduleMaintenanceWindow
+  }
 
   alias Trento.MaintenanceWindows.Projections.{
     MaintenanceWindowProjector,
@@ -91,6 +96,42 @@ defmodule Trento.MaintenanceWindows do
         )
       end)
     end
+  end
+
+  @doc """
+  Deletes a window. A window deleted meanwhile is not found.
+  """
+  @spec delete_window(String.t(), String.t()) ::
+          :ok | {:error, :not_found} | {:error, :consistency_timeout} | {:error, any()}
+  def delete_window(window_id, actor) do
+    with {:ok, window} <- get_window(window_id) do
+      %{window_id: window_id}
+      |> DeleteMaintenanceWindow.new!()
+      |> dispatch([])
+      |> deleted(window, actor, %{})
+    end
+  end
+
+  @doc """
+  Deletes the windows of a target that is removed. The entries are logged by
+  the system and correlated to the clean up that removed the target: `cause`
+  holds its correlation and causation ids. A window deleted meanwhile is
+  skipped; the other windows are deleted anyway, and the first error is
+  returned, so that the clean up can retry.
+  """
+  @spec delete_target_windows(String.t(), keyword()) :: :ok | {:error, any()}
+  def delete_target_windows(target_id, cause) do
+    extra = Map.new(Keyword.take(cause, [:correlation_id]))
+
+    from(w in MaintenanceWindowReadModel, where: w.target_id == ^target_id)
+    |> Repo.all()
+    |> Enum.map(fn %MaintenanceWindowReadModel{id: window_id} = window ->
+      %{window_id: window_id}
+      |> DeleteMaintenanceWindow.new!()
+      |> CommandedUtils.dispatch([consistency: [MaintenanceWindowProjector]] ++ cause)
+      |> deleted(window, "system", extra)
+    end)
+    |> Enum.find(:ok, &match?({:error, reason} when reason != :consistency_timeout, &1))
   end
 
   @type covering_window :: %{
@@ -270,6 +311,20 @@ defmodule Trento.MaintenanceWindows do
   defp saved({:error, :maintenance_window_not_found}, _, _, _), do: {:error, :not_found}
 
   defp saved({:error, _} = error, _, _, _), do: error
+
+  defp deleted(result, window, actor, extra)
+       when result in [:ok, {:error, :consistency_timeout}] do
+    WindowActivity.record(:maintenance_window_deleted, window, actor, extra)
+    result
+  end
+
+  defp deleted({:error, :maintenance_window_not_found}, _, "system", _), do: :ok
+  defp deleted({:error, :maintenance_window_not_found}, _, _, _), do: {:error, :not_found}
+
+  defp deleted({:error, reason} = error, %{id: window_id}, _, _) do
+    Logger.error("Maintenance window #{window_id} could not be deleted: #{inspect(reason)}")
+    error
+  end
 
   # The window as the read model will show it, to log a change that the read
   # model does not show yet.

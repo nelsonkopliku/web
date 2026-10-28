@@ -5,7 +5,11 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjectorTest d
   use ExUnit.Case
   use Trento.DataCase
 
-  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
+  alias Trento.MaintenanceWindows.Events.{
+    MaintenanceWindowChanged,
+    MaintenanceWindowDeleted,
+    MaintenanceWindowScheduled
+  }
 
   alias Trento.MaintenanceWindows.Projections.{
     MaintenanceWindowProjector,
@@ -139,6 +143,24 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjectorTest d
     assert_receive %Phoenix.Socket.Broadcast{
       event: "maintenance_windows_changed",
       payload: %{target_type: "cluster", target_id: ^target_id}
+    }
+  end
+
+  test "should remove a deleted window and tell the UI" do
+    target_id = UUID.uuid4()
+
+    %{id: window_id} =
+      insert(:maintenance_window, target_type: "sap_system", target_id: target_id)
+
+    %{id: kept_id} = insert(:maintenance_window, target_id: target_id)
+
+    project(%MaintenanceWindowDeleted{window_id: window_id})
+
+    assert [%MaintenanceWindowReadModel{id: ^kept_id}] = Repo.all(MaintenanceWindowReadModel)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "maintenance_windows_changed",
+      payload: %{target_type: "sap_system", target_id: ^target_id}
     }
   end
 end

@@ -21,8 +21,18 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
 
   require Trento.MaintenanceWindows.Enums.ForbiddenAction, as: ForbiddenAction
 
-  alias Trento.MaintenanceWindows.Commands.{ChangeMaintenanceWindow, ScheduleMaintenanceWindow}
-  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
+  alias Trento.MaintenanceWindows.Commands.{
+    ChangeMaintenanceWindow,
+    DeleteMaintenanceWindow,
+    ScheduleMaintenanceWindow
+  }
+
+  alias Trento.MaintenanceWindows.Events.{
+    MaintenanceWindowChanged,
+    MaintenanceWindowDeleted,
+    MaintenanceWindowScheduled
+  }
+
   alias Trento.MaintenanceWindows.ValueObjects.Recurrence
   alias Trento.Scheduling.Recurrence, as: Occurrences
 
@@ -36,6 +46,7 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
     embeds_one :recurrence, Recurrence
     field :forbids, {:array, Ecto.Enum}, values: ForbiddenAction.values()
     field :bulk_id, Ecto.UUID
+    field :deleted, :boolean, default: false
   end
 
   def execute(%__MODULE__{window_id: nil}, %ScheduleMaintenanceWindow{} = command) do
@@ -59,6 +70,7 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
     do: {:error, :maintenance_window_already_exists}
 
   def execute(%__MODULE__{window_id: nil}, _), do: {:error, :maintenance_window_not_found}
+  def execute(%__MODULE__{deleted: true}, _), do: {:error, :maintenance_window_not_found}
 
   # An ongoing window can keep its start in the past
   def execute(%__MODULE__{} = window, %ChangeMaintenanceWindow{} = command) do
@@ -74,6 +86,9 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
       }
     end
   end
+
+  def execute(%__MODULE__{window_id: window_id}, %DeleteMaintenanceWindow{}),
+    do: %MaintenanceWindowDeleted{window_id: window_id}
 
   def apply(%__MODULE__{} = window, %MaintenanceWindowScheduled{} = event) do
     %__MODULE__{
@@ -100,6 +115,9 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
         forbids: event.forbids
     }
   end
+
+  def apply(%__MODULE__{} = window, %MaintenanceWindowDeleted{}),
+    do: %__MODULE__{window | deleted: true}
 
   defp starts_in_the_future(current, starts_at, requested_at) do
     if DateTime.compare(current, starts_at) == :eq,
