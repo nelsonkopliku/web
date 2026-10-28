@@ -128,6 +128,23 @@ const OPERATION_ABILITIES = {
   [DATABASE_STOP]: ['stop:database'],
 };
 
+const TARGET_TYPE_LABELS = {
+  host: ['host', 'hosts'],
+  cluster: ['cluster', 'clusters'],
+  sap_system: ['SAP system', 'SAP systems'],
+  database: ['database', 'databases'],
+};
+
+// Number of targets of an operation, for example "2 hosts"
+export const countTargets = (count, targetType) => {
+  const [singular, plural] = get(TARGET_TYPE_LABELS, targetType, [
+    'target',
+    'targets',
+  ]);
+
+  return `${count} ${count === 1 ? singular : plural}`;
+};
+
 export const getOperationPermittedFor = (operation) => [
   ...get(OPERATION_ABILITIES, operation, []),
   'operation:all',
