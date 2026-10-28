@@ -762,4 +762,66 @@ describe('ClusterDetails ClusterDetails component', () => {
       expect(onScheduleOperation).not.toHaveBeenCalled();
     });
   });
+
+  describe('scheduled operations', () => {
+    const cluster = clusterFactory.build();
+    const schedule = operationScheduleFactory.build({
+      target_type: 'cluster',
+      target_id: cluster.id,
+      operation: CLUSTER_MAINTENANCE_CHANGE,
+      params: { maintenance: true, node_id: 'node01' },
+      starts_at: '2099-11-20T03:00:00Z',
+      timezone: 'Etc/UTC',
+      recurrence: null,
+      next_run_at: '2099-11-20T03:00:00Z',
+    });
+    const rowLabel =
+      'the schedule of Cluster maintenance change, next run 20 Nov 2099, 03:00:00';
+
+    beforeEach(() => waiveOperationDisclaimer());
+
+    it('should list, change and cancel the scheduled operations of the cluster', async () => {
+      const user = userEvent.setup();
+      const onUpdateSchedule = jest.fn();
+      const onCancelSchedule = jest.fn();
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={cluster.id}
+          clusterName={cluster.name}
+          details={cluster.details}
+          hasSelectedChecks
+          hosts={[]}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          userTimezone="Etc/UTC"
+          operationsEnabled
+          operationSchedules={[schedule]}
+          onUpdateSchedule={onUpdateSchedule}
+          onCancelSchedule={onCancelSchedule}
+        />
+      );
+
+      expect(screen.getByText('Maintenance: on, Node: node01')).toBeVisible();
+
+      await user.click(
+        screen.getByRole('button', { name: `Edit ${rowLabel}` })
+      );
+      expect(screen.getByText(/on node node01/)).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+      expect(onUpdateSchedule).toHaveBeenCalledWith(schedule, {
+        params: { maintenance: true, node_id: 'node01' },
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Cancel Schedule' }));
+      await user.click(
+        screen.getByRole('button', { name: 'Yes, Cancel Schedule' })
+      );
+      expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
+    });
+  });
 });

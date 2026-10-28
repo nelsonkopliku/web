@@ -27,10 +27,12 @@ import {
 } from '@state/runningOperations';
 import { getRunningOperation } from '@state/selectors/runningOperations';
 import {
+  cancelOperationSchedule,
   fetchOperationSchedules,
   forgetOperationSchedules,
   resetOperationScheduleSubmission,
   scheduleOperation,
+  updateOperationSchedule,
 } from '@state/operationSchedules';
 import {
   getOperationScheduleSubmission,
@@ -123,9 +125,8 @@ export function ClusterDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(clusterID));
-  const { schedules: operationSchedules } = useSelector(
-    getOperationSchedules(clusterID)
-  );
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(clusterID));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
 
   useEffect(() => {
@@ -163,6 +164,16 @@ export function ClusterDetailsPage() {
       operationSchedules={operationSchedules}
       scheduleSubmission={scheduleSubmission}
       onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      operationSchedulesError={operationSchedulesError}
+      onUpdateSchedule={(schedule, changes) =>
+        dispatch(updateOperationSchedule({ schedule, changes }))
+      }
+      onCancelSchedule={(schedule) =>
+        dispatch(cancelOperationSchedule({ schedule }))
+      }
+      onRetryOperationSchedules={() =>
+        dispatch(fetchOperationSchedules({ targetID: clusterID }))
+      }
       onResetScheduleSubmission={() =>
         dispatch(resetOperationScheduleSubmission())
       }
