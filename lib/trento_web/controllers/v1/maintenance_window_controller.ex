@@ -108,6 +108,38 @@ defmodule TrentoWeb.V1.MaintenanceWindowController do
     end
   end
 
+  operation :bulk_create,
+    summary: "Schedule a maintenance window on several targets.",
+    description:
+      "Sets the same maintenance window on several registered targets of one type, one window per target with the same bulk_id, or none when one of them is refused. The windows are then changed and deleted one by one.",
+    tags: ["Maintenance Windows"],
+    request_body:
+      {"Targets and maintenance window.", "application/json",
+       MaintenanceWindowsSchema.BulkCreateMaintenanceWindowsRequest},
+    responses: [
+      created:
+        {"Saved maintenance windows.", "application/json",
+         MaintenanceWindowsSchema.BulkMaintenanceWindows},
+      unauthorized: Schema.Unauthorized.response(),
+      forbidden: Schema.Forbidden.response(),
+      not_found: Schema.NotFound.response(),
+      unprocessable_entity: Schema.UnprocessableEntity.response()
+    ]
+
+  def bulk_create(conn, _) do
+    %{username: username} = Pow.Plug.current_user(conn)
+
+    with {:ok, bulk_id, windows} <-
+           MaintenanceWindows.create_bulk_windows(OpenApiSpex.body_params(conn), username) do
+      conn
+      |> put_status(:created)
+      |> render(:bulk_maintenance_windows,
+        bulk_id: bulk_id,
+        maintenance_windows: Enum.map(windows, &MaintenanceWindows.own_window/1)
+      )
+    end
+  end
+
   operation :update,
     summary: "Change a maintenance window.",
     description:
