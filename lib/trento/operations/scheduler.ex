@@ -124,6 +124,9 @@ defmodule Trento.Operations.Scheduler do
       {:error, :forbidden, errors} ->
         {:scheduled_operation_request_failed, %{reason: "policies", errors: errors}}
 
+      {:error, :maintenance_window, errors} ->
+        {:scheduled_operation_request_failed, %{reason: "maintenance_window", errors: errors}}
+
       {:error, :not_found} ->
         {:scheduled_operation_request_failed, %{reason: "target_not_found"}}
 
