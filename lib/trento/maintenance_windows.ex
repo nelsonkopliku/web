@@ -262,6 +262,99 @@ defmodule Trento.MaintenanceWindows do
     do: query |> Repo.all() |> Enum.map(fn {id, name} -> {{target_type, id}, name} end)
 
   @doc """
+  Sets the same window on several registered targets of one type, with the
+  same bulk_id.
+
+  Every target is checked before any window is saved, so an unknown target
+  or an invalid window saves nothing. The windows are separate aggregates:
+  when one cannot be saved, the ones saved before are deleted, so the
+  request saves all of them or none.
+  """
+  @spec create_bulk_windows(map(), String.t(), module()) ::
+          {:ok, String.t(), [MaintenanceWindowReadModel.t()]}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :consistency_timeout}
+          | {:error, any()}
+  def create_bulk_windows(%{target_ids: target_ids} = attrs, actor, date_service \\ DateService) do
+    bulk_id = UUID.uuid4()
+    requested_at = date_service.utc_now()
+    common = attrs |> Map.delete(:target_ids) |> Map.put(:bulk_id, bulk_id)
+
+    changesets =
+      Enum.map(target_ids, fn target_id ->
+        schedule_changeset(Map.put(common, :target_id, target_id), UUID.uuid4(), requested_at)
+      end)
+
+    with {:ok, commands} <- validate_bulk(changesets),
+         {:ok, dispatched} <- dispatch_bulk(Enum.zip(changesets, commands), actor) do
+      windows =
+        Enum.map(dispatched, fn {command, _} ->
+          window = Repo.get(MaintenanceWindowReadModel, command.window_id)
+
+          WindowActivity.record(
+            :maintenance_window_scheduled,
+            window || provisional(command),
+            actor
+          )
+
+          window
+        end)
+
+      if Enum.any?(dispatched, &match?({_, {:error, :consistency_timeout}}, &1)),
+        do: {:error, :consistency_timeout},
+        else: {:ok, bulk_id, windows}
+    end
+  end
+
+  defp validate_bulk(changesets) do
+    changesets
+    |> Enum.reduce_while({:ok, []}, fn changeset, {:ok, commands} ->
+      with {:ok, command} <- Ecto.Changeset.apply_action(changeset, :insert),
+           :ok <- registered(command.target_type, command.target_id) do
+        {:cont, {:ok, [command | commands]}}
+      else
+        error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, commands} -> {:ok, Enum.reverse(commands)}
+      error -> error
+    end
+  end
+
+  # The windows share their timing: when it does not hold, the first one is
+  # refused and nothing is saved.
+  defp dispatch_bulk(prepared, actor) do
+    prepared
+    |> Enum.reduce_while({:ok, []}, fn {changeset, command}, {:ok, dispatched} ->
+      case dispatch(command, metadata: %{"created_by" => actor}) do
+        result when result in [:ok, {:error, :consistency_timeout}] ->
+          {:cont, {:ok, [{command, result} | dispatched]}}
+
+        error ->
+          {:halt, {:error, error, changeset, dispatched}}
+      end
+    end)
+    |> case do
+      {:ok, dispatched} ->
+        {:ok, Enum.reverse(dispatched)}
+
+      {:error, error, changeset, dispatched} ->
+        Enum.each(dispatched, fn {command, _} -> compensate(command) end)
+        saved(error, changeset, nil, fn _ -> :ok end)
+    end
+  end
+
+  defp compensate(%ScheduleMaintenanceWindow{window_id: window_id}) do
+    Logger.warning("Maintenance window #{window_id} deleted: its bulk request failed")
+
+    %{window_id: window_id}
+    |> DeleteMaintenanceWindow.new!()
+    |> dispatch([])
+  end
+
+  @doc """
   Tells whether a target is registered: a window can only be set on one.
   """
   @spec registered(String.t(), String.t()) :: :ok | {:error, :not_found}
