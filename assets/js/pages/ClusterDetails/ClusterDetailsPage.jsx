@@ -26,6 +26,16 @@ import {
   removeRunningOperation,
 } from '@state/runningOperations';
 import { getRunningOperation } from '@state/selectors/runningOperations';
+import {
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+} from '@state/operationSchedules';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 
 import { buildEnv } from '@lib/checks';
 import { TARGET_CLUSTER } from '@lib/model';
@@ -113,6 +123,20 @@ export function ClusterDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(clusterID));
+  const { schedules: operationSchedules } = useSelector(
+    getOperationSchedules(clusterID)
+  );
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+
+  useEffect(() => {
+    operationsEnabled &&
+      dispatch(fetchOperationSchedules({ targetID: clusterID }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: clusterID }));
+    };
+  }, [dispatch, clusterID]);
 
   if (!cluster) {
     return <div>Loading...</div>;
@@ -136,6 +160,12 @@ export function ClusterDetailsPage() {
       lastExecution={lastExecution}
       operationsEnabled={operationsEnabled}
       runningOperation={runningOperation}
+      operationSchedules={operationSchedules}
+      scheduleSubmission={scheduleSubmission}
+      onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      onResetScheduleSubmission={() =>
+        dispatch(resetOperationScheduleSubmission())
+      }
       selectedChecks={cluster.selected_checks}
       userAbilities={abilities}
       userTimezone={timezone}

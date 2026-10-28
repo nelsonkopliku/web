@@ -216,6 +216,23 @@ export default {
       description: 'Timezone string for date formatting.',
       control: { type: 'text' },
     },
+    operationSchedules: {
+      description: 'Scheduled operations of the host',
+      control: { type: 'object' },
+    },
+    scheduleSubmission: {
+      description:
+        'Submission of the schedule being saved: status, operation, errors and warnings',
+      control: { type: 'object' },
+    },
+    onScheduleOperation: {
+      description: 'Callback with the schedule request of an operation',
+      action: 'onScheduleOperation',
+    },
+    onResetScheduleSubmission: {
+      description: 'Callback to forget the last schedule submission',
+      action: 'onResetScheduleSubmission',
+    },
     nextExecutionAt: {
       description:
         'When the checks of the host are executed next: a date, null when periodic executions are disabled, undefined while unknown',
@@ -285,6 +302,23 @@ export const Default = {
     operationsEnabled: true,
     runningOperations: {},
     timezone: 'Etc/UTC',
+  },
+};
+
+export const WithScheduleWarnings = {
+  args: {
+    ...Default.args,
+    scheduleSubmission: {
+      status: 'succeeded',
+      operation: 'reboot',
+      errors: [],
+      warnings: [
+        {
+          message: 'Trento agent is not currently running in the host',
+          metadata: [],
+        },
+      ],
+    },
   },
 };
 

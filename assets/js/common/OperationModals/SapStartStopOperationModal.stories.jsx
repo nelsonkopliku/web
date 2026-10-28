@@ -2,8 +2,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
-import { DATABASE_START, SAP_SYSTEM_START } from '@lib/operations';
-import { sapSystemFactory } from '@lib/test-utils/factories';
+import {
+  DATABASE_START,
+  SAP_SYSTEM_START,
+  SAP_SYSTEM_STOP,
+} from '@lib/operations';
+import {
+  operationScheduleFactory,
+  sapSystemFactory,
+} from '@lib/test-utils/factories';
 import { action } from 'storybook/actions';
 
 import SapStartStopOperationModal from './SapStartStopOperationModal';
@@ -33,9 +40,26 @@ export default {
       description: 'Modal is open',
       control: { type: 'boolean' },
     },
+    schedulable: {
+      description: 'Whether the operation can be scheduled',
+      control: { type: 'boolean' },
+    },
+    timezone: {
+      description: 'Timezone of the user, for new schedules',
+      control: { type: 'text' },
+    },
+    initialSchedule: {
+      description: 'Existing schedule to change, with its params',
+      control: { type: 'object' },
+    },
     onRequest: {
-      description: 'Request start/stop operation',
+      description:
+        'Request start/stop operation, with the params and the schedule, null to request now',
       action: 'onRequest',
+    },
+    onCancelSchedule: {
+      description: 'Cancels the existing schedule',
+      action: 'onCancelSchedule',
     },
     onCancel: {
       description: 'Closes the modal',
@@ -78,5 +102,26 @@ export const Database = {
     isOpen: true,
     onRequest: action('onRequest'),
     onCancel: action('onCancel'),
+  },
+};
+
+export const Schedulable = {
+  args: {
+    ...Default.args,
+    schedulable: true,
+    timezone: 'Europe/Berlin',
+  },
+};
+
+export const ChangeSchedule = {
+  args: {
+    ...Schedulable.args,
+    operation: SAP_SYSTEM_STOP,
+    initialSchedule: operationScheduleFactory.build({
+      target_type: 'sap_system',
+      operation: SAP_SYSTEM_STOP,
+      params: { instance_type: 'abap', timeout: 600 },
+    }),
+    onCancelSchedule: action('onCancelSchedule'),
   },
 };
