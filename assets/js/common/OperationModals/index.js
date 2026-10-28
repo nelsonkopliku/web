@@ -6,6 +6,7 @@ import OperationForbiddenModal from './OperationForbiddenModal';
 import SimpleAcceptanceOperationModal from './SimpleAcceptanceOperationModal';
 import SapStartStopOperationModal from './SapStartStopOperationModal';
 import SaptuneSolutionOperationModal from './SaptuneSolutionOperationModal';
+import ScheduleWarningsModal from './ScheduleWarningsModal';
 
 export {
   OperationModal,
@@ -13,4 +14,5 @@ export {
   SimpleAcceptanceOperationModal,
   SapStartStopOperationModal,
   SaptuneSolutionOperationModal,
+  ScheduleWarningsModal,
 };
