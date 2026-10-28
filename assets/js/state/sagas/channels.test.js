@@ -11,6 +11,7 @@ import {
 import { userUpdated } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
 import { operationCompleted } from '@state/runningOperations';
+import { operationSchedulesChanged } from '@state/operationSchedules';
 
 import { watchSocketEvents } from './channels';
 
@@ -52,6 +53,7 @@ const channels = {
   'monitoring:databases': new MockChannel(),
   'monitoring:executions': new MockChannel(),
   'monitoring:operations': new MockChannel(),
+  'monitoring:operation_schedules': new MockChannel(),
   [`users:${USER_ID}`]: new MockChannel(),
   [`activity_log:${USER_ID}`]: new MockChannel(),
 };
@@ -167,6 +169,22 @@ describe('Channels saga', () => {
         operation: 'operation',
         result: 'result',
       }),
+    ]);
+  });
+
+  it('should listen and transform operation_schedules_changed event', async () => {
+    const { saga, dispatched } = runWatchSocketEventsSaga(mockSocket);
+
+    channels['monitoring:operation_schedules'].emit(
+      'operation_schedules_changed',
+      { target_id: 'target_id' }
+    );
+
+    closeSocket();
+    await saga;
+
+    expect(dispatched).toEqual([
+      operationSchedulesChanged({ targetID: 'target_id' }),
     ]);
   });
 });
