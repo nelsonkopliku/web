@@ -51,7 +51,7 @@ defmodule Trento.Router do
     UpdateDatabaseStaleAt
   }
 
-  alias Trento.Operations.Commands.ScheduleOperation
+  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
 
   alias Trento.Clusters
   alias Trento.Databases
@@ -125,7 +125,7 @@ defmodule Trento.Router do
 
   identify Operations.Schedule, by: :schedule_id
 
-  dispatch [ScheduleOperation],
+  dispatch [ScheduleOperation, ChangeOperationSchedule],
     to: Operations.Schedule,
     lifespan: Operations.Lifespan
 end

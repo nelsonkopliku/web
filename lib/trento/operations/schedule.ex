@@ -6,8 +6,8 @@ defmodule Trento.Operations.Schedule do
   The operation schedule aggregate.
 
   It decides when the operation of a schedule runs: the first occurrence at
-  creation, from the time the schedule was requested. The aggregate never
-  reads the clock: the commands carry the time.
+  creation or change, from the time the change was requested. The aggregate
+  never reads the clock: the commands carry the time.
 
   The operation policies are not checked here: they read the current state of
   the target, so they run outside the aggregate, when the schedule is saved and
@@ -18,8 +18,8 @@ defmodule Trento.Operations.Schedule do
 
   use Trento.Support.Type
 
-  alias Trento.Operations.Commands.ScheduleOperation
-  alias Trento.Operations.Events.OperationScheduled
+  alias Trento.Operations.Commands.{ChangeOperationSchedule, ScheduleOperation}
+  alias Trento.Operations.Events.{OperationScheduleChanged, OperationScheduled}
   alias Trento.Operations.ValueObjects.{OperationParams, Recurrence}
   alias Trento.Scheduling.Recurrence, as: Occurrences
 
@@ -64,6 +64,30 @@ defmodule Trento.Operations.Schedule do
   def execute(%__MODULE__{}, %ScheduleOperation{}),
     do: {:error, :operation_schedule_already_exists}
 
+  def execute(%__MODULE__{schedule_id: nil}, _), do: {:error, :operation_schedule_not_found}
+
+  # An ongoing periodic schedule can keep its start: it continues with its
+  # next occurrence, never with one in the past.
+  def execute(%__MODULE__{} = schedule, %ChangeOperationSchedule{} = command) do
+    with :ok <- starts_in_the_future(schedule.starts_at, command.starts_at, command.requested_at),
+         {:ok, next_run_at} <-
+           first_occurrence(
+             command.recurrence,
+             command.starts_at,
+             command.timezone,
+             command.requested_at
+           ) do
+      %OperationScheduleChanged{
+        schedule_id: schedule.schedule_id,
+        params: command.params,
+        starts_at: command.starts_at,
+        timezone: command.timezone,
+        recurrence: command.recurrence,
+        next_run_at: next_run_at
+      }
+    end
+  end
+
   def apply(%__MODULE__{} = schedule, %OperationScheduled{} = event) do
     %__MODULE__{
       schedule
@@ -79,6 +103,25 @@ defmodule Trento.Operations.Schedule do
         occurrences: 0,
         bulk_id: event.bulk_id
     }
+  end
+
+  def apply(%__MODULE__{} = schedule, %OperationScheduleChanged{} = event) do
+    %__MODULE__{
+      schedule
+      | params: event.params,
+        starts_at: event.starts_at,
+        timezone: event.timezone,
+        recurrence: event.recurrence,
+        next_run_at: event.next_run_at,
+        occurrences: 0
+    }
+  end
+
+  # A start that does not change can be in the past
+  defp starts_in_the_future(current, starts_at, requested_at) do
+    if DateTime.compare(current, starts_at) == :eq,
+      do: :ok,
+      else: starts_in_the_future(starts_at, requested_at)
   end
 
   defp starts_in_the_future(starts_at, requested_at) do
