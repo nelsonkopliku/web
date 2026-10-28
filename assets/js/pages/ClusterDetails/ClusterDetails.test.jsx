@@ -280,7 +280,7 @@ describe('ClusterDetails ClusterDetails component', () => {
   );
 
   describe('cluster operations', () => {
-    it('should disable main operations button if all the hosts heartbeat is not passing', async () => {
+    it('should keep the main operations button available if no host heartbeat passes', async () => {
       const user = userEvent.setup();
       const { id, name, details } = clusterFactory.build();
       const hosts = hostFactory.buildList(2, {
@@ -306,15 +306,17 @@ describe('ClusterDetails ClusterDetails component', () => {
         name: 'Operations',
       });
 
+      // the operations can be scheduled, the policies refuse a request now
+      expect(operationsButton).toBeEnabled();
       await user.hover(operationsButton);
       expect(
         screen.queryByText(
           'Trento agent is not currently running in any of the hosts in the cluster'
         )
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
 
-    it('should disable resources operations buttons if all the hosts heartbeat is not passing', async () => {
+    it('should keep resources operations available if no host heartbeat passes', async () => {
       const user = userEvent.setup();
       const { id, name, details } = clusterFactory.build();
       const hosts = hostFactory.buildList(2, {
@@ -342,12 +344,50 @@ describe('ClusterDetails ClusterDetails component', () => {
       const resourcesTable = resourcesHeader.nextElementSibling;
       const { getAllByRole } = within(resourcesTable);
       const operationButtons = getAllByRole('button');
+      expect(operationButtons[0]).toBeEnabled();
       await user.hover(operationButtons[0]);
       expect(
         screen.queryByText(
           'Trento agent is not currently running in any of the hosts in the cluster'
         )
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
+    });
+
+    it('should refuse a request now while an operation runs for the cluster', async () => {
+      waiveOperationDisclaimer();
+      const user = userEvent.setup();
+      const onRequestOperation = jest.fn();
+      const { id, name, details } = clusterFactory.build();
+      const hosts = hostFactory.buildList(2, {
+        cluster_host_status: 'online',
+        heartbeat: 'passing',
+      });
+
+      renderWithRouter(
+        <ClusterDetails
+          clusterID={id}
+          clusterName={name}
+          details={details}
+          hasSelectedChecks
+          hosts={hosts}
+          selectedChecks={[]}
+          userAbilities={userAbilities}
+          operationsEnabled
+          runningOperation={{ operation: CLUSTER_RESOURCE_REFRESH }}
+          onRequestOperation={onRequestOperation}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Operations' }));
+      const maintenanceItem = screen.getByRole('menuitem', {
+        name: 'Cluster Maintenance',
+      });
+      expect(maintenanceItem).toBeEnabled();
+      await user.click(maintenanceItem);
+      await user.click(screen.getByRole('button', { name: 'Request' }));
+
+      expect(onRequestOperation).not.toHaveBeenCalled();
+      expect(screen.getByText('Operation Already Running')).toBeVisible();
     });
   });
 
@@ -439,8 +479,6 @@ describe('ClusterDetails ClusterDetails component', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: menuItemText,
         });
-        expect(menuItem).toBeDisabled();
-
         const { getByTestId } = within(menuItem);
 
         expect(getByTestId('eos-svg-component')).toBeInTheDocument();
@@ -487,7 +525,7 @@ describe('ClusterDetails ClusterDetails component', () => {
         expect(mockCleanForbiddenOperation).toHaveBeenCalled();
       });
 
-      it('should disable operation when none of the hosts is online', async () => {
+      it('should keep the operation available when none of the hosts is online', async () => {
         const user = userEvent.setup();
         const { id, name, details } = clusterFactory.build();
         const hosts = hostFactory.buildList(2, {
@@ -516,7 +554,7 @@ describe('ClusterDetails ClusterDetails component', () => {
         const menuItem = screen.getByRole('menuitem', {
           name: menuItemText,
         });
-        expect(menuItem).toBeDisabled();
+        expect(menuItem).toBeEnabled();
       });
     }
   );
