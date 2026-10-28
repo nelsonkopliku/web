@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { adminUser, hostFactory } from '@lib/test-utils/factories';
 import { MemoryRouter } from 'react-router';
@@ -11,6 +11,23 @@ import HostsList from './HostsList';
 
 const admin = adminUser.build();
 const hosts = hostFactory.buildList(3);
+
+// The selection and the bulk schedule show when operations are enabled in the
+// configuration of the deployment
+function OperationsEnabled({ children }) {
+  // eslint-disable-next-line no-undef
+  config.operationsEnabled = true;
+
+  useEffect(
+    () => () => {
+      // eslint-disable-next-line no-undef
+      delete config.operationsEnabled;
+    },
+    []
+  );
+
+  return children;
+}
 
 function ContainerWrapper({ children }) {
   return (
@@ -54,6 +71,22 @@ export const WithStaleHost = {
             : host
         ),
       },
+    },
+  },
+};
+
+export const WithBulkScheduling = {
+  decorators: [
+    (Story) => (
+      <OperationsEnabled>
+        <Story />
+      </OperationsEnabled>
+    ),
+  ],
+  parameters: {
+    storeState: {
+      user: admin,
+      hostsList: { hosts },
     },
   },
 };

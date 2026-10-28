@@ -26,17 +26,6 @@ export const DATABASE_START = 'database_start';
 export const DATABASE_STOP = 'database_stop';
 export const HOST_REBOOT = 'reboot';
 
-export const OPERATION_NOT_ALLOWED_HOST =
-  'Trento agent is not currently running in the host';
-export const OPERATION_NOT_ALLOWED_CLUSTER =
-  'Trento agent is not currently running in any of the hosts in the cluster';
-export const OPERATION_NOT_ALLOWED_SITE =
-  'Trento agent is not currently running in any of the hosts in the database site';
-export const OPERATION_NOT_ALLOWED_SAP_SYSTEM =
-  'Trento agent is not currently running in any of the hosts in the SAP system';
-export const OPERATION_NOT_ALLOWED_DATABASE =
-  'Trento agent is not currently running in any of the hosts of some database site';
-
 const OPERATION_LABELS = {
   [SAPTUNE_SOLUTION_APPLY]: 'Apply Saptune solution',
   [SAPTUNE_SOLUTION_CHANGE]: 'Change Saptune solution',
@@ -111,6 +100,56 @@ const OPERATION_RESOURCE_TYPES = {
 
 export const OPERATION_REQUEST_FAILED = 'REQUEST_FAILED';
 
+// Operations that can be scheduled, see Trento.Operations.Requests
+const SCHEDULABLE_OPERATIONS = [
+  HOST_REBOOT,
+  CLUSTER_MAINTENANCE_CHANGE,
+  SAP_SYSTEM_START,
+  SAP_SYSTEM_STOP,
+  SAP_INSTANCE_START,
+  SAP_INSTANCE_STOP,
+  DATABASE_START,
+  DATABASE_STOP,
+];
+
+export const isSchedulable = (operation) =>
+  SCHEDULABLE_OPERATIONS.includes(operation);
+
+// Abilities that permit to request an operation, and so to schedule it, as in
+// the operations menus
+const OPERATION_ABILITIES = {
+  [HOST_REBOOT]: ['reboot:host'],
+  [CLUSTER_MAINTENANCE_CHANGE]: ['maintenance_change:cluster'],
+  [SAP_SYSTEM_START]: ['start:sap_system'],
+  [SAP_SYSTEM_STOP]: ['stop:sap_system'],
+  [SAP_INSTANCE_START]: ['start:application_instance'],
+  [SAP_INSTANCE_STOP]: ['stop:application_instance'],
+  [DATABASE_START]: ['start:database'],
+  [DATABASE_STOP]: ['stop:database'],
+};
+
+const TARGET_TYPE_LABELS = {
+  host: ['host', 'hosts'],
+  cluster: ['cluster', 'clusters'],
+  sap_system: ['SAP system', 'SAP systems'],
+  database: ['database', 'databases'],
+};
+
+// Number of targets of an operation, for example "2 hosts"
+export const countTargets = (count, targetType) => {
+  const [singular, plural] = get(TARGET_TYPE_LABELS, targetType, [
+    'target',
+    'targets',
+  ]);
+
+  return `${count} ${count === 1 ? singular : plural}`;
+};
+
+export const getOperationPermittedFor = (operation) => [
+  ...get(OPERATION_ABILITIES, operation, []),
+  'operation:all',
+];
+
 export const getOperationLabel = (operation) =>
   get(OPERATION_LABELS, operation, 'unknown');
 
@@ -122,6 +161,48 @@ export const getOperationInternalName = (operation) =>
 
 export const getOperationResourceType = (operation) =>
   get(OPERATION_RESOURCE_TYPES, operation, 'unknown');
+
+const INSTANCE_TYPE_LABELS = {
+  all: 'All',
+  abap: 'ABAP',
+  j2ee: 'J2EE',
+  scs: 'ASCS/SCS',
+  enqrep: 'ENQREP',
+};
+
+const describeTimeout = (seconds) => {
+  if (seconds % 60 !== 0) return `${seconds} seconds`;
+
+  const minutes = seconds / 60;
+  return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+};
+
+const paramDescriptions = [
+  [
+    'maintenance',
+    (maintenance) => `Maintenance: ${maintenance ? 'on' : 'off'}`,
+  ],
+  ['resource_id', (resourceID) => `Resource: ${resourceID}`],
+  ['node_id', (nodeID) => `Node: ${nodeID}`],
+  [
+    'instance_type',
+    (instanceType) =>
+      `Instances: ${get(INSTANCE_TYPE_LABELS, instanceType, instanceType)}`,
+  ],
+  ['instance_number', (instanceNumber) => `Instance: ${instanceNumber}`],
+  ['site', (site) => `Site: ${site}`],
+  ['timeout', (timeout) => `Timeout: ${describeTimeout(timeout)}`],
+];
+
+/**
+ * Options of an operation as stored with its schedule, for example
+ * "Instances: ABAP, Timeout: 5 minutes". Empty when there are none.
+ */
+export const describeOperationParams = (params = {}) =>
+  paramDescriptions
+    .filter(([key]) => params[key] !== undefined && params[key] !== null)
+    .map(([key, describe]) => describe(params[key]))
+    .join(', ');
 
 export const operationSucceeded = (result) =>
   ['UPDATED', 'NOT_UPDATED'].includes(result);

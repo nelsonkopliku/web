@@ -13,6 +13,7 @@ import {
 } from '@lib/operations';
 import {
   hostFactory,
+  operationScheduleFactory,
   sapSystemApplicationInstanceFactory,
 } from '@lib/test-utils/factories';
 import { action } from 'storybook/actions';
@@ -46,9 +47,31 @@ export default {
       description: 'Modal is open',
       control: { type: 'boolean' },
     },
+    schedulable: {
+      description: 'Whether the operation can be scheduled',
+      control: { type: 'boolean' },
+    },
+    timezone: {
+      description: 'Timezone of the user, for new schedules',
+      control: { type: 'text' },
+    },
+    initialSchedule: {
+      description: 'Existing schedule to change',
+      control: { type: 'object' },
+    },
+    existingSchedules: {
+      description:
+        'Schedules of the same operation for the target, to warn before scheduling it again',
+      control: { type: 'object' },
+    },
     onRequest: {
-      description: 'Request saptune solution apply operation',
+      description:
+        'Request the operation, with its params and the schedule, null to request now',
       action: 'onRequest',
+    },
+    onCancelSchedule: {
+      description: 'Cancels the existing schedule',
+      action: 'onCancelSchedule',
     },
     onCancel: {
       description: 'Closes the modal',
@@ -170,5 +193,38 @@ export const RebootHost = {
     ...Default.args,
     operation: 'reboot',
     descriptionResolverArgs: { hostName },
+  },
+};
+
+export const ScheduleInstanceStart = {
+  args: {
+    ...Default.args,
+    schedulable: true,
+    timezone: 'Europe/Berlin',
+  },
+};
+
+export const InstanceStartAlreadyScheduled = {
+  args: {
+    ...ScheduleInstanceStart.args,
+    existingSchedules: [
+      operationScheduleFactory.build({
+        target_type: 'sap_system',
+        operation: SAP_INSTANCE_START,
+        params: { instance_number: instanceNumber },
+      }),
+    ],
+  },
+};
+
+export const ChangeInstanceStartSchedule = {
+  args: {
+    ...ScheduleInstanceStart.args,
+    initialSchedule: operationScheduleFactory.build({
+      target_type: 'sap_system',
+      operation: SAP_INSTANCE_START,
+      params: { instance_number: instanceNumber },
+    }),
+    onCancelSchedule: action('onCancelSchedule'),
   },
 };
