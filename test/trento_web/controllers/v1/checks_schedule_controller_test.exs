@@ -89,6 +89,31 @@ defmodule TrentoWeb.V1.ChecksScheduleControllerTest do
              |> assert_schema("ChecksScheduleV1", api_spec)
   end
 
+  test "should refuse a manual checks execution during the exception window", %{
+    conn: conn,
+    api_spec: api_spec
+  } do
+    %{id: host_id} = insert(:host, selected_checks: ["check_1"])
+
+    conn
+    |> put_schedule("/api/v1/hosts/#{host_id}/checks/schedule", %{
+      interval: nil,
+      exception_window: %{
+        starts_at: DateTime.utc_now() |> DateTime.add(-10, :minute) |> DateTime.to_iso8601(),
+        timezone: "Etc/UTC",
+        duration_minutes: 60,
+        recurrence: nil
+      }
+    })
+    |> json_response(200)
+
+    assert %{errors: [%{detail: "Checks cannot be executed during exception window"}]} =
+             conn
+             |> post("/api/v1/hosts/#{host_id}/checks/request_execution")
+             |> json_response(422)
+             |> assert_schema("UnprocessableEntityV1", api_spec)
+  end
+
   test "should log the change of the interval of a host and a cluster", %{conn: conn} do
     %{id: host_id, hostname: hostname} = insert(:host)
     %{id: cluster_id, name: cluster_name} = insert(:cluster)
