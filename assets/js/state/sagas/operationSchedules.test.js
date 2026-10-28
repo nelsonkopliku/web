@@ -26,8 +26,11 @@ import {
 } from '@state/operationSchedules';
 
 import {
+  cancelOperationSchedule,
   fetchOperationSchedules,
+  refreshOperationSchedules,
   scheduleOperation,
+  updateOperationSchedule,
 } from './operationSchedules';
 
 const axiosMock = new MockAdapter(networkClient);
@@ -173,6 +176,159 @@ describe('operation schedules saga', () => {
         startOperationScheduleSubmission(),
         setOperationScheduleSubmissionErrors({ errors: [defaultGlobalError] }),
       ]);
+    });
+  });
+
+  describe('changing a schedule', () => {
+    const host = hostFactory.build();
+    const schedule = operationScheduleFactory.build({
+      target_type: 'host',
+      target_id: host.id,
+      operation: 'reboot',
+    });
+    const changes = {
+      params: {},
+      starts_at: '2099-11-21T03:00:00.000Z',
+      timezone: 'Etc/UTC',
+      recurrence: null,
+    };
+    const state = { hostsList: { hosts: [host] } };
+
+    it('should save the changes, tell it and fetch the schedules of the target again', async () => {
+      const warnings = policyWarningFactory.buildList(1);
+      axiosMock
+        .onPut(`/operation_schedules/${schedule.id}`, changes)
+        .reply(200, { ...schedule, ...changes, warnings });
+
+      const dispatched = await recordSaga(
+        updateOperationSchedule,
+        { payload: { schedule, changes } },
+        state
+      );
+
+      expect(dispatched).toEqual([
+        startOperationScheduleSubmission(),
+        setOperationScheduleSubmitted({ operation: 'reboot', warnings }),
+        notify({
+          text: `Schedule of operation Reboot host for ${host.hostname} changed`,
+          icon: '📅',
+        }),
+        fetchOperationSchedulesAction({ targetID: host.id }),
+      ]);
+    });
+
+    it('should keep the errors of a refused change', async () => {
+      const errors = [
+        {
+          title: 'Not Found',
+          detail: 'The requested resource cannot be found.',
+        },
+      ];
+      axiosMock
+        .onPut(`/operation_schedules/${schedule.id}`)
+        .reply(404, { errors });
+
+      const dispatched = await recordSaga(
+        updateOperationSchedule,
+        { payload: { schedule, changes } },
+        state
+      );
+
+      expect(dispatched).toEqual([
+        startOperationScheduleSubmission(),
+        setOperationScheduleSubmissionErrors({ errors }),
+      ]);
+    });
+  });
+
+  describe('cancelling a schedule', () => {
+    const host = hostFactory.build();
+    const schedule = operationScheduleFactory.build({
+      target_type: 'host',
+      target_id: host.id,
+      operation: 'reboot',
+    });
+    const state = { hostsList: { hosts: [host] } };
+
+    it('should delete the schedule, tell it and fetch the schedules of the target again', async () => {
+      axiosMock.onDelete(`/operation_schedules/${schedule.id}`).reply(204);
+
+      const dispatched = await recordSaga(
+        cancelOperationSchedule,
+        { payload: { schedule } },
+        state
+      );
+
+      expect(dispatched).toEqual([
+        startOperationScheduleSubmission(),
+        setOperationScheduleSubmitted({ operation: 'reboot' }),
+        notify({
+          text: `Schedule of operation Reboot host for ${host.hostname} cancelled`,
+          icon: '🗑️',
+        }),
+        fetchOperationSchedulesAction({ targetID: host.id }),
+      ]);
+    });
+
+    it('should keep the errors of a refused cancellation', async () => {
+      axiosMock.onDelete(`/operation_schedules/${schedule.id}`).reply(500);
+
+      const dispatched = await recordSaga(
+        cancelOperationSchedule,
+        { payload: { schedule } },
+        state
+      );
+
+      expect(dispatched).toEqual([
+        startOperationScheduleSubmission(),
+        setOperationScheduleSubmissionErrors({ errors: [defaultGlobalError] }),
+      ]);
+    });
+  });
+
+  describe('refreshing the schedules of a target', () => {
+    const targetID = faker.string.uuid();
+
+    it('should fetch the schedules of a displayed target again', async () => {
+      const dispatched = await recordSaga(
+        refreshOperationSchedules,
+        { payload: { targetID } },
+        {
+          operationSchedules: {
+            byTarget: {
+              [targetID]: { loading: false, error: false, schedules: [] },
+            },
+          },
+        }
+      );
+
+      expect(dispatched).toEqual([fetchOperationSchedulesAction({ targetID })]);
+    });
+
+    it('should ignore the targets that are not displayed', async () => {
+      const dispatched = await recordSaga(
+        refreshOperationSchedules,
+        { payload: { targetID } },
+        { operationSchedules: { byTarget: {} } }
+      );
+
+      expect(dispatched).toEqual([]);
+    });
+
+    it('should refresh the target of a completed operation', async () => {
+      const dispatched = await recordSaga(
+        refreshOperationSchedules,
+        { payload: { groupID: targetID } },
+        {
+          operationSchedules: {
+            byTarget: {
+              [targetID]: { loading: false, error: false, schedules: [] },
+            },
+          },
+        }
+      );
+
+      expect(dispatched).toEqual([fetchOperationSchedulesAction({ targetID })]);
     });
   });
 });
