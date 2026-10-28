@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { get, noop } from 'lodash';
+import { filter, get, noop } from 'lodash';
 
 import classNames from 'classnames';
 import {
@@ -13,6 +13,12 @@ import {
 } from 'eos-icons-react';
 
 import { RUNNING_STATES } from '@state/lastExecutions';
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
 
 import { isSomeHostOnline } from '@lib/model/clusters';
 import { isSomeHostHeartbeatPassing } from '@lib/model/hosts';
@@ -26,6 +32,7 @@ import {
   CLUSTER_HOST_STOP,
   OPERATION_NOT_ALLOWED_CLUSTER,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 
 import { formatDateTime } from '@lib/timezones';
@@ -39,6 +46,7 @@ import { DetailsViewHeader } from '@common/PageHeader';
 import Tooltip from '@common/Tooltip';
 import {
   OperationForbiddenModal,
+  ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
 } from '@common/OperationModals';
 
@@ -70,6 +78,10 @@ function ClusterDetails({
   userTimezone,
   onStartExecution = noop,
   onRequestOperation = noop,
+  operationSchedules = [],
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
   onRequestHostOperation = noop,
   navigate = noop,
@@ -82,6 +94,17 @@ function ClusterDetails({
 
   const closeOperationModal = () =>
     setOperationModalOpen((prevState) => ({ ...prevState, open: false }));
+
+  const openOperationModal = (modalState) => {
+    onResetScheduleSubmission();
+    setOperationModalOpen(modalState);
+  };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) closeOperationModal();
+  }, [scheduleSubmitted]);
 
   const executionLoading = get(lastExecution, 'loading', false);
   const executionStatus = get(lastExecution, 'data.status', null);
@@ -104,7 +127,7 @@ function ClusterDetails({
     clusterID,
     runningOperation,
     setOperationParams,
-    setOperationModalOpen,
+    openOperationModal,
     details,
     someHostOnline
   );
@@ -113,7 +136,7 @@ function ClusterDetails({
     clusterID,
     runningOperation,
     setOperationParams,
-    setOperationModalOpen,
+    openOperationModal,
     someHostOnline
   );
 
@@ -161,7 +184,7 @@ function ClusterDetails({
           runningOperation,
           setCurrentOperationHost,
           setOperationParams,
-          setOperationModalOpen
+          openOperationModal
         ),
       })
     : null;
@@ -177,16 +200,40 @@ function ClusterDetails({
             errors={operationForbiddenErrors}
           />
           <SimpleAcceptanceOperationModal
+            key={`${operationModalOpen.operation}-${operationModalOpen.open}`}
             operation={operationModalOpen.operation}
             descriptionResolverArgs={getOperationModalDescriptionArgs(
               operationModalOpen.operation
             )}
             isOpen={operationModalOpen.open}
-            onRequest={() => {
+            schedulable={isSchedulable(operationModalOpen.operation)}
+            timezone={userTimezone}
+            existingSchedules={filter(operationSchedules, {
+              operation: operationModalOpen.operation,
+            })}
+            loading={isSubmittingSchedule(scheduleSubmission)}
+            errors={scheduleSubmission.errors}
+            onRequest={(_params, schedule) => {
+              if (schedule) {
+                onScheduleOperation({
+                  target_type: 'cluster',
+                  target_id: clusterID,
+                  operation: operationModalOpen.operation,
+                  params: operationParams,
+                  ...schedule,
+                });
+                return;
+              }
               requestOperation(operationModalOpen.operation);
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
+          />
+          <ScheduleWarningsModal
+            isOpen={hasScheduleWarnings(scheduleSubmission)}
+            operation={getOperationLabel(scheduleSubmission.operation)}
+            warnings={scheduleSubmission.warnings}
+            onClose={onResetScheduleSubmission}
           />
         </>
       )}
