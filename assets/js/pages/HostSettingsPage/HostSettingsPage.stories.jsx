@@ -1,8 +1,14 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { abilityFactory, hostFactory } from '@lib/test-utils/factories';
+import { networkClient } from '@lib/network';
+import {
+  abilityFactory,
+  checksScheduleFactory,
+  hostFactory,
+} from '@lib/test-utils/factories';
 import { configureStore, createSlice } from '@reduxjs/toolkit';
+import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -61,6 +67,11 @@ export default {
           user: userSlice.reducer,
         },
       });
+
+      const axiosMock = new MockAdapter(networkClient);
+      axiosMock
+        .onGet(`/hosts/${host.id}/checks/schedule`)
+        .reply(200, checksScheduleFactory.build());
 
       return (
         <Provider store={mockStore}>

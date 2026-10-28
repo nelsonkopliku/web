@@ -30,6 +30,7 @@ import Banner from '@common/Banners';
 
 import ChecksSelection, { useChecksSelection } from '@pages/ChecksSelection';
 import ChecksSelectionHeader from '@pages/ChecksSelection/ChecksSelectionHeader';
+import TargetChecksExecutionSection from '@pages/ChecksSelection/TargetChecksExecutionSection';
 
 const catalogBanner = {
   [UNKNOWN_PROVIDER]: (
@@ -145,6 +146,11 @@ function ClusterSettingsPage() {
         scaleUpScenario={hanaScenario}
         provider={provider}
         architectureType={architectureType}
+      />
+      <TargetChecksExecutionSection
+        targetType={TARGET_CLUSTER}
+        targetID={clusterID}
+        userAbilities={abilities}
       />
       <ChecksSelection
         groupID={clusterID}

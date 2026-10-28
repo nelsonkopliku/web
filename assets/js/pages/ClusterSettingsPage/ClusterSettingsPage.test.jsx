@@ -17,6 +17,7 @@ import {
   renderWithRouterMatch,
 } from '@lib/test-utils';
 import {
+  checksScheduleFactory,
   clusterFactory,
   selectableCheckFactory,
 } from '@lib/test-utils/factories';
@@ -145,4 +146,43 @@ describe('ClusterDetails ClusterSettings component', () => {
       );
     }
   );
+
+  it('should render the check execution frequency of the cluster', async () => {
+    const cluster = clusterFactory.build();
+    const { id: clusterID } = cluster;
+
+    axiosMock.onGet(`/api/v1/clusters/${clusterID}/checks/schedule`).reply(
+      200,
+      checksScheduleFactory.build({
+        interval: null,
+        effective_interval: '1h',
+        global_interval: '1h',
+      })
+    );
+
+    const [StatefulClusterSettings] = withState(<ClusterSettingsPage />, {
+      ...defaultInitialState,
+      clustersList: { clusters: [cluster] },
+      user: { abilities: [] },
+    });
+
+    await act(async () => {
+      renderWithRouterMatch(StatefulClusterSettings, {
+        path: 'clusters/:clusterID/settings',
+        route: `/clusters/${clusterID}/settings`,
+      });
+    });
+
+    expect(
+      screen.getByText(
+        'Configure how often the checks of this cluster are executed.'
+      )
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText('checks-execution-frequency')
+    ).toHaveTextContent('Every hour (system setting)');
+    expect(
+      screen.getByRole('button', { name: 'Edit Settings' })
+    ).toBeDisabled();
+  });
 });

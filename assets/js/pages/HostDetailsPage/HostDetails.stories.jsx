@@ -216,6 +216,11 @@ export default {
       description: 'Timezone string for date formatting.',
       control: { type: 'text' },
     },
+    nextExecutionAt: {
+      description:
+        'When the checks of the host are executed next: a date, null when periodic executions are disabled, undefined while unknown',
+      control: { type: 'text' },
+    },
   },
   decorators: [
     (Story) => (
@@ -280,6 +285,13 @@ export const Default = {
     operationsEnabled: true,
     runningOperations: {},
     timezone: 'Etc/UTC',
+  },
+};
+
+export const WithNextExecution = {
+  args: {
+    ...Default.args,
+    nextExecutionAt: faker.date.soon().toISOString(),
   },
 };
 
