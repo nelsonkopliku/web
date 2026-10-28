@@ -58,3 +58,10 @@ export const operationScheduleFactory = Factory.define(({ params }) => {
     updated_at: createdAt,
   };
 });
+
+export const exceptionWindowFactory = Factory.define(() => ({
+  starts_at: futureDate(),
+  timezone: 'Etc/UTC',
+  duration_minutes: 60,
+  recurrence: null,
+}));
