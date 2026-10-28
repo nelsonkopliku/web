@@ -14,6 +14,7 @@ import {
   maintenanceWindowFormErrors,
   maintenanceWindowToForm,
   nextWindowsBoundary,
+  checksExecutionBlockedReason,
 } from './maintenanceWindows';
 
 describe('maintenance windows', () => {
@@ -166,6 +167,13 @@ describe('maintenance windows', () => {
       expect(
         activeWindows([checksWindow, upcomingWindow, operationsWindow])
       ).toEqual([checksWindow, operationsWindow]);
+    });
+
+    it('should tell why the checks cannot be executed now', () => {
+      expect(
+        checksExecutionBlockedReason([operationsWindow, checksWindow])
+      ).toBe('Checks cannot be executed during a maintenance window');
+      expect(checksExecutionBlockedReason([operationsWindow])).toBeNull();
     });
 
     it('should tell the active window that blocks the checks executions', () => {

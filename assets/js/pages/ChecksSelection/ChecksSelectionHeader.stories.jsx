@@ -70,6 +70,11 @@ export default {
       description: 'Starts the host checks execution',
       action: 'onStartExecution',
     },
+    executionBlockedReason: {
+      control: { type: 'text' },
+      description:
+        'Why the checks cannot be executed now, for example during a maintenance window',
+    },
   },
 };
 
@@ -145,6 +150,14 @@ export const CannotStartExecution = {
     ...Default.args,
     savedSelection: [],
     isSavingSelection: false,
+  },
+};
+
+export const InMaintenanceWindow = {
+  args: {
+    ...Default.args,
+    executionBlockedReason:
+      'Checks cannot be executed during a maintenance window',
   },
 };
 
