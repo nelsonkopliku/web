@@ -25,6 +25,7 @@ import {
   sapSystemApplicationInstanceFactory,
   operationScheduleFactory,
   policyWarningFactory,
+  maintenanceWindowFactory,
 } from '@lib/test-utils/factories';
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
 import {
@@ -1177,6 +1178,61 @@ describe('HostDetails component', () => {
       expect(
         screen.queryByText('Scheduled Operations')
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Maintenance windows', () => {
+    it('should show the maintenance windows of the host and the active ones', () => {
+      const active = maintenanceWindowFactory.build({
+        active: true,
+        forbids: ['operations'],
+        current_occurrence: {
+          starts_at: '2026-11-20T08:00:00Z',
+          ends_at: '2026-11-20T10:00:00Z',
+        },
+      });
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          hostname="vmhana01"
+          userAbilities={userAbilities}
+          timezone="Etc/UTC"
+          maintenanceWindows={{
+            windows: [active],
+            error: false,
+            onSchedule: jest.fn(),
+          }}
+        />
+      );
+
+      expect(
+        screen.getByText(
+          'Maintenance window in progress: operations forbidden until 20 Nov 2026, 10:00:00.'
+        )
+      ).toBeVisible();
+      expect(screen.getByText('Maintenance Windows')).toBeVisible();
+    });
+
+    it('should schedule maintenance for the host', async () => {
+      const user = userEvent.setup();
+
+      renderWithRouter(
+        <HostDetails
+          agentVersion="2.0.0"
+          hostname="vmhana01"
+          userAbilities={userAbilities}
+          maintenanceWindows={{ windows: [], error: false }}
+        />
+      );
+
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+
+      expect(
+        screen.getByText(/forbidden actions on host vmhana01/)
+      ).toBeVisible();
     });
   });
 

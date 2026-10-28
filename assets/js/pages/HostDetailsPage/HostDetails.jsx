@@ -51,6 +51,9 @@ import OperationSchedules, {
 } from '@common/OperationSchedules';
 
 import CheckResultsOverview from '@pages/CheckResultsOverview';
+import MaintenanceWindowsSection, {
+  MaintenanceWindowBanner,
+} from '@pages/MaintenanceWindows';
 import { canStartExecution } from '@pages/ChecksSelection';
 import DeregistrationModal from '@pages/DeregistrationModal';
 
@@ -112,6 +115,7 @@ function HostDetails({
   requestHostChecksExecution,
   requestOperation,
   nextExecutionAt = undefined,
+  maintenanceWindows = null,
   operationSchedules = [],
   operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
@@ -418,6 +422,12 @@ function HostDetails({
             {renderedExporters}
           </div>
         </div>
+        {maintenanceWindows && (
+          <MaintenanceWindowBanner
+            windows={maintenanceWindows.windows}
+            timezone={timezone}
+          />
+        )}
         {staleAt && (
           <Banner type="warning" truncate={false}>
             The agent in this host is not responding since{' '}
@@ -512,6 +522,14 @@ function HostDetails({
             onCancel={onCancelSchedule}
             onRetry={onRetryOperationSchedules}
             onResetSubmission={onResetScheduleSubmission}
+          />
+        )}
+        {maintenanceWindows && (
+          <MaintenanceWindowsSection
+            {...maintenanceWindows}
+            timezone={timezone}
+            targetLabel={`host ${hostname}`}
+            userAbilities={userAbilities}
           />
         )}
         <div className="mt-16">

@@ -52,6 +52,10 @@ import OperationSchedules, {
   EditOperationScheduleModal,
 } from '@common/OperationSchedules';
 
+import MaintenanceWindowsSection, {
+  MaintenanceWindowBanner,
+} from '@pages/MaintenanceWindows';
+
 import Resources from './Resources';
 import SBDDetails from './SBDDetails';
 import ClusterStatePill from './ClusterStatePill';
@@ -81,6 +85,7 @@ function ClusterDetails({
   onStartExecution = noop,
   onRequestOperation = noop,
   operationSchedules = [],
+  maintenanceWindows = null,
   operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
   onScheduleOperation = noop,
@@ -340,6 +345,12 @@ function ClusterDetails({
           <ClusterStatePill state={clusterState} />
         </div>
       </div>
+      {maintenanceWindows && (
+        <MaintenanceWindowBanner
+          windows={maintenanceWindows.windows}
+          timezone={userTimezone}
+        />
+      )}
       {staleAt && (
         <Banner type="warning" truncate={false}>
           An agent in one of the cluster hosts is not reporting since{' '}
@@ -362,6 +373,14 @@ function ClusterDetails({
           onCancel={onCancelSchedule}
           onRetry={onRetryOperationSchedules}
           onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
+      {maintenanceWindows && (
+        <MaintenanceWindowsSection
+          {...maintenanceWindows}
+          timezone={userTimezone}
+          targetLabel={`cluster ${clusterName}`}
+          userAbilities={userAbilities}
         />
       )}
       <Resources
