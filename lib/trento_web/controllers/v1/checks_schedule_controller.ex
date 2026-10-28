@@ -65,7 +65,7 @@ defmodule TrentoWeb.V1.ChecksScheduleController do
   operation :show_host_checks_schedule,
     summary: "Get the checks execution interval of a host.",
     description:
-      "Tells the interval of the periodic checks executions of the host, the global one it falls back to, and when the next execution runs.",
+      "Tells the interval of the periodic checks executions of the host, the global one it falls back to, its exception window, and when the next execution runs.",
     tags: ["Checks", "MCP"],
     parameters: @host_id_param,
     responses: @show_responses
@@ -77,10 +77,12 @@ defmodule TrentoWeb.V1.ChecksScheduleController do
   operation :update_host_checks_schedule,
     summary: "Change the checks execution interval of a host.",
     description:
-      "Sets the interval of the periodic checks executions of the host. Null makes the host use the global interval again.",
+      "Sets the interval of the periodic checks executions of the host, null making the host use the global interval again, and optionally its exception window.",
     tags: ["Checks"],
     parameters: @host_id_param,
-    request_body: {"Interval.", "application/json", Scheduling.UpdateChecksScheduleRequest},
+    request_body:
+      {"Interval and exception window.", "application/json",
+       Scheduling.UpdateChecksScheduleRequest},
     responses: @update_responses
 
   def update_host_checks_schedule(conn, %{id: id}), do: update(conn, :host, id)
@@ -88,7 +90,7 @@ defmodule TrentoWeb.V1.ChecksScheduleController do
   operation :show_cluster_checks_schedule,
     summary: "Get the checks execution interval of a cluster.",
     description:
-      "Tells the interval of the periodic checks executions of the cluster, the global one it falls back to, and when the next execution runs.",
+      "Tells the interval of the periodic checks executions of the cluster, the global one it falls back to, its exception window, and when the next execution runs.",
     tags: ["Checks", "MCP"],
     parameters: @cluster_id_param,
     responses: @show_responses
@@ -101,10 +103,12 @@ defmodule TrentoWeb.V1.ChecksScheduleController do
   operation :update_cluster_checks_schedule,
     summary: "Change the checks execution interval of a cluster.",
     description:
-      "Sets the interval of the periodic checks executions of the cluster. Null makes the cluster use the global interval again.",
+      "Sets the interval of the periodic checks executions of the cluster, null making the cluster use the global interval again, and optionally its exception window.",
     tags: ["Checks"],
     parameters: @cluster_id_param,
-    request_body: {"Interval.", "application/json", Scheduling.UpdateChecksScheduleRequest},
+    request_body:
+      {"Interval and exception window.", "application/json",
+       Scheduling.UpdateChecksScheduleRequest},
     responses: @update_responses
 
   def update_cluster_checks_schedule(conn, %{id: id}), do: update(conn, :cluster, id)

@@ -9,6 +9,8 @@ defmodule TrentoWeb.V1.ChecksScheduleJSON do
         :effective_interval,
         :global_interval,
         :last_requested_at,
-        :next_execution_at
+        :next_execution_at,
+        :exception_window,
+        :in_exception_window
       ])
 end
