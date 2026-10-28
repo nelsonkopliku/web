@@ -74,8 +74,16 @@ function OperationsButton({
               )}
               size={transparent ? 'fit' : 'small'}
               disabled={disabled}
+              aria-busy={someRunning}
             >
-              <EOS_MORE_VERT className="inline-block fill-jungle-green-500" />{' '}
+              {someRunning ? (
+                <EOS_LOADING_ANIMATED
+                  aria-hidden="true"
+                  className="inline-block fill-jungle-green-500"
+                />
+              ) : (
+                <EOS_MORE_VERT className="inline-block fill-jungle-green-500" />
+              )}{' '}
               {text}
             </Button>
           </div>
@@ -99,7 +107,7 @@ function OperationsButton({
                   <CustomMenuButton
                     value={value}
                     running={running}
-                    disabled={itemDisabled || someRunning}
+                    disabled={itemDisabled}
                     onClick={onClick}
                   />
                 </DisabledGuard>
