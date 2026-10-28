@@ -6,7 +6,7 @@ defmodule TrentoWeb.V1.HostController do
   use OpenApiSpex.ControllerSpecs
   use Trento.AI.ControllerSpecs
 
-  alias Trento.Repo
+  alias Trento.Operations.Targets
 
   alias Trento.{
     Heartbeats,
@@ -369,11 +369,7 @@ defmodule TrentoWeb.V1.HostController do
 
   def get_policy_resource(_), do: HostReadModel
 
-  def get_operation_host(%{params: %{id: id}}) do
-    HostReadModel
-    |> Repo.get(id)
-    |> Repo.preload([:cluster, :application_instances, :database_instances])
-  end
+  def get_operation_host(%{params: %{id: id}}), do: Targets.host(id)
 
   defp request_operation(%{assigns: %{host: host, operation: operation}} = conn, _)
        when operation in HostOperations.values() do

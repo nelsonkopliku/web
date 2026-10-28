@@ -6,7 +6,7 @@ defmodule TrentoWeb.V1.DatabaseController do
   use OpenApiSpex.ControllerSpecs
   use Trento.AI.ControllerSpecs
 
-  alias Trento.Repo
+  alias Trento.Operations.Targets
 
   alias Trento.Databases
 
@@ -186,27 +186,8 @@ defmodule TrentoWeb.V1.DatabaseController do
           id: database_id
         },
         body_params: body_params
-      }) do
-    site = Map.get(body_params, :site, nil)
-
-    database_id
-    |> Databases.get_database_by_id()
-    |> Repo.preload(database_instances: [host: [:cluster]], sap_systems: [:application_instances])
-    |> case do
-      nil ->
-        nil
-
-      %DatabaseReadModel{} = database when is_nil(site) ->
-        database
-
-      # return not found if the given site does not exist in the database
-      %DatabaseReadModel{database_instances: instances} = database ->
-        Enum.find_value(instances, nil, fn
-          %{system_replication_site: ^site} -> database
-          _ -> false
-        end)
-    end
-  end
+      }),
+      do: Targets.database(database_id, Map.get(body_params, :site))
 
   def get_operation_database(_), do: nil
 
