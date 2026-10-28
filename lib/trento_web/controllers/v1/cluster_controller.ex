@@ -100,7 +100,8 @@ defmodule TrentoWeb.V1.ClusterController do
     display_text: "Request checks execution for a cluster"
 
   def request_checks_execution(conn, %{cluster_id: cluster_id}) do
-    with :ok <- Clusters.request_checks_execution(cluster_id) do
+    with :ok <- outside_maintenance_window(cluster_id),
+         :ok <- Clusters.request_checks_execution(cluster_id) do
       conn
       |> put_status(:accepted)
       |> json(%{})
@@ -283,6 +284,13 @@ defmodule TrentoWeb.V1.ClusterController do
   end
 
   def get_policy_resource(_), do: ClusterReadModel
+
+  defp outside_maintenance_window(cluster_id) do
+    case Trento.MaintenanceWindows.forbidding_window("cluster", cluster_id, :checks_execution) do
+      :none -> :ok
+      {:ok, _, _, _} -> {:error, :in_maintenance_window}
+    end
+  end
 
   def get_operation_cluster(%{
         assigns: %{operation: operation},
