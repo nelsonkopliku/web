@@ -5,7 +5,7 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjectorTest d
   use ExUnit.Case
   use Trento.DataCase
 
-  alias Trento.MaintenanceWindows.Events.MaintenanceWindowScheduled
+  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
 
   alias Trento.MaintenanceWindows.Projections.{
     MaintenanceWindowProjector,
@@ -14,6 +14,8 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjectorTest d
 
   alias Trento.MaintenanceWindows.ValueObjects.Recurrence
   alias Trento.ProjectorTestHelper
+
+  import Trento.Factory
 
   @moduletag :integration
 
@@ -102,5 +104,41 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjectorTest d
     assert %MaintenanceWindowReadModel{frequency: nil, interval: 1, weekdays: []} = window
     assert nil == MaintenanceWindowReadModel.recurrence(window)
     assert ["checks_execution", "operations"] == MaintenanceWindowReadModel.forbids(window)
+  end
+
+  test "should project a change of the timing and the forbidden actions" do
+    target_id = UUID.uuid4()
+
+    %{id: window_id} =
+      insert(:maintenance_window,
+        target_type: "cluster",
+        target_id: target_id,
+        frequency: "daily",
+        created_by: "admin"
+      )
+
+    project(%MaintenanceWindowChanged{
+      window_id: window_id,
+      starts_at: @starts_at,
+      timezone: "Europe/Berlin",
+      duration_minutes: 30,
+      recurrence: nil,
+      forbids: [:checks_execution]
+    })
+
+    assert %MaintenanceWindowReadModel{
+             starts_at: @starts_at,
+             timezone: "Europe/Berlin",
+             duration_minutes: 30,
+             frequency: nil,
+             forbid_checks_execution: true,
+             forbid_operations: false,
+             created_by: "admin"
+           } = Repo.get!(MaintenanceWindowReadModel, window_id)
+
+    assert_receive %Phoenix.Socket.Broadcast{
+      event: "maintenance_windows_changed",
+      payload: %{target_type: "cluster", target_id: ^target_id}
+    }
   end
 end

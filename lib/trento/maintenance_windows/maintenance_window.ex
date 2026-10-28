@@ -7,8 +7,9 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
   a host, cluster, database or SAP system, which forbids checks executions,
   operations, or both on the targets it covers.
 
-  It decides whether the timing of a window holds when it is set: the window
-  starts after the request and has an occurrence that is not over. The
+  It decides whether the timing of a window holds when it is set or changed:
+  a new start comes after the request, and the window has an occurrence that
+  is not over. A change applies at once, also to an ongoing window. The
   aggregate never reads the clock: the commands carry the time. Which
   targets a window covers is resolved when it is asked, on the topology the
   read models know, see `Trento.MaintenanceWindows.Coverage`.
@@ -20,8 +21,8 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
 
   require Trento.MaintenanceWindows.Enums.ForbiddenAction, as: ForbiddenAction
 
-  alias Trento.MaintenanceWindows.Commands.ScheduleMaintenanceWindow
-  alias Trento.MaintenanceWindows.Events.MaintenanceWindowScheduled
+  alias Trento.MaintenanceWindows.Commands.{ChangeMaintenanceWindow, ScheduleMaintenanceWindow}
+  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
   alias Trento.MaintenanceWindows.ValueObjects.Recurrence
   alias Trento.Scheduling.Recurrence, as: Occurrences
 
@@ -57,6 +58,23 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
   def execute(%__MODULE__{}, %ScheduleMaintenanceWindow{}),
     do: {:error, :maintenance_window_already_exists}
 
+  def execute(%__MODULE__{window_id: nil}, _), do: {:error, :maintenance_window_not_found}
+
+  # An ongoing window can keep its start in the past
+  def execute(%__MODULE__{} = window, %ChangeMaintenanceWindow{} = command) do
+    with :ok <- starts_in_the_future(window.starts_at, command.starts_at, command.requested_at),
+         :ok <- not_over(command, command.requested_at) do
+      %MaintenanceWindowChanged{
+        window_id: window.window_id,
+        starts_at: command.starts_at,
+        timezone: command.timezone,
+        duration_minutes: command.duration_minutes,
+        recurrence: command.recurrence,
+        forbids: command.forbids
+      }
+    end
+  end
+
   def apply(%__MODULE__{} = window, %MaintenanceWindowScheduled{} = event) do
     %__MODULE__{
       window
@@ -70,6 +88,23 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindow do
         forbids: event.forbids,
         bulk_id: event.bulk_id
     }
+  end
+
+  def apply(%__MODULE__{} = window, %MaintenanceWindowChanged{} = event) do
+    %__MODULE__{
+      window
+      | starts_at: event.starts_at,
+        timezone: event.timezone,
+        duration_minutes: event.duration_minutes,
+        recurrence: event.recurrence,
+        forbids: event.forbids
+    }
+  end
+
+  defp starts_in_the_future(current, starts_at, requested_at) do
+    if DateTime.compare(current, starts_at) == :eq,
+      do: :ok,
+      else: starts_in_the_future(starts_at, requested_at)
   end
 
   defp starts_in_the_future(starts_at, requested_at) do
