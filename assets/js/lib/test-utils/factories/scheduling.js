@@ -58,3 +58,32 @@ export const operationScheduleFactory = Factory.define(({ params }) => {
     updated_at: createdAt,
   };
 });
+
+export const maintenanceWindowFactory = Factory.define(({ params }) => {
+  const startsAt = params.starts_at ?? futureDate();
+  const durationMinutes = params.duration_minutes ?? 60;
+  const endsAt = new Date(
+    new Date(startsAt).getTime() + durationMinutes * 60 * 1000
+  ).toISOString();
+  const createdAt = faker.date.recent().toISOString();
+
+  return {
+    id: faker.string.uuid(),
+    target_type: 'host',
+    target_id: faker.string.uuid(),
+    target_name: faker.internet.domainWord(),
+    starts_at: startsAt,
+    timezone: 'Etc/UTC',
+    duration_minutes: durationMinutes,
+    recurrence: null,
+    forbids: ['checks_execution', 'operations'],
+    bulk_id: null,
+    created_by: faker.internet.username(),
+    inserted_at: createdAt,
+    updated_at: createdAt,
+    inherited: false,
+    active: false,
+    current_occurrence: null,
+    next_occurrence: { starts_at: startsAt, ends_at: endsAt },
+  };
+});
