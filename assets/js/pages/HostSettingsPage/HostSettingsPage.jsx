@@ -28,7 +28,7 @@ function HostSettingsPage() {
   const { hostID } = useParams();
   const [selection, setSelection] = useState([]);
 
-  const { abilities } = useSelector(getUserProfile);
+  const { abilities, timezone } = useSelector(getUserProfile);
   const host = useSelector(getHost(hostID));
   const selectedChecks = useSelector((state) =>
     getHostSelectedChecks(state, hostID)
@@ -111,6 +111,7 @@ function HostSettingsPage() {
       <TargetChecksExecutionSection
         targetType={TARGET_HOST}
         targetID={hostID}
+        timezone={timezone}
         userAbilities={abilities}
       />
       <ChecksSelection

@@ -18,6 +18,7 @@ import {
   getChecksSchedule,
   updateChecksSchedule,
 } from '@lib/api/checksSchedule';
+import { nextWindowBoundary } from '@lib/model/checksSchedule';
 import { defaultGlobalError } from '@lib/api/validationErrors';
 
 const setCheckCustomized = (customized) => (check) => ({
@@ -147,12 +148,21 @@ export const useChecksSelection = () => {
   };
 };
 
+// setTimeout takes at most about 24 days: far boundaries are looked at again
+// every day
+const MAX_BOUNDARY_DELAY = 24 * 60 * 60 * 1000;
+
+// The server may still be on the other side of the boundary for a moment
+const BOUNDARY_MARGIN = 1000;
+
 /**
- * Checks execution frequency of a host or a cluster, and when its checks are
- * executed next. The next execution moves when an execution of the target
- * starts or completes, so the schedule is fetched again then, without the
- * loading state: what shows the schedule, and an open modal, stay.
- * `saveSchedule` resolves to whether the change was saved.
+ * Checks execution frequency of a host or a cluster, its exception window,
+ * and when its checks are executed next. The next execution moves when an
+ * execution of the target starts or completes, and whether the target is in
+ * its exception window changes when the window starts or ends, so the
+ * schedule is fetched again then, without the loading state: what shows the
+ * schedule, and an open modal, stay. `saveSchedule` resolves to whether the
+ * change was saved.
  */
 export const useChecksSchedule = (targetType, targetID) => {
   const [schedule, setSchedule] = useState(null);
@@ -219,6 +229,18 @@ export const useChecksSchedule = (targetType, targetID) => {
   useEffect(() => {
     if (targetID) fetchSchedule();
   }, [targetType, targetID, lastExecutionStatus]);
+
+  useEffect(() => {
+    const boundary = nextWindowBoundary(schedule?.exception_window);
+    if (!boundary) return undefined;
+
+    const timer = setTimeout(
+      fetchSchedule,
+      Math.min(boundary - Date.now() + BOUNDARY_MARGIN, MAX_BOUNDARY_DELAY)
+    );
+
+    return () => clearTimeout(timer);
+  }, [schedule]);
 
   return {
     schedule,
