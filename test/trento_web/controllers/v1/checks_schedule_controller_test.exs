@@ -78,6 +78,38 @@ defmodule TrentoWeb.V1.ChecksScheduleControllerTest do
              |> assert_schema("ChecksScheduleV1", api_spec)
   end
 
+  test "should set and remove the exception window of a host", %{
+    conn: conn,
+    api_spec: api_spec
+  } do
+    %{id: host_id} = insert(:host)
+
+    window = %{
+      starts_at: DateTime.utc_now() |> DateTime.add(1, :day) |> DateTime.to_iso8601(),
+      timezone: "Europe/Berlin",
+      duration_minutes: 60,
+      recurrence: %{frequency: "weekly", interval: 1, weekdays: [6, 7]}
+    }
+
+    assert %{exception_window: %{duration_minutes: 60}, in_exception_window: false} =
+             conn
+             |> put_schedule("/api/v1/hosts/#{host_id}/checks/schedule", %{
+               interval: "6h",
+               exception_window: window
+             })
+             |> json_response(200)
+             |> assert_schema("ChecksScheduleV1", api_spec)
+
+    assert %{exception_window: nil} =
+             conn
+             |> put_schedule("/api/v1/hosts/#{host_id}/checks/schedule", %{
+               interval: "6h",
+               exception_window: nil
+             })
+             |> json_response(200)
+             |> assert_schema("ChecksScheduleV1", api_spec)
+  end
+
   test "should log the change of the interval of a host and a cluster", %{conn: conn} do
     %{id: host_id, hostname: hostname} = insert(:host)
     %{id: cluster_id, name: cluster_name} = insert(:cluster)
