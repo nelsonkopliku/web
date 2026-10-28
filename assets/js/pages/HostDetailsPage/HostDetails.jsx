@@ -46,6 +46,10 @@ import { subHours } from 'date-fns';
 
 import SuseLogo from '@static/suse_logo.svg';
 
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
 import CheckResultsOverview from '@pages/CheckResultsOverview';
 import { canStartExecution } from '@pages/ChecksSelection';
 import DeregistrationModal from '@pages/DeregistrationModal';
@@ -108,8 +112,12 @@ function HostDetails({
   requestOperation,
   nextExecutionAt = undefined,
   operationSchedules = [],
+  operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
   onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
   onResetScheduleSubmission = noop,
   cleanForbiddenOperation,
   navigate,
@@ -123,6 +131,7 @@ function HostDetails({
   const [simpleOperationModalOpen, setSimpleOperationModalOpen] =
     useState(false);
   const [currentOperation, setCurrentOperation] = useState(null);
+  const [editingSchedule, setEditingSchedule] = useState(null);
   const tableLabelId = useId();
 
   const versionWarningMessage = agentVersionWarning(agentVersion);
@@ -195,7 +204,10 @@ function HostDetails({
   // A schedule closes its modal only once it is saved
   const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
   useEffect(() => {
-    if (scheduleSubmitted) closeOperationModal();
+    if (scheduleSubmitted) {
+      closeOperationModal();
+      setEditingSchedule(null);
+    }
   }, [scheduleSubmitted]);
 
   return (
@@ -258,6 +270,16 @@ function HostDetails({
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
+          />
+          <EditOperationScheduleModal
+            key={editingSchedule?.id}
+            schedule={editingSchedule}
+            isOpen={!!editingSchedule}
+            descriptionResolverArgs={{ hostName: hostname }}
+            submission={scheduleSubmission}
+            onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+            onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+            onCancel={() => setEditingSchedule(null)}
           />
           <ScheduleWarningsModal
             isOpen={hasScheduleWarnings(scheduleSubmission)}
@@ -464,6 +486,22 @@ function HostDetails({
           </div>
           <DiskSpaceChart hostId={hostID} />
         </ChartsFeatureWrapper>
+        {operationsEnabled && (
+          <OperationSchedules
+            schedules={operationSchedules}
+            error={operationSchedulesError}
+            timezone={timezone}
+            userAbilities={userAbilities}
+            submission={scheduleSubmission}
+            onEdit={(schedule) => {
+              onResetScheduleSubmission();
+              setEditingSchedule(schedule);
+            }}
+            onCancel={onCancelSchedule}
+            onRetry={onRetryOperationSchedules}
+            onResetSubmission={onResetScheduleSubmission}
+          />
+        )}
         <div className="mt-16">
           <div className="mb-4">
             <h2 className="text-2xl font-bold">Provider details</h2>

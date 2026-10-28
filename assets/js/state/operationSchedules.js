@@ -94,11 +94,24 @@ export const operationSchedulesSlice = createSlice({
 
 export const FETCH_OPERATION_SCHEDULES = 'FETCH_OPERATION_SCHEDULES';
 export const SCHEDULE_OPERATION = 'SCHEDULE_OPERATION';
+export const UPDATE_OPERATION_SCHEDULE = 'UPDATE_OPERATION_SCHEDULE';
+export const CANCEL_OPERATION_SCHEDULE = 'CANCEL_OPERATION_SCHEDULE';
+export const OPERATION_SCHEDULES_CHANGED = 'OPERATION_SCHEDULES_CHANGED';
 
 export const fetchOperationSchedules = createAction(FETCH_OPERATION_SCHEDULES);
 // Payload: the schedule request, with target_type, target_id, operation,
 // params, starts_at, timezone and recurrence
 export const scheduleOperation = createAction(SCHEDULE_OPERATION);
+// Payload: { schedule, changes }, the existing schedule and its new params,
+// starts_at, timezone and recurrence
+export const updateOperationSchedule = createAction(UPDATE_OPERATION_SCHEDULE);
+// Payload: { schedule }
+export const cancelOperationSchedule = createAction(CANCEL_OPERATION_SCHEDULE);
+// Payload: { targetID }, broadcast by the server after any change of the
+// schedules of a target
+export const operationSchedulesChanged = createAction(
+  OPERATION_SCHEDULES_CHANGED
+);
 
 export const {
   startLoadingOperationSchedules,
