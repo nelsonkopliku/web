@@ -97,6 +97,7 @@ function HostDetails({
   cleanUpHost,
   requestHostChecksExecution,
   requestOperation,
+  nextExecutionAt = undefined,
   cleanForbiddenOperation,
   navigate,
   timezone,
@@ -284,7 +285,7 @@ function HostDetails({
                 onClick={() => navigate(`/hosts/${hostID}/settings`)}
               >
                 <EOS_PLAYLIST_ADD_CHECK_FILLED className="inline-block fill-jungle-green-500" />{' '}
-                Check Selection
+                Check Settings
               </Button>
 
               <Button
@@ -372,6 +373,7 @@ function HostDetails({
               data={lastExecutionData}
               catalogDataEmpty={catalogData?.length === 0}
               timezone={timezone}
+              nextExecutionAt={nextExecutionAt}
               loading={catalogLoading || lastExecutionLoading}
               error={catalogError || lastExecutionError}
               onCheckClick={(checksHealth) =>
