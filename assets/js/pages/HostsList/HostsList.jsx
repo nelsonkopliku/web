@@ -17,6 +17,8 @@ import HealthIcon from '@common/HealthIcon';
 import HostLink from '@common/HostLink';
 import { Checkbox } from '@common/Input';
 import { ScheduleWarningsModal } from '@common/OperationModals';
+import MaintenanceWindowModal from '@common/MaintenanceWindowModal';
+import PremiumPill from '@common/PremiumPill';
 import PageHeader from '@common/PageHeader';
 import Pill from '@common/Pill';
 import ProviderLabel from '@common/ProviderLabel';
@@ -54,6 +56,15 @@ import {
   resetOperationScheduleSubmission,
 } from '@state/operationSchedules';
 import { getOperationScheduleSubmission } from '@state/selectors/operationSchedules';
+import {
+  bulkScheduleMaintenanceWindows,
+  isSubmittingWindow,
+  isWindowSubmitted,
+  resetMaintenanceWindowSubmission,
+} from '@state/maintenanceWindows';
+import { getMaintenanceWindowSubmission } from '@state/selectors/maintenanceWindows';
+
+import { maintenanceWindowsPermittedFor } from '@pages/MaintenanceWindows/MaintenanceWindowsSection';
 
 const compareAgentVersions = (a, b) => {
   const coercedA = semver.coerce(a);
@@ -83,11 +94,13 @@ function HostsList() {
   const [hostToDeregister, setHostToDeregister] = useState(undefined);
   // The selectable table of #4954 will replace this selection
   const [selectedHostIDs, setSelectedHostIDs] = useState([]);
-  // The hosts of the bulk modal, taken from the selection when it opens: a
-  // change of the rows clears the selection, also while the modal is open
+  // The hosts of the bulk modals, taken from the selection when one opens: a
+  // change of the rows clears the selection, also while a modal is open
   const [bulkHostIDs, setBulkHostIDs] = useState([]);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  const windowSubmission = useSelector(getMaintenanceWindowSubmission);
 
   const operationsEnabled = getFromConfig('operationsEnabled');
 
@@ -117,10 +130,32 @@ function HostsList() {
     }
   }, [scheduleSubmitted]);
 
+  const windowsScheduled = isWindowSubmitted(windowSubmission);
+  useEffect(() => {
+    if (windowsScheduled) {
+      setMaintenanceModalOpen(false);
+      clearSelection();
+    }
+  }, [windowsScheduled]);
+
   useEffect(
-    () => () => dispatch(resetOperationScheduleSubmission()),
+    () => () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(resetMaintenanceWindowSubmission());
+    },
     [dispatch]
   );
+
+  const scheduleMaintenance = (window) =>
+    dispatch(
+      bulkScheduleMaintenanceWindows({
+        request: {
+          target_type: 'host',
+          target_ids: bulkHosts.map(({ id }) => id),
+          ...window,
+        },
+      })
+    );
 
   const toggleHostSelection = (hostID) =>
     setSelectedHostIDs((selected) =>
@@ -373,39 +408,70 @@ function HostsList() {
             warnings={scheduleSubmission.warnings}
             onClose={() => dispatch(resetOperationScheduleSubmission())}
           />
-          <div className="flex justify-end items-center space-x-2 pb-2">
-            <span className="text-sm text-gray-500" aria-live="polite">
-              {selectedHosts.length === 0
-                ? 'No hosts selected'
-                : `${countTargets(selectedHosts.length, 'host')} selected`}
-            </span>
+        </>
+      )}
+      {maintenanceModalOpen && (
+        <MaintenanceWindowModal
+          isOpen
+          targetLabel={countTargets(bulkHosts.length, 'host')}
+          timezone={timezone}
+          loading={isSubmittingWindow(windowSubmission)}
+          errors={windowSubmission.errors}
+          onSave={scheduleMaintenance}
+          onCancel={() => setMaintenanceModalOpen(false)}
+        />
+      )}
+      {operationsEnabled && (
+        <div className="flex justify-end items-center space-x-2 pb-2">
+          <span className="text-sm text-gray-500" aria-live="polite">
+            {selectedHosts.length === 0
+              ? 'No hosts selected'
+              : `${countTargets(selectedHosts.length, 'host')} selected`}
+          </span>
+          <Button
+            type="primary-white-fit"
+            size="small"
+            disabled={selectedHosts.length === 0}
+            onClick={clearSelection}
+          >
+            Clear selection
+          </Button>
+          <DisabledGuard
+            userAbilities={abilities}
+            permitted={maintenanceWindowsPermittedFor}
+          >
             <Button
               type="primary-white-fit"
               size="small"
               disabled={selectedHosts.length === 0}
-              onClick={clearSelection}
+              onClick={() => {
+                dispatch(resetMaintenanceWindowSubmission());
+                setBulkHostIDs(selectedHosts.map(({ id }) => id));
+                setMaintenanceModalOpen(true);
+              }}
             >
-              Clear selection
+              Schedule Maintenance
+              <PremiumPill className="ml-2" />
             </Button>
-            <DisabledGuard
-              userAbilities={abilities}
-              permitted={getOperationPermittedFor(HOST_REBOOT)}
+          </DisabledGuard>
+          <DisabledGuard
+            userAbilities={abilities}
+            permitted={getOperationPermittedFor(HOST_REBOOT)}
+          >
+            <Button
+              type="primary-white-fit"
+              size="small"
+              disabled={selectedHosts.length === 0}
+              onClick={() => {
+                dispatch(resetOperationScheduleSubmission());
+                setBulkHostIDs(selectedHosts.map(({ id }) => id));
+                setBulkModalOpen(true);
+              }}
             >
-              <Button
-                type="primary-white-fit"
-                size="small"
-                disabled={selectedHosts.length === 0}
-                onClick={() => {
-                  dispatch(resetOperationScheduleSubmission());
-                  setBulkHostIDs(selectedHosts.map(({ id }) => id));
-                  setBulkModalOpen(true);
-                }}
-              >
-                Schedule Reboot
-              </Button>
-            </DisabledGuard>
-          </div>
-        </>
+              Schedule Reboot
+            </Button>
+          </DisabledGuard>
+        </div>
       )}
       <div className="bg-white rounded-lg shadow">
         <HealthSummary {...counters} className="px-4 py-2" />
