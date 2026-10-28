@@ -24,6 +24,7 @@ import {
 } from '@state/maintenanceWindows';
 
 import {
+  bulkScheduleMaintenanceWindows,
   deleteMaintenanceWindow,
   fetchMaintenanceWindows,
   refreshMaintenanceWindows,
@@ -245,5 +246,56 @@ describe('maintenance windows saga', () => {
     expect(dispatched).toEqual([
       fetchMaintenanceWindowsAction({ targetType: 'host', targetID: host.id }),
     ]);
+  });
+
+  describe('scheduling a window on several targets', () => {
+    const [host1, host2] = hostFactory.buildList(2);
+    const request = {
+      target_type: 'host',
+      target_ids: [host1.id, host2.id],
+      starts_at: '2099-11-20T22:00:00.000Z',
+      timezone: 'Etc/UTC',
+      duration_minutes: 60,
+      recurrence: null,
+      forbids: ['checks_execution', 'operations'],
+    };
+
+    it('should create one window per target and tell it', async () => {
+      axiosMock.onPost('/maintenance_windows/bulk', request).reply(201, {
+        bulk_id: 'bulk-id',
+        maintenance_windows: maintenanceWindowFactory.buildList(2),
+      });
+
+      const dispatched = await recordSaga(
+        bulkScheduleMaintenanceWindows,
+        { payload: { request } },
+        { maintenanceWindows: { byTarget: {} } }
+      );
+
+      expect(dispatched).toEqual([
+        startMaintenanceWindowSubmission(),
+        setMaintenanceWindowSubmitted(),
+        notify({
+          text: 'Maintenance window scheduled for 2 hosts',
+          icon: '🛠️',
+        }),
+      ]);
+    });
+
+    it('should keep the errors of a refused bulk window', async () => {
+      const errors = [{ title: 'Not Found', detail: 'not found' }];
+      axiosMock.onPost('/maintenance_windows/bulk').reply(404, { errors });
+
+      const dispatched = await recordSaga(
+        bulkScheduleMaintenanceWindows,
+        { payload: { request } },
+        { maintenanceWindows: { byTarget: {} } }
+      );
+
+      expect(dispatched).toEqual([
+        startMaintenanceWindowSubmission(),
+        setMaintenanceWindowSubmissionErrors({ errors }),
+      ]);
+    });
   });
 });
