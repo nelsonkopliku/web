@@ -6,7 +6,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
-import { checksScheduleFactory } from '@lib/test-utils/factories';
+import {
+  checksScheduleFactory,
+  exceptionWindowFactory,
+} from '@lib/test-utils/factories';
 
 import TargetChecksExecution from './TargetChecksExecution';
 
@@ -110,5 +113,65 @@ describe('TargetChecksExecution', () => {
     expect(
       screen.getByRole('button', { name: 'Edit Settings' })
     ).toBeDisabled();
+  });
+
+  describe('exception window', () => {
+    it('should tell that the target has no exception window', () => {
+      render(
+        <TargetChecksExecution
+          targetType="host"
+          schedule={checksScheduleFactory.build({ exception_window: null })}
+          userAbilities={abilities}
+        />
+      );
+
+      expect(screen.getByLabelText('exception-window')).toHaveTextContent(
+        'None'
+      );
+    });
+
+    it('should describe the exception window in its own timezone', () => {
+      render(
+        <TargetChecksExecution
+          targetType="cluster"
+          schedule={checksScheduleFactory.build({
+            exception_window: exceptionWindowFactory.build({
+              starts_at: '2026-10-12T22:00:00Z',
+              timezone: 'Europe/Berlin',
+              duration_minutes: 60,
+              recurrence: {
+                frequency: 'weekly',
+                interval: 1,
+                weekdays: [1, 5],
+              },
+            }),
+          })}
+          userAbilities={abilities}
+        />
+      );
+
+      expect(screen.getByLabelText('exception-window')).toHaveTextContent(
+        'Mondays, Fridays, 00:00 – 01:00 (Europe/Berlin)'
+      );
+    });
+
+    it('should explain what an exception window is, also from the keyboard', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <TargetChecksExecution
+          targetType="host"
+          schedule={checksScheduleFactory.build({ exception_window: null })}
+          userAbilities={abilities}
+        />
+      );
+
+      await user.tab();
+      await user.tab();
+
+      expect(
+        await screen.findByText('Configure when checks should not be run.')
+      ).toBeVisible();
+    });
   });
 });

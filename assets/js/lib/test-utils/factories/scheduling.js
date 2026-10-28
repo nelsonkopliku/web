@@ -22,6 +22,8 @@ export const checksScheduleFactory = Factory.define(() => ({
   global_interval: '5m',
   last_requested_at: faker.date.recent().toISOString(),
   next_execution_at: futureDate(),
+  exception_window: null,
+  in_exception_window: false,
 }));
 
 export const recurrenceFactory = Factory.define(() => ({

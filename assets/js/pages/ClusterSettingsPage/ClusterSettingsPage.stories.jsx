@@ -124,13 +124,15 @@ export default {
       axiosMock
         .onPut(`/clusters/${cluster.id}/checks/schedule`)
         .reply(({ data }) => {
-          const { interval } = JSON.parse(data);
+          const { interval, exception_window: exceptionWindow } =
+            JSON.parse(data);
           return [
             200,
             checksScheduleFactory.build({
               interval,
               effective_interval: interval ?? '15m',
               global_interval: '15m',
+              exception_window: exceptionWindow,
             }),
           ];
         });
