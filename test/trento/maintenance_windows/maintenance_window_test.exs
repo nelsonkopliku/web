@@ -4,8 +4,18 @@
 defmodule Trento.MaintenanceWindows.MaintenanceWindowTest do
   use Trento.AggregateCase, aggregate: Trento.MaintenanceWindows.MaintenanceWindow, async: true
 
-  alias Trento.MaintenanceWindows.Commands.{ChangeMaintenanceWindow, ScheduleMaintenanceWindow}
-  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
+  alias Trento.MaintenanceWindows.Commands.{
+    ChangeMaintenanceWindow,
+    DeleteMaintenanceWindow,
+    ScheduleMaintenanceWindow
+  }
+
+  alias Trento.MaintenanceWindows.Events.{
+    MaintenanceWindowChanged,
+    MaintenanceWindowDeleted,
+    MaintenanceWindowScheduled
+  }
+
   alias Trento.MaintenanceWindows.MaintenanceWindow
   alias Trento.MaintenanceWindows.ValueObjects.Recurrence
 
@@ -181,6 +191,28 @@ defmodule Trento.MaintenanceWindows.MaintenanceWindowTest do
 
     test "should not change a window that does not exist" do
       assert_error(change(UUID.uuid4(), %{}), {:error, :maintenance_window_not_found})
+    end
+  end
+
+  describe "deleting" do
+    test "should delete a window and refuse any change after it" do
+      window_id = UUID.uuid4()
+      delete = DeleteMaintenanceWindow.new!(%{window_id: window_id})
+
+      assert_events_and_state(
+        [scheduled(window_id)],
+        delete,
+        [%MaintenanceWindowDeleted{window_id: window_id}],
+        fn window -> assert %MaintenanceWindow{deleted: true} = window end
+      )
+
+      initial = [scheduled(window_id), %MaintenanceWindowDeleted{window_id: window_id}]
+
+      for command <- [delete, change(window_id, %{})] do
+        assert_error(initial, command, {:error, :maintenance_window_not_found})
+      end
+
+      assert_error(delete, {:error, :maintenance_window_not_found})
     end
   end
 

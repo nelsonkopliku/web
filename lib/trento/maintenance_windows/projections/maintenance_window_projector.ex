@@ -17,7 +17,12 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjector do
     name: "maintenance_window_projector",
     consistency: :strong
 
-  alias Trento.MaintenanceWindows.Events.{MaintenanceWindowChanged, MaintenanceWindowScheduled}
+  alias Trento.MaintenanceWindows.Events.{
+    MaintenanceWindowChanged,
+    MaintenanceWindowDeleted,
+    MaintenanceWindowScheduled
+  }
+
   alias Trento.MaintenanceWindows.Projections.MaintenanceWindowReadModel
   alias Trento.MaintenanceWindows.ValueObjects.Recurrence
   alias Trento.Repo
@@ -49,6 +54,14 @@ defmodule Trento.MaintenanceWindows.Projections.MaintenanceWindowProjector do
       |> MaintenanceWindowReadModel.changeset(timing(event))
 
     Ecto.Multi.update(multi, :maintenance_window, changeset)
+  end)
+
+  project(%MaintenanceWindowDeleted{window_id: window_id}, fn multi ->
+    Ecto.Multi.delete(
+      multi,
+      :maintenance_window,
+      Repo.get!(MaintenanceWindowReadModel, window_id)
+    )
   end)
 
   @impl true
