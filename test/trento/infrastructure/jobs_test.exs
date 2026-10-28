@@ -19,7 +19,7 @@ defmodule Trento.Infrastructure.JobsTest do
   test "every crontab entry has a valid expression and an existing worker" do
     crontab = Jobs.oban_config()[:cron][:crontab]
 
-    assert length(crontab) == 5
+    assert length(crontab) == 6
 
     for {expression, worker, _opts} <- Enum.map(crontab, &with_opts/1) do
       assert {:ok, _} = Oban.Cron.Expression.parse(expression)
