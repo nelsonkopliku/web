@@ -134,18 +134,19 @@ defmodule Trento.Operations.Requests do
   end
 
   @doc """
-  Requests the operation when the policies pass. Returns the operation id.
+  Requests the operation when the policies pass. Returns the operation id:
+  the given one, or a new one.
   """
-  @spec request(target_type(), String.t(), atom(), map()) ::
+  @spec request(target_type(), String.t(), atom(), map(), String.t()) ::
           {:ok, String.t()}
           | {:error, :not_found}
           | {:error, :forbidden, [OperationsHelper.forbidden_error()]}
           | {:error, any()}
-  def request(target_type, target_id, operation, params) do
+  def request(target_type, target_id, operation, params, operation_id \\ UUID.uuid4()) do
     params = cast_params(operation, params)
 
     with :ok <- authorize(target_type, target_id, operation, params) do
-      do_request(target_type, target_id, operation, params)
+      do_request(target_type, target_id, operation, params, operation_id)
     end
   end
 
@@ -194,24 +195,31 @@ defmodule Trento.Operations.Requests do
   defp found(nil, _), do: {:error, :not_found}
   defp found(resource, policy), do: {:ok, policy, resource}
 
-  defp do_request(:host, host_id, operation, params),
-    do: Hosts.request_operation(operation, host_id, params)
+  defp do_request(:host, host_id, operation, params, operation_id),
+    do: Hosts.request_operation(operation, host_id, params, operation_id)
 
-  defp do_request(:cluster, cluster_id, operation, params),
-    do: Clusters.request_operation(operation, cluster_id, params)
+  defp do_request(:cluster, cluster_id, operation, params, operation_id),
+    do: Clusters.request_operation(operation, cluster_id, params, operation_id)
 
-  defp do_request(:sap_system, _, operation, params) when operation in @sap_instance_operations do
+  defp do_request(:sap_system, _, operation, params, operation_id)
+       when operation in @sap_instance_operations do
     {%{host_id: host_id, instance_number: instance_number}, params} =
       Map.split(params, [:host_id, :instance_number])
 
-    SapSystems.request_instance_operation(operation, host_id, instance_number, params)
+    SapSystems.request_instance_operation(
+      operation,
+      host_id,
+      instance_number,
+      params,
+      operation_id
+    )
   end
 
-  defp do_request(:sap_system, sap_system_id, operation, params),
-    do: SapSystems.request_operation(operation, sap_system_id, params)
+  defp do_request(:sap_system, sap_system_id, operation, params, operation_id),
+    do: SapSystems.request_operation(operation, sap_system_id, params, operation_id)
 
-  defp do_request(:database, database_id, operation, params),
-    do: Databases.request_operation(operation, database_id, params)
+  defp do_request(:database, database_id, operation, params, operation_id),
+    do: Databases.request_operation(operation, database_id, params, operation_id)
 
   defp fetch_param(params, key) do
     case Map.fetch(params, key) do

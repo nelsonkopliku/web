@@ -93,12 +93,12 @@ defmodule Trento.Databases do
     end
   end
 
-  @spec request_operation(atom(), Ecto.UUID.t(), map()) ::
+  @spec request_operation(atom(), Ecto.UUID.t(), map(), String.t()) ::
           {:ok, String.t()} | {:error, any}
-  def request_operation(operation, database_id, params)
-      when operation in DatabaseOperations.values() do
-    operation_id = UUID.uuid4()
+  def request_operation(operation, database_id, params, operation_id \\ UUID.uuid4())
 
+  def request_operation(operation, database_id, params, operation_id)
+      when operation in DatabaseOperations.values() do
     # Filter the 1st running host for each SR site to send the operation.
     # If "site" field is coming in params, only instances with this sites are filtered.
     # Not checking if the database is deregistered. That must be done by the function user
@@ -141,7 +141,7 @@ defmodule Trento.Databases do
     end
   end
 
-  def request_operation(_, _, _), do: {:error, :operation_not_found}
+  def request_operation(_, _, _, _), do: {:error, :operation_not_found}
 
   defp maybe_filter_by_site(databases, %{site: site}) when not is_nil(site) do
     Enum.filter(databases, fn %{system_replication_site: current_site} -> site == current_site end)

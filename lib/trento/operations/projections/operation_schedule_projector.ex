@@ -20,7 +20,9 @@ defmodule Trento.Operations.Projections.OperationScheduleProjector do
   alias Trento.Operations.Events.{
     OperationScheduleCancelled,
     OperationScheduleChanged,
-    OperationScheduled
+    OperationScheduled,
+    ScheduledOperationRequested,
+    ScheduledOperationRequestFailed
   }
 
   alias Trento.Operations.Projections.OperationScheduleReadModel
@@ -57,6 +59,11 @@ defmodule Trento.Operations.Projections.OperationScheduleProjector do
     Ecto.Multi.update(multi, :operation_schedule, changeset)
   end)
 
+  # After a run, a schedule moves to its next occurrence or ends. The outcome
+  # of a run that started before a cancellation finds no schedule.
+  project(%ScheduledOperationRequested{} = event, fn multi -> after_run(multi, event) end)
+  project(%ScheduledOperationRequestFailed{} = event, fn multi -> after_run(multi, event) end)
+
   project(%OperationScheduleCancelled{schedule_id: schedule_id}, fn multi ->
     Ecto.Multi.delete(
       multi,
@@ -73,6 +80,25 @@ defmodule Trento.Operations.Projections.OperationScheduleProjector do
   end
 
   def after_update(_event, _metadata, _changes), do: :ok
+
+  defp after_run(multi, %{schedule_id: schedule_id, next_run_at: next_run_at} = event) do
+    case {Repo.get(OperationScheduleReadModel, schedule_id), next_run_at} do
+      {nil, _} ->
+        multi
+
+      {schedule, nil} ->
+        Ecto.Multi.delete(multi, :operation_schedule, schedule)
+
+      {schedule, next_run_at} ->
+        changeset =
+          OperationScheduleReadModel.changeset(schedule, %{
+            next_run_at: next_run_at,
+            occurrences: event.occurrences
+          })
+
+        Ecto.Multi.update(multi, :operation_schedule, changeset)
+    end
+  end
 
   # The params and the timing of a schedule, as the read model keeps them.
   defp timing(%{recurrence: recurrence} = event) do

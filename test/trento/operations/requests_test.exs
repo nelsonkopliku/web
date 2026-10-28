@@ -150,6 +150,22 @@ defmodule Trento.Operations.RequestsTest do
       assert {:ok, _} = UUID.info(operation_id)
     end
 
+    test "should request an operation with the given operation id" do
+      %{id: host_id} = insert(:host, heartbeat: :passing, cluster_id: nil)
+      operation_id = UUID.uuid4()
+
+      expect(Trento.Infrastructure.Messaging.Adapter.Mock, :publish, fn Publisher,
+                                                                        "requests",
+                                                                        %OperationRequested{
+                                                                          operation_id:
+                                                                            ^operation_id
+                                                                        } ->
+        :ok
+      end)
+
+      assert {:ok, ^operation_id} = Requests.request(:host, host_id, :reboot, %{}, operation_id)
+    end
+
     test "should not request an operation whose policies fail" do
       %{id: host_id} = insert(:host, heartbeat: :critical, cluster_id: nil)
 

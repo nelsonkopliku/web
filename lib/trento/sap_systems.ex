@@ -96,11 +96,18 @@ defmodule Trento.SapSystems do
     end
   end
 
-  @spec request_instance_operation(atom(), Ecto.UUID.t(), String.t(), map()) ::
+  @spec request_instance_operation(atom(), Ecto.UUID.t(), String.t(), map(), String.t()) ::
           {:ok, String.t()} | {:error, any}
-  def request_instance_operation(operation, host_id, instance_number, params)
+  def request_instance_operation(
+        operation,
+        host_id,
+        instance_number,
+        params,
+        operation_id \\ UUID.uuid4()
+      )
+
+  def request_instance_operation(operation, host_id, instance_number, params, operation_id)
       when operation in SapInstanceOperations.values() do
-    operation_id = UUID.uuid4()
     arguments = Map.put(params, :instance_number, instance_number)
 
     case Operations.request_operation(
@@ -114,14 +121,14 @@ defmodule Trento.SapSystems do
     end
   end
 
-  def request_instance_operation(_, _, _, _), do: {:error, :operation_not_found}
+  def request_instance_operation(_, _, _, _, _), do: {:error, :operation_not_found}
 
-  @spec request_operation(atom(), Ecto.UUID.t(), map()) ::
+  @spec request_operation(atom(), Ecto.UUID.t(), map(), String.t()) ::
           {:ok, String.t()} | {:error, any}
-  def request_operation(operation, sap_system_id, params)
-      when operation in SapSystemOperations.values() do
-    operation_id = UUID.uuid4()
+  def request_operation(operation, sap_system_id, params, operation_id \\ UUID.uuid4())
 
+  def request_operation(operation, sap_system_id, params, operation_id)
+      when operation in SapSystemOperations.values() do
     # Look for 1st running host to send the operation including the instance_number
     # If there is not any running host, the request is sent to the first instance
     # Not checking if the SAP system is deregistered. That must be done by the function user
@@ -158,5 +165,5 @@ defmodule Trento.SapSystems do
     end
   end
 
-  def request_operation(_, _, _), do: {:error, :operation_not_found}
+  def request_operation(_, _, _, _), do: {:error, :operation_not_found}
 end
