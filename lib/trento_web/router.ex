@@ -146,6 +146,11 @@ defmodule TrentoWeb.Router do
           ChecksScheduleController,
           :update_cluster_checks_schedule
 
+      get "/maintenance_windows", MaintenanceWindowController, :index
+      post "/maintenance_windows", MaintenanceWindowController, :create
+      put "/maintenance_windows/:id", MaintenanceWindowController, :update
+      delete "/maintenance_windows/:id", MaintenanceWindowController, :delete
+
       delete "/hosts/:id", HostController, :delete
 
       post "/hosts/:id/tags", TagsController, :add_tag_to_host,
