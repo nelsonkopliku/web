@@ -150,6 +150,56 @@ defmodule Trento.Infrastructure.Commanded.EventHandlers.StreamRollUpEventHandler
              StreamRollUpEventHandler.handle(event, %{stream_version: @max_stream_version + 1})
   end
 
+  defp fill_stream(stream_id) do
+    :ok =
+      Trento.EventStore.append_to_stream(
+        stream_id,
+        0,
+        Enum.map(0..@max_stream_version, fn _ ->
+          event = TestEvent.new!(%{"data" => Faker.StarWars.quote()})
+
+          %EventStore.EventData{
+            causation_id: UUID.uuid4(),
+            correlation_id: UUID.uuid4(),
+            event_type: TypeProvider.to_string(event),
+            data: event,
+            metadata: %{}
+          }
+        end)
+      )
+  end
+
+  test "should roll up a host whose checks execution interval changes too often" do
+    host_id = Faker.UUID.v4()
+    fill_stream(host_id)
+
+    expect(Trento.Commanded.Mock, :dispatch, fn %RollUpHost{host_id: ^host_id}, _ -> :ok end)
+
+    assert :ok =
+             StreamRollUpEventHandler.handle(
+               %Trento.Hosts.Events.HostChecksIntervalChanged{host_id: host_id, interval: "1h"},
+               %{stream_version: @max_stream_version + 1}
+             )
+  end
+
+  test "should roll up a cluster whose checks execution interval changes too often" do
+    cluster_id = Faker.UUID.v4()
+    fill_stream(cluster_id)
+
+    expect(Trento.Commanded.Mock, :dispatch, fn %RollUpCluster{cluster_id: ^cluster_id}, _ ->
+      :ok
+    end)
+
+    assert :ok =
+             StreamRollUpEventHandler.handle(
+               %Trento.Clusters.Events.ClusterChecksIntervalChanged{
+                 cluster_id: cluster_id,
+                 interval: "1h"
+               },
+               %{stream_version: @max_stream_version + 1}
+             )
+  end
+
   test "should dispatch the host roll-up command when HostTombstoned is received" do
     host_id = UUID.uuid4()
     event = build(:host_tombstoned_event, host_id: host_id)

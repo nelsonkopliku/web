@@ -9,6 +9,7 @@ defmodule Trento.Hosts.HostTest do
   alias Trento.Support.StructHelper
 
   alias Trento.Hosts.Commands.{
+    ChangeHostChecksInterval,
     ClearSoftwareUpdatesDiscovery,
     CompleteHostChecksExecution,
     CompleteSoftwareUpdatesDiscovery,
@@ -27,6 +28,7 @@ defmodule Trento.Hosts.HostTest do
     HeartbeatFailed,
     HeartbeatSucceeded,
     HostChecksHealthChanged,
+    HostChecksIntervalChanged,
     HostChecksSelected,
     HostDeregistered,
     HostDeregistrationRequested,
@@ -1692,6 +1694,116 @@ defmodule Trento.Hosts.HostTest do
           end
         )
       end
+    end
+  end
+
+  describe "checks execution interval" do
+    test "should change the checks execution interval of a host" do
+      host_id = Faker.UUID.v4()
+
+      assert_events_and_state(
+        build(:host_registered_event, host_id: host_id),
+        ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "6h"}),
+        [%HostChecksIntervalChanged{host_id: host_id, interval: "6h"}],
+        fn host -> assert %Host{checks_interval: "6h"} = host end
+      )
+    end
+
+    test "should go back to the global interval" do
+      host_id = Faker.UUID.v4()
+
+      assert_events_and_state(
+        [
+          build(:host_registered_event, host_id: host_id),
+          %HostChecksIntervalChanged{host_id: host_id, interval: "6h"}
+        ],
+        ChangeHostChecksInterval.new!(%{host_id: host_id, interval: nil}),
+        [%HostChecksIntervalChanged{host_id: host_id, interval: nil}],
+        fn host -> assert %Host{checks_interval: nil} = host end
+      )
+    end
+
+    test "should not emit an event when the interval does not change" do
+      host_id = Faker.UUID.v4()
+
+      assert_events(
+        [
+          build(:host_registered_event, host_id: host_id),
+          %HostChecksIntervalChanged{host_id: host_id, interval: "1w"}
+        ],
+        ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "1w"}),
+        []
+      )
+    end
+
+    test "should refuse an interval that is not allowed" do
+      assert {:error, {:validation, %{interval: _}}} =
+               ChangeHostChecksInterval.new(%{host_id: Faker.UUID.v4(), interval: "7m"})
+    end
+
+    test "should not change the interval of a host that is not registered, deregistered or rolling up" do
+      host_id = Faker.UUID.v4()
+      command = ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "6h"})
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_error(command, {:error, :host_not_registered})
+
+      assert_error(
+        [registered, %HostDeregistered{host_id: host_id, deregistered_at: DateTime.utc_now()}],
+        command,
+        {:error, :host_not_registered}
+      )
+
+      assert_error(
+        [registered, %HostRollUpRequested{host_id: host_id, snapshot: %Host{}}],
+        command,
+        {:error, :host_rolling_up}
+      )
+    end
+
+    test "should remove the interval of a deregistered host" do
+      host_id = Faker.UUID.v4()
+
+      assert_state(
+        [
+          build(:host_registered_event, host_id: host_id),
+          %HostChecksIntervalChanged{host_id: host_id, interval: "6h"},
+          %HostDeregistered{host_id: host_id, deregistered_at: DateTime.utc_now()}
+        ],
+        [],
+        fn host -> assert %Host{checks_interval: nil} = host end
+      )
+    end
+
+    test "should keep the interval through a roll-up" do
+      host_id = Faker.UUID.v4()
+      registered = build(:host_registered_event, host_id: host_id)
+
+      assert_state(
+        [registered, %HostChecksIntervalChanged{host_id: host_id, interval: "12h"}],
+        RollUpHost.new!(%{host_id: host_id}),
+        fn %Host{} = host ->
+          # the snapshot goes through the event store as JSON
+          rolled_up =
+            %HostRolledUp{host_id: host_id, snapshot: %Host{host | rolling_up: false}}
+            |> Jason.encode!()
+            |> Jason.decode!()
+            |> then(&%Trento.Support.IntermediateEvent{module: HostRolledUp, term: &1})
+            |> Commanded.Event.Upcaster.upcast(%{})
+
+          assert_state(
+            [registered, rolled_up],
+            ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "12h"}),
+            fn restored -> assert %Host{checks_interval: "12h"} = restored end
+          )
+
+          assert_events(
+            [registered, rolled_up],
+            ChangeHostChecksInterval.new!(%{host_id: host_id, interval: "12h"}),
+            []
+          )
+        end
+      )
     end
   end
 

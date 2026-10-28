@@ -15,6 +15,7 @@ defmodule Trento.ClusterTest do
   alias Trento.Support.StructHelper
 
   alias Trento.Clusters.Commands.{
+    ChangeClusterChecksInterval,
     CompleteChecksExecution,
     DeregisterClusterHost,
     MarkClusterHostStale,
@@ -34,6 +35,7 @@ defmodule Trento.ClusterTest do
   alias Trento.Clusters.Events.{
     ChecksSelected,
     ClusterChecksHealthChanged,
+    ClusterChecksIntervalChanged,
     ClusterDataMarkedInSync,
     ClusterDataMarkedStale,
     ClusterDeregistered,
@@ -1732,6 +1734,94 @@ defmodule Trento.ClusterTest do
                      replication_health: Health.critical()
                    }
                  } = cluster
+        end
+      )
+    end
+  end
+
+  describe "checks execution interval" do
+    test "should change the checks execution interval of a cluster" do
+      cluster_id = Faker.UUID.v4()
+
+      assert_events_and_state(
+        build(:cluster_registered_event, cluster_id: cluster_id),
+        ChangeClusterChecksInterval.new!(%{cluster_id: cluster_id, interval: "disabled"}),
+        [%ClusterChecksIntervalChanged{cluster_id: cluster_id, interval: "disabled"}],
+        fn cluster -> assert %Cluster{checks_interval: "disabled"} = cluster end
+      )
+    end
+
+    test "should not emit an event when the interval does not change" do
+      cluster_id = Faker.UUID.v4()
+
+      assert_events(
+        build(:cluster_registered_event, cluster_id: cluster_id),
+        ChangeClusterChecksInterval.new!(%{cluster_id: cluster_id, interval: nil}),
+        []
+      )
+    end
+
+    test "should not change the interval of a cluster that is not registered, deregistered or rolling up" do
+      cluster_id = Faker.UUID.v4()
+      command = ChangeClusterChecksInterval.new!(%{cluster_id: cluster_id, interval: "6h"})
+      registered = build(:cluster_registered_event, cluster_id: cluster_id)
+
+      assert_error(command, {:error, :cluster_not_registered})
+
+      assert_error(
+        [
+          registered,
+          %ClusterDeregistered{cluster_id: cluster_id, deregistered_at: DateTime.utc_now()}
+        ],
+        command,
+        {:error, :cluster_not_registered}
+      )
+
+      assert_error(
+        [registered, %ClusterRollUpRequested{cluster_id: cluster_id, snapshot: %Cluster{}}],
+        command,
+        {:error, :cluster_rolling_up}
+      )
+    end
+
+    test "should remove the interval of a deregistered cluster" do
+      cluster_id = Faker.UUID.v4()
+
+      assert_state(
+        [
+          build(:cluster_registered_event, cluster_id: cluster_id),
+          %ClusterChecksIntervalChanged{cluster_id: cluster_id, interval: "6h"},
+          %ClusterDeregistered{cluster_id: cluster_id, deregistered_at: DateTime.utc_now()}
+        ],
+        [],
+        fn cluster -> assert %Cluster{checks_interval: nil} = cluster end
+      )
+    end
+
+    test "should keep the interval through a roll-up" do
+      cluster_id = Faker.UUID.v4()
+      registered = build(:cluster_registered_event, cluster_id: cluster_id)
+
+      assert_state(
+        [registered, %ClusterChecksIntervalChanged{cluster_id: cluster_id, interval: "24h"}],
+        RollUpCluster.new!(%{cluster_id: cluster_id}),
+        fn %Cluster{} = cluster ->
+          # the snapshot goes through the event store as JSON
+          rolled_up =
+            %ClusterRolledUp{
+              cluster_id: cluster_id,
+              snapshot: %Cluster{cluster | rolling_up: false}
+            }
+            |> Jason.encode!()
+            |> Jason.decode!()
+            |> then(&%Trento.Support.IntermediateEvent{module: ClusterRolledUp, term: &1})
+            |> Commanded.Event.Upcaster.upcast(%{})
+
+          assert_events(
+            [registered, rolled_up],
+            ChangeClusterChecksInterval.new!(%{cluster_id: cluster_id, interval: "24h"}),
+            []
+          )
         end
       )
     end
