@@ -317,7 +317,7 @@ describe('operation schedules saga', () => {
       expect(dispatched).toEqual([]);
     });
 
-    it('should refresh the target of a completed operation', async () => {
+    it('should refresh the target of a started or completed operation', async () => {
       const dispatched = await recordSaga(
         refreshOperationSchedules,
         { payload: { groupID: targetID } },
