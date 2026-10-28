@@ -57,6 +57,41 @@ defmodule Trento.MaintenanceWindows do
     end
   end
 
+  @doc """
+  Deletes a window. A window deleted meanwhile is not found.
+  """
+  @spec delete_window(String.t(), String.t()) :: :ok | {:error, :not_found}
+  def delete_window(window_id, actor) do
+    with {:ok, window} <- get_window(window_id),
+         {:ok, window} <- delete(window) do
+      WindowActivity.record(:maintenance_window_deleted, window, actor)
+    end
+  end
+
+  @doc """
+  Deletes the windows of a target that is removed. The entries are logged by
+  the system and correlated to the clean up that removed the target.
+  """
+  @spec delete_target_windows(String.t(), String.t() | nil) :: :ok
+  def delete_target_windows(target_id, correlation_id) do
+    extra = if correlation_id, do: %{correlation_id: correlation_id}, else: %{}
+
+    from(w in MaintenanceWindow, where: w.target_id == ^target_id)
+    |> Repo.all()
+    |> Enum.each(fn window ->
+      with {:ok, window} <- delete(window) do
+        WindowActivity.record(:maintenance_window_deleted, window, "system", extra)
+      end
+    end)
+  end
+
+  defp delete(%MaintenanceWindow{} = window) do
+    case Repo.delete(window, stale_error_field: :id) do
+      {:ok, window} -> {:ok, window}
+      {:error, _} -> {:error, :not_found}
+    end
+  end
+
   @type covering_window :: %{
           window: MaintenanceWindow.t(),
           target_name: String.t() | nil,
