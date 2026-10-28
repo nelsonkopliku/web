@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   find,
@@ -38,6 +38,7 @@ import {
   OPERATION_NOT_ALLOWED_SAP_SYSTEM,
   OPERATION_NOT_ALLOWED_SITE,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 import {
   APPLICATION_TYPE,
@@ -54,6 +55,7 @@ import Table from '@common/Table';
 import { DetailsViewHeader } from '@common/PageHeader';
 import {
   OperationForbiddenModal,
+  ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
   SapStartStopOperationModal,
 } from '@common/OperationModals';
@@ -62,6 +64,13 @@ import HealthIcon from '@common/HealthIcon';
 import SapSystemLink from '@common/SapSystemLink';
 
 import DeregistrationModal from '@pages/DeregistrationModal';
+
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
 
 import Pill from '@common/Pill';
 import Banner from '@common/Banners';
@@ -131,6 +140,10 @@ export function GenericSystemDetails({
   getSiteOperations = noop,
   onInstanceCleanUp = noop,
   onRequestOperation = noop,
+  operationSchedules = [],
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
 }) {
   const [cleanUpModalOpen, setCleanUpModalOpen] = useState(false);
@@ -140,6 +153,24 @@ export function GenericSystemDetails({
   const [currentOperationInstance, setCurrentOperationInstance] =
     useState(undefined);
   const [currentOperationSite, setCurrentOperationSite] = useState(undefined);
+
+  const closeOperationModal = (prevState) => {
+    setCurrentOperationInstance(undefined);
+    setCurrentOperationSite(undefined);
+
+    return { ...prevState, open: false };
+  };
+
+  const openOperationModal = (modalState) => {
+    onResetScheduleSubmission();
+    setOperationModelOpen(modalState);
+  };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) setOperationModelOpen(closeOperationModal);
+  }, [scheduleSubmitted]);
 
   if (!system) {
     return <div>Not Found</div>;
@@ -162,7 +193,7 @@ export function GenericSystemDetails({
 
   const curriedGetInstanceOperations = getInstanceOperations(
     systemRunningOperations,
-    setOperationModelOpen,
+    openOperationModal,
     setCurrentOperationInstance
   );
 
@@ -170,14 +201,14 @@ export function GenericSystemDetails({
     system,
     systemRunningOperations,
     operationsDisabled,
-    setOperationModelOpen
+    openOperationModal
   );
 
   const curriedGetSiteOperations = getSiteOperations(
     system,
     systemRunningOperations,
     operationsDisabled,
-    setOperationModelOpen,
+    openOperationModal,
     setCurrentOperationSite
   );
 
@@ -213,12 +244,9 @@ export function GenericSystemDetails({
       ? OPERATION_NOT_ALLOWED_SAP_SYSTEM
       : OPERATION_NOT_ALLOWED_DATABASE;
 
-  const closeOperationModal = (prevState) => {
-    setCurrentOperationInstance(undefined);
-    setCurrentOperationSite(undefined);
-
-    return { ...prevState, open: false };
-  };
+  const existingSchedules = filter(operationSchedules, {
+    operation: operationModalOpen.operation,
+  });
 
   return (
     <div>
@@ -242,6 +270,7 @@ export function GenericSystemDetails({
         errors={forbiddenErrors}
       />
       <SimpleAcceptanceOperationModal
+        key={`instance-${operationModalOpen.operation}-${operationModalOpen.open}`}
         operation={operationModalOpen.operation}
         descriptionResolverArgs={{
           instanceNumber: currentOperationInstance?.instance_number,
@@ -251,7 +280,26 @@ export function GenericSystemDetails({
           operationModalOpen.open &&
           instanceStartStopOperations.includes(operationModalOpen.operation)
         }
-        onRequest={(params) => {
+        schedulable={isSchedulable(operationModalOpen.operation)}
+        timezone={userTimezone}
+        existingSchedules={existingSchedules}
+        loading={isSubmittingSchedule(scheduleSubmission)}
+        errors={scheduleSubmission.errors}
+        onRequest={(params, schedule) => {
+          if (schedule) {
+            onScheduleOperation({
+              target_type: 'sap_system',
+              target_id: system.id,
+              operation: operationModalOpen.operation,
+              params: {
+                ...params,
+                host_id: currentOperationInstance.host_id,
+                instance_number: currentOperationInstance.instance_number,
+              },
+              ...schedule,
+            });
+            return;
+          }
           onRequestOperation({
             groupID: currentOperationInstance.host_id,
             operation: operationModalOpen.operation,
@@ -269,6 +317,7 @@ export function GenericSystemDetails({
         }}
       />
       <SapStartStopOperationModal
+        key={`system-${operationModalOpen.operation}-${operationModalOpen.open}`}
         operation={operationModalOpen.operation}
         sid={system.sid}
         type={type}
@@ -277,7 +326,22 @@ export function GenericSystemDetails({
           operationModalOpen.open &&
           startStopOperations.includes(operationModalOpen.operation)
         }
-        onRequest={(params) => {
+        schedulable={isSchedulable(operationModalOpen.operation)}
+        timezone={userTimezone}
+        existingSchedules={existingSchedules}
+        loading={isSubmittingSchedule(scheduleSubmission)}
+        errors={scheduleSubmission.errors}
+        onRequest={(params, schedule) => {
+          if (schedule) {
+            onScheduleOperation({
+              target_type: type === DATABASE_TYPE ? 'database' : 'sap_system',
+              target_id: system.id,
+              operation: operationModalOpen.operation,
+              params,
+              ...schedule,
+            });
+            return;
+          }
           onRequestOperation({
             groupID: system.id,
             operation: operationModalOpen.operation,
@@ -292,6 +356,12 @@ export function GenericSystemDetails({
         onCancel={() => {
           setOperationModelOpen(closeOperationModal);
         }}
+      />
+      <ScheduleWarningsModal
+        isOpen={hasScheduleWarnings(scheduleSubmission)}
+        operation={getOperationLabel(scheduleSubmission.operation)}
+        warnings={scheduleSubmission.warnings}
+        onClose={onResetScheduleSubmission}
       />
       <div className="flex flex-wrap">
         <div className="flex w-1/2 h-auto overflow-hidden overflow-ellipsis break-words">
