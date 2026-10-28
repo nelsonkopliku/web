@@ -293,7 +293,7 @@ defmodule Trento.Operations.Schedules do
            OperationParams.to_map(params)
          ) do
       :ok -> {:ok, []}
-      {:error, :forbidden, errors} -> {:ok, errors}
+      {:error, reason, errors} when reason in [:forbidden, :maintenance_window] -> {:ok, errors}
       {:error, :not_found} -> {:error, :not_found}
     end
   end

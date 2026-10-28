@@ -32,6 +32,7 @@ defmodule Trento.Operations.Requests do
     ClusterPolicy,
     DatabasePolicy,
     HostPolicy,
+    MaintenanceWindowsPolicy,
     SapSystemPolicy,
     Targets
   }
@@ -118,18 +119,32 @@ defmodule Trento.Operations.Requests do
   end
 
   @doc """
-  Runs the operation policies on the current state of the target.
+  Runs the operation policies on the current state of the target, after the
+  maintenance windows that cover it: an ongoing window that forbids
+  operations refuses the request on its own.
   """
   @spec authorize(target_type(), String.t(), atom(), map()) ::
-          :ok | {:error, :not_found} | {:error, :forbidden, [OperationsHelper.forbidden_error()]}
+          :ok
+          | {:error, :not_found}
+          | {:error, :forbidden | :maintenance_window, [OperationsHelper.forbidden_error()]}
   def authorize(target_type, target_id, operation, params) do
     params = cast_params(operation, params)
 
-    with {:ok, policy, resource} <- load(target_type, target_id, operation, params) do
+    with {:ok, policy, resource} <- load(target_type, target_id, operation, params),
+         :ok <- maintenance_windows(resource, params) do
       case policy.authorize_operation(operation, resource, params) do
         :ok -> :ok
         {:error, errors} -> {:error, :forbidden, errors}
       end
+    end
+  end
+
+  defp maintenance_windows(resource, params) do
+    case resource
+         |> MaintenanceWindowsPolicy.targets(params)
+         |> MaintenanceWindowsPolicy.authorize() do
+      :ok -> :ok
+      {:error, errors} -> {:error, :maintenance_window, errors}
     end
   end
 
@@ -140,7 +155,7 @@ defmodule Trento.Operations.Requests do
   @spec request(target_type(), String.t(), atom(), map(), String.t()) ::
           {:ok, String.t()}
           | {:error, :not_found}
-          | {:error, :forbidden, [OperationsHelper.forbidden_error()]}
+          | {:error, :forbidden | :maintenance_window, [OperationsHelper.forbidden_error()]}
           | {:error, any()}
   def request(target_type, target_id, operation, params, operation_id \\ UUID.uuid4()) do
     params = cast_params(operation, params)
