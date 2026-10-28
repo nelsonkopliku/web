@@ -41,6 +41,25 @@ defmodule Trento.Operations.Schedules do
   end
 
   @doc """
+  Replaces the params and the timing of a schedule. The occurrence count
+  restarts. Failing operation policies come back as warnings.
+  """
+  @spec update_schedule(String.t(), map(), String.t(), module()) ::
+          {:ok, OperationSchedule.t(), warnings()}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+  def update_schedule(schedule_id, attrs, actor, date_service \\ DateService) do
+    with {:ok, current} <- get_schedule(schedule_id),
+         changeset = OperationSchedule.update_changeset(current, attrs, date_service.utc_now()),
+         {:ok, schedule} <- Ecto.Changeset.apply_action(changeset, :update),
+         {:ok, warnings} <- policy_warnings(schedule),
+         {:ok, schedule} <- Repo.update(changeset) do
+      ScheduleActivity.record(:operation_schedule_changed, schedule, actor)
+      {:ok, schedule, warnings}
+    end
+  end
+
+  @doc """
   Lists the schedules of one or more targets, the next one first. With the
   `operation` option, only the schedules of that operation.
   """
