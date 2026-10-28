@@ -57,6 +57,42 @@ defmodule Trento.Operations.Schedules do
   end
 
   @doc """
+  Schedules the same operation on several targets of one type: one schedule
+  per target, all with the same bulk id. Failing policies come back as
+  warnings, per target.
+
+  Every target is checked before any schedule is saved, so an unknown target
+  or an invalid schedule saves nothing. The schedules are separate
+  aggregates: when one cannot be saved, the ones saved before are cancelled,
+  so the request saves all of them or none.
+  """
+  @spec create_bulk_schedules(map(), String.t(), module()) ::
+          {:ok, String.t(), [{OperationScheduleReadModel.t(), warnings()}]}
+          | {:error, :not_found}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :consistency_timeout}
+          | {:error, any()}
+  def create_bulk_schedules(%{target_ids: target_ids} = attrs, actor, date_service \\ DateService) do
+    bulk_id = UUID.uuid4()
+    requested_at = date_service.utc_now()
+    common = attrs |> Map.delete(:target_ids) |> Map.put(:bulk_id, bulk_id)
+
+    with {:ok, prepared} <- prepare_bulk(target_ids, common, requested_at),
+         {:ok, dispatched} <- dispatch_bulk(prepared, actor) do
+      schedules =
+        Enum.map(dispatched, fn {%{command: command, warnings: warnings}, _} ->
+          schedule = Repo.get(OperationScheduleReadModel, command.schedule_id)
+          ScheduleActivity.record(:operation_scheduled, schedule || provisional(command), actor)
+          {schedule, warnings}
+        end)
+
+      if Enum.any?(dispatched, &match?({_, {:error, :consistency_timeout}}, &1)),
+        do: {:error, :consistency_timeout},
+        else: {:ok, bulk_id, schedules}
+    end
+  end
+
+  @doc """
   Replaces the params and the timing of a schedule. The occurrence count
   restarts. Failing operation policies come back as warnings.
   """
@@ -177,6 +213,56 @@ defmodule Trento.Operations.Schedules do
       nil -> {:error, :not_found}
       schedule -> {:ok, schedule}
     end
+  end
+
+  defp prepare_bulk(target_ids, common, requested_at) do
+    target_ids
+    |> Enum.reduce_while({:ok, []}, fn target_id, {:ok, prepared} ->
+      changeset =
+        schedule_changeset(Map.put(common, :target_id, target_id), UUID.uuid4(), requested_at)
+
+      with {:ok, command} <- Ecto.Changeset.apply_action(changeset, :insert),
+           {:ok, warnings} <- policy_warnings(command, command.params) do
+        {:cont, {:ok, [%{changeset: changeset, command: command, warnings: warnings} | prepared]}}
+      else
+        error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, prepared} -> {:ok, Enum.reverse(prepared)}
+      error -> error
+    end
+  end
+
+  # The schedules share their timing: when it leaves no occurrence, the first
+  # one is refused and nothing is saved.
+  defp dispatch_bulk(prepared, actor) do
+    prepared
+    |> Enum.reduce_while({:ok, []}, fn %{command: command} = schedule, {:ok, dispatched} ->
+      case dispatch(command, metadata: %{"created_by" => actor}) do
+        result when result in [:ok, {:error, :consistency_timeout}] ->
+          {:cont, {:ok, [{schedule, result} | dispatched]}}
+
+        error ->
+          {:halt, {:error, error, schedule, dispatched}}
+      end
+    end)
+    |> case do
+      {:ok, dispatched} ->
+        {:ok, Enum.reverse(dispatched)}
+
+      {:error, error, %{changeset: changeset}, dispatched} ->
+        Enum.each(dispatched, fn {%{command: command}, _} -> compensate(command) end)
+        saved(error, changeset, nil, fn _ -> :ok end)
+    end
+  end
+
+  defp compensate(%ScheduleOperation{schedule_id: schedule_id}) do
+    Logger.warning("Operation schedule #{schedule_id} cancelled: its bulk request failed")
+
+    %{schedule_id: schedule_id}
+    |> CancelOperationSchedule.new!()
+    |> dispatch([])
   end
 
   defp schedule_changeset(attrs, schedule_id, requested_at) do
