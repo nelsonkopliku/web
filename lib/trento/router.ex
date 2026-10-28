@@ -7,6 +7,7 @@ defmodule Trento.Router do
   alias Trento.Infrastructure.Commanded.Middleware.Enrich
 
   alias Trento.Clusters.Commands.{
+    ChangeClusterChecksInterval,
     CompleteChecksExecution,
     DeregisterClusterHost,
     MarkClusterHostStale,
@@ -17,6 +18,7 @@ defmodule Trento.Router do
   }
 
   alias Trento.Hosts.Commands.{
+    ChangeHostChecksInterval,
     ClearSoftwareUpdatesDiscovery,
     CompleteHostChecksExecution,
     CompleteSoftwareUpdatesDiscovery,
@@ -76,6 +78,7 @@ defmodule Trento.Router do
              UpdateSaptuneStatus,
              UpdateSlesSubscriptions,
              SelectHostChecks,
+             ChangeHostChecksInterval,
              RollUpHost,
              RequestHostDeregistration,
              DeregisterHost,
@@ -96,6 +99,7 @@ defmodule Trento.Router do
              RegisterOfflineClusterHost,
              RegisterOnlineClusterHost,
              SelectChecks,
+             ChangeClusterChecksInterval,
              CompleteChecksExecution
            ],
            to: Clusters.Cluster,

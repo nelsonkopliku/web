@@ -82,6 +82,7 @@ defmodule Trento.Hosts.Host do
   }
 
   alias Trento.Hosts.Commands.{
+    ChangeHostChecksInterval,
     ClearSoftwareUpdatesDiscovery,
     CompleteHostChecksExecution,
     CompleteSoftwareUpdatesDiscovery,
@@ -100,6 +101,7 @@ defmodule Trento.Hosts.Host do
     HeartbeatFailed,
     HeartbeatSucceeded,
     HostChecksHealthChanged,
+    HostChecksIntervalChanged,
     HostChecksSelected,
     HostDeregistered,
     HostDeregistrationRequested,
@@ -146,6 +148,7 @@ defmodule Trento.Hosts.Host do
 
     field :rolling_up, :boolean, default: false
     field :selected_checks, {:array, :string}, default: []
+    field :checks_interval, :string
     field :deregistered_at, :utc_datetime_usec, default: nil
 
     embeds_one :saptune_status, SaptuneStatus
@@ -520,6 +523,12 @@ defmodule Trento.Hosts.Host do
     }
   end
 
+  def execute(%Host{checks_interval: interval}, %ChangeHostChecksInterval{interval: interval}),
+    do: []
+
+  def execute(%Host{host_id: host_id}, %ChangeHostChecksInterval{interval: interval}),
+    do: %HostChecksIntervalChanged{host_id: host_id, interval: interval}
+
   def execute(
         %Host{
           host_id: host_id
@@ -795,6 +804,9 @@ defmodule Trento.Hosts.Host do
     }
   end
 
+  def apply(%Host{} = host, %HostChecksIntervalChanged{interval: interval}),
+    do: %Host{host | checks_interval: interval}
+
   def apply(%Host{} = host, %HostChecksHealthChanged{
         checks_health: checks_health
       }),
@@ -843,10 +855,11 @@ defmodule Trento.Hosts.Host do
 
   # Deregistration
 
+  # The checks execution interval of a deregistered host is removed
   def apply(%Host{} = host, %HostDeregistered{
         deregistered_at: deregistered_at
       }) do
-    %Host{host | deregistered_at: deregistered_at}
+    %Host{host | deregistered_at: deregistered_at, checks_interval: nil}
   end
 
   def apply(%Host{} = host, %HostDeregistrationRequested{}), do: host

@@ -33,6 +33,7 @@ defmodule Trento.Infrastructure.Commanded.EventHandlers.StreamRollUpEventHandler
   @cluster_events [
     Trento.Clusters.Events.ChecksSelected,
     Trento.Clusters.Events.ClusterChecksHealthChanged,
+    Trento.Clusters.Events.ClusterChecksIntervalChanged,
     Trento.Clusters.Events.ClusterDetailsUpdated,
     Trento.Clusters.Events.ClusterDitributedHealthChanged,
     Trento.Clusters.Events.ClusterHealthChanged,
@@ -61,6 +62,7 @@ defmodule Trento.Infrastructure.Commanded.EventHandlers.StreamRollUpEventHandler
     Trento.Hosts.Events.SlesSubscriptionsUpdated,
     Trento.Hosts.Events.HostChecksSelected,
     Trento.Hosts.Events.HostChecksHealthChanged,
+    Trento.Hosts.Events.HostChecksIntervalChanged,
     Trento.Hosts.Events.HostHealthChanged,
     Trento.Hosts.Events.HostSaptuneHealthChanged,
     Trento.Hosts.Events.SaptuneStatusUpdated,

@@ -6,6 +6,8 @@ defmodule Trento.ProjectorsSupervisor do
 
   use Supervisor
 
+  alias Trento.ChecksScheduling.Projections.TargetChecksIntervalProjector
+
   alias Trento.Clusters.Projections.ClusterProjector
 
   alias Trento.Hosts.Projections.{
@@ -35,7 +37,8 @@ defmodule Trento.ProjectorsSupervisor do
       OperationScheduleProjector,
       SapSystemProjector,
       ScheduledRunProjector,
-      SlesSubscriptionsProjector
+      SlesSubscriptionsProjector,
+      TargetChecksIntervalProjector
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

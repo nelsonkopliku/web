@@ -550,6 +550,17 @@ defmodule Trento.ActivityLog.ActivityCatalogTest do
         assert {:error, :not_interesting} =
                  ActivityCatalog.detect_activity(%{event: build(excluded_event)})
       end
+
+      for excluded_event <- [
+            %Trento.Hosts.Events.HostChecksIntervalChanged{host_id: UUID.uuid4(), interval: "1h"},
+            %Trento.Clusters.Events.ClusterChecksIntervalChanged{
+              cluster_id: UUID.uuid4(),
+              interval: "1h"
+            }
+          ] do
+        assert {:error, :not_interesting} =
+                 ActivityCatalog.detect_activity(%{event: excluded_event})
+      end
     end
 
     test "should detect activity from queue events" do

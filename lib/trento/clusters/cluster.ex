@@ -93,6 +93,7 @@ defmodule Trento.Clusters.Cluster do
   }
 
   alias Trento.Clusters.Commands.{
+    ChangeClusterChecksInterval,
     CompleteChecksExecution,
     DeregisterClusterHost,
     MarkClusterHostStale,
@@ -112,6 +113,7 @@ defmodule Trento.Clusters.Cluster do
   alias Trento.Clusters.Events.{
     ChecksSelected,
     ClusterChecksHealthChanged,
+    ClusterChecksIntervalChanged,
     ClusterDataMarkedInSync,
     ClusterDataMarkedStale,
     ClusterDeregistered,
@@ -156,6 +158,7 @@ defmodule Trento.Clusters.Cluster do
     field :offline_hosts, {:array, :string}, default: []
     field :stale_hosts, {:array, :string}, default: []
     field :selected_checks, {:array, :string}, default: []
+    field :checks_interval, :string
     field :rolling_up, :boolean, default: false
     field :deregistered_at, :utc_datetime_usec, default: nil
 
@@ -418,6 +421,15 @@ defmodule Trento.Clusters.Cluster do
   end
 
   # Checks selected
+  def execute(
+        %Cluster{checks_interval: interval},
+        %ChangeClusterChecksInterval{interval: interval}
+      ),
+      do: []
+
+  def execute(%Cluster{cluster_id: cluster_id}, %ChangeClusterChecksInterval{interval: interval}),
+    do: %ClusterChecksIntervalChanged{cluster_id: cluster_id, interval: interval}
+
   def execute(
         %Cluster{
           cluster_id: cluster_id
@@ -771,9 +783,13 @@ defmodule Trento.Clusters.Cluster do
   end
 
   # Deregistration
+  # The checks execution interval of a deregistered cluster is removed
   def apply(%Cluster{} = cluster, %ClusterDeregistered{deregistered_at: deregistered_at}) do
-    %Cluster{cluster | deregistered_at: deregistered_at}
+    %Cluster{cluster | deregistered_at: deregistered_at, checks_interval: nil}
   end
+
+  def apply(%Cluster{} = cluster, %ClusterChecksIntervalChanged{interval: interval}),
+    do: %Cluster{cluster | checks_interval: interval}
 
   # Restoration
   def apply(%Cluster{} = cluster, %ClusterRestored{}) do
