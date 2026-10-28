@@ -15,6 +15,19 @@ a Mox mock without booting the real sagents stack.
 @callback add_message(String.t(), LangChain.Message.t()) :: :ok | {:error, term()}
 ```
 
+# `cancel`
+
+```elixir
+@callback cancel(String.t()) :: :ok | {:error, term()}
+```
+
+# `fetch_pid`
+
+```elixir
+@callback fetch_pid(String.t()) ::
+  {:ok, pid()} | {:error, :not_running | :registry_unavailable}
+```
+
 # `get_agent`
 
 ```elixir
@@ -24,13 +37,21 @@ a Mox mock without booting the real sagents stack.
 # `get_info`
 
 ```elixir
-@callback get_info(String.t()) :: %{state: Sagents.State.t()}
+@callback get_info(String.t()) ::
+  %{state: Sagents.State.t()} | {:error, :registry_unavailable}
+```
+
+# `get_status`
+
+```elixir
+@callback get_status(String.t()) ::
+  Sagents.AgentServer.status() | :not_running | {:error, :registry_unavailable}
 ```
 
 # `subscribe`
 
 ```elixir
-@callback subscribe(String.t()) :: :ok | {:error, term()}
+@callback subscribe(String.t()) :: {:ok, pid(), reference()} | {:error, term()}
 ```
 
 # `update_agent_and_state`
@@ -42,9 +63,15 @@ a Mox mock without booting the real sagents stack.
 
 # `add_message`
 
+# `cancel`
+
+# `fetch_pid`
+
 # `get_agent`
 
 # `get_info`
+
+# `get_status`
 
 # `subscribe`
 

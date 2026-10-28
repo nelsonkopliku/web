@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.40.3">
-    <meta name="project" content="Trento Web v3.1.5">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="Trento Web v3.2.0">
 
 
-    <title>API Reference — Trento Web v3.1.5</title>
+    <title>API Reference — Trento Web v3.2.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
 
-    <script defer src="dist/sidebar_items-78651DF5.js"></script>
+    <script defer src="dist/sidebar_items-7680EBB5.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-Y2MUTVIN.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@
 Trento Web
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v3.1.5
+          v3.2.0
         </div>
       </div>
     </div>
@@ -96,7 +96,7 @@ Trento Web
 
 <div id="top-content">
   <div class="heading-with-actions top-heading">
-    <h1>API Reference <small class="app-vsn">Trento Web v#3.1.5</small></h1>
+    <h1>API Reference <small class="app-vsn">Trento Web v#3.2.0</small></h1>
 <a href="api-reference.md" title="Copy Markdown (hold Ctrl/Cmd and click it to open as Markdown)" class="copy-markdown icon-action" rel="help">
   <i class="ri-markdown-line" aria-hidden="true"></i>
   <span class="sr-only">Copy Markdown</span>
@@ -155,7 +155,7 @@ Trento Web
 
   </div>
 
-    <div class="summary-synopsis"><p>Behaviour wrapping the subset of <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentServer.html"><code class="inline">Sagents.AgentServer</code></a> that
+    <div class="summary-synopsis"><p>Behaviour wrapping the subset of <a href="https://sagents.hexdocs.pm/0.16.1/Sagents.AgentServer.html"><code class="inline">Sagents.AgentServer</code></a> that
 <a href="Trento.AI.Agent.html#run/2"><code class="inline">Trento.AI.Agent.run/2</code></a> calls into.</p></div>
 
 </div>
@@ -165,7 +165,7 @@ Trento Web
 
   </div>
 
-    <div class="summary-synopsis"><p>Behaviour wrapping <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentsDynamicSupervisor.html#start_agent_sync/1"><code class="inline">Sagents.AgentsDynamicSupervisor.start_agent_sync/1</code></a>.</p></div>
+    <div class="summary-synopsis"><p>Behaviour wrapping <a href="https://sagents.hexdocs.pm/0.16.1/Sagents.AgentsDynamicSupervisor.html#start_agent_sync/1"><code class="inline">Sagents.AgentsDynamicSupervisor.start_agent_sync/1</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -201,8 +201,17 @@ Trento Web
 
   </div>
 
-    <div class="summary-synopsis"><p>Per-action AI-tool metadata macro. Sits next to <a href="https://hexdocs.pm/open_api_spex/3.22.3/OpenApiSpex.ControllerSpecs.html#operation/2"><code class="inline">OpenApiSpex.ControllerSpecs.operation/2</code></a>
+    <div class="summary-synopsis"><p>Per-action AI-tool metadata macro. Sits next to <a href="https://open-api-spex.hexdocs.pm/3.22.4/OpenApiSpex.ControllerSpecs.html#operation/2"><code class="inline">OpenApiSpex.ControllerSpecs.operation/2</code></a>
 in controllers and labels the immediately following public function as an AI tool.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Trento.AI.FakeChatModel.html" translate="no">Trento.<wbr />AI.<wbr />FakeChatModel</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A <a href="https://langchain.hexdocs.pm/0.15.0/LangChain.ChatModels.ChatModel.html"><code class="inline">LangChain.ChatModels.ChatModel</code></a> that never talks to a provider.</p></div>
 
 </div>
 <div class="summary-row">
@@ -230,7 +239,7 @@ in controllers and labels the immediately following public function as an AI too
   </div>
 
     <div class="summary-synopsis"><p>Transport-agnostic helpers shared by every <a href="Trento.AI.ToolSource.html"><code class="inline">Trento.AI.ToolSource</code></a> that
-derives <a href="https://hexdocs.pm/langchain/0.9.6/LangChain.Function.html"><code class="inline">LangChain.Function</code></a>s from <code class="inline">%OpenApiSpex.Operation{}</code> structs.</p></div>
+derives <a href="https://langchain.hexdocs.pm/0.15.0/LangChain.Function.html"><code class="inline">LangChain.Function</code></a>s from <code class="inline">%OpenApiSpex.Operation{}</code> structs.</p></div>
 
 </div>
 <div class="summary-row">
@@ -241,6 +250,15 @@ derives <a href="https://hexdocs.pm/langchain/0.9.6/LangChain.Function.html"><co
 
     <div class="summary-synopsis"><p>Transport-agnostic catalog entry shared by every <a href="Trento.AI.ToolSource.html"><code class="inline">Trento.AI.ToolSource</code></a>
 that derives AI tools from <code class="inline">%OpenApiSpex.Operation{}</code> structs.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Trento.AI.Presence.html" translate="no">Trento.<wbr />AI.<wbr />Presence</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Viewers of AI agent conversations. sagents stops an idle agent once its last viewer is gone.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2953,7 +2971,7 @@ and its calculated health is taken into account in host's aggregated health.</p>
   </div>
 
     <div class="summary-synopsis"><p>Default <a href="Trento.AI.Configurations.Events.html"><code class="inline">Trento.AI.Configurations.Events</code></a> implementation: per-user AI
-configuration lifecycle events carried over <a href="https://hexdocs.pm/phoenix_pubsub/2.2.0/Phoenix.PubSub.html"><code class="inline">Phoenix.PubSub</code></a>.</p></div>
+configuration lifecycle events carried over <a href="https://phoenix-pubsub.hexdocs.pm/2.3.0/Phoenix.PubSub.html"><code class="inline">Phoenix.PubSub</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2963,7 +2981,7 @@ configuration lifecycle events carried over <a href="https://hexdocs.pm/phoenix_
   </div>
 
     <div class="summary-synopsis"><p>Production implementation of <a href="Trento.AI.Agent.Server.html"><code class="inline">Trento.AI.Agent.Server</code></a> —
-delegates to <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentServer.html"><code class="inline">Sagents.AgentServer</code></a>.</p></div>
+delegates to <a href="https://sagents.hexdocs.pm/0.16.1/Sagents.AgentServer.html"><code class="inline">Sagents.AgentServer</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2973,7 +2991,7 @@ delegates to <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentServer.html"
   </div>
 
     <div class="summary-synopsis"><p>Production implementation of <a href="Trento.AI.Agent.Supervisor.html"><code class="inline">Trento.AI.Agent.Supervisor</code></a> —
-delegates to <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentsDynamicSupervisor.html"><code class="inline">Sagents.AgentsDynamicSupervisor</code></a>.</p></div>
+delegates to <a href="https://sagents.hexdocs.pm/0.16.1/Sagents.AgentsDynamicSupervisor.html"><code class="inline">Sagents.AgentsDynamicSupervisor</code></a>.</p></div>
 
 </div>
 <div class="summary-row">
@@ -2983,6 +3001,15 @@ delegates to <a href="https://hexdocs.pm/sagents/0.7.0/Sagents.AgentsDynamicSupe
   </div>
 
     <div class="summary-synopsis"><p>Provides a set of functions of Alerting related usecases.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Trento.Infrastructure.Alerting.Emails.EmailLayout.html" translate="no">Trento.<wbr />Infrastructure.<wbr />Alerting.<wbr />Emails.<wbr />EmailLayout</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Common layout of the Trento alerting emails.</p></div>
 
 </div>
 <div class="summary-row">
@@ -3408,6 +3435,15 @@ Chart time series objects</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Trento.Infrastructure.SoftwareUpdates.Auth.SmlmAuth.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Auth.<wbr />SmlmAuth</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>GenServer module to authenticate with SUSE Multi-Linux Manager</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Trento.Infrastructure.SoftwareUpdates.Auth.State.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Auth.<wbr />State</a>
 
   </div>
@@ -3417,16 +3453,7 @@ Chart time series objects</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Trento.Infrastructure.SoftwareUpdates.Auth.SumaAuth.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Auth.<wbr />SumaAuth</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>GenServer module to authenticate with SUSE Multi-Linux Manager</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Trento.Infrastructure.SoftwareUpdates.MockSuma.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />MockSuma</a>
+    <a href="Trento.Infrastructure.SoftwareUpdates.MockSmlm.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />MockSmlm</a>
 
   </div>
 
@@ -3435,7 +3462,7 @@ Chart time series objects</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Trento.Infrastructure.SoftwareUpdates.Suma.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Suma</a>
+    <a href="Trento.Infrastructure.SoftwareUpdates.Smlm.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Smlm</a>
 
   </div>
 
@@ -3444,7 +3471,7 @@ Chart time series objects</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Trento.Infrastructure.SoftwareUpdates.Suma.HttpExecutor.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Suma.<wbr />HttpExecutor</a>
+    <a href="Trento.Infrastructure.SoftwareUpdates.Smlm.HttpExecutor.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />Smlm.<wbr />HttpExecutor</a>
 
   </div>
 
@@ -3453,7 +3480,7 @@ Chart time series objects</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Trento.Infrastructure.SoftwareUpdates.SumaApi.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />SumaApi</a>
+    <a href="Trento.Infrastructure.SoftwareUpdates.SmlmApi.html" translate="no">Trento.<wbr />Infrastructure.<wbr />SoftwareUpdates.<wbr />SmlmApi</a>
 
   </div>
 
@@ -4192,7 +4219,7 @@ deployed SAP systems, which is composed by the application layer.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Trento.Settings.SuseManagerSettings.html" translate="no">Trento.<wbr />Settings.<wbr />SuseManagerSettings</a>
+    <a href="Trento.Settings.SmlmSettings.html" translate="no">Trento.<wbr />Settings.<wbr />SmlmSettings</a>
 
   </div>
 
@@ -4369,11 +4396,33 @@ check supported values and validate possible values</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Trento.Support.Helpers.TestCertificates.html" translate="no">Trento.<wbr />Support.<wbr />Helpers.<wbr />TestCertificates</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Generates, with the <code class="inline">openssl</code> command, the certificate chains used to test
+<a href="Trento.Support.HttpClient.html"><code class="inline">Trento.Support.HttpClient</code></a> against a real TLS server.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Trento.Support.Helpers.TlsTestServer.html" translate="no">Trento.<wbr />Support.<wbr />Helpers.<wbr />TlsTestServer</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A minimal HTTPS server for tests: it listens on 127.0.0.1 on a random port,
+serves the given certificate chain and answers every request with
+<code class="inline">200 ok</code>. A client that rejects the chain fails the handshake, the server
+ignores that and accepts the next connection.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Trento.Support.HttpClient.html" translate="no">Trento.<wbr />Support.<wbr />HttpClient</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>Shared HTTP client behaviour wrapping <a href="https://hexdocs.pm/httpoison/2.2.3/HTTPoison.html"><code class="inline">HTTPoison</code></a>. The default implementation
+    <div class="summary-synopsis"><p>Shared HTTP client behaviour wrapping <a href="https://httpoison.hexdocs.pm/3.0.0/HTTPoison.html"><code class="inline">HTTPoison</code></a>. The default implementation
 forwards to HTTPoison and injects secure SSL defaults (<code class="inline">verify_peer</code> with the
 system CA bundle); callers can override individual SSL keys by passing their
 own <code class="inline">:ssl</code> keyword. Tests substitute a Mox mock via config.</p></div>
@@ -4554,7 +4603,7 @@ real action by re-entering <a href="TrentoWeb.Endpoint.html#call/2"><code class=
   </div>
 
     <div class="summary-synopsis"><p><a href="Trento.AI.ToolSource.html"><code class="inline">Trento.AI.ToolSource</code></a> implementation that materialises a
-<a href="https://hexdocs.pm/langchain/0.9.6/LangChain.Function.html"><code class="inline">LangChain.Function</code></a> for every MCP-tagged controller route discovered
+<a href="https://langchain.hexdocs.pm/0.15.0/LangChain.Function.html"><code class="inline">LangChain.Function</code></a> for every MCP-tagged controller route discovered
 by <a href="TrentoWeb.AI.McpRouteIndex.html"><code class="inline">TrentoWeb.AI.McpRouteIndex</code></a>.</p></div>
 
 </div>
@@ -5307,20 +5356,6 @@ to receive personal broadcasts</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="TrentoWeb.V1.SUSEManagerController.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SUSEManagerController</a>
-
-  </div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="TrentoWeb.V1.SUSEManagerJSON.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SUSEManagerJSON</a>
-
-  </div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="TrentoWeb.V1.SapSystemController.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SapSystemController</a>
 
   </div>
@@ -5343,6 +5378,20 @@ to receive personal broadcasts</p></div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="TrentoWeb.V1.SettingsJSON.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SettingsJSON</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TrentoWeb.V1.SmlmController.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SmlmController</a>
+
+  </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="TrentoWeb.V1.SmlmJSON.html" translate="no">TrentoWeb.<wbr />V1.<wbr />SmlmJSON</a>
 
   </div>
 
@@ -5455,7 +5504,7 @@ to receive personal broadcasts</p></div>
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

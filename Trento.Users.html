@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.40.3">
-    <meta name="project" content="Trento Web v3.1.5">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="Trento Web v3.2.0">
 
 
-    <title>Trento.Users — Trento Web v3.1.5</title>
+    <title>Trento.Users — Trento Web v3.2.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
 
-    <script defer src="dist/sidebar_items-78651DF5.js"></script>
+    <script defer src="dist/sidebar_items-7680EBB5.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-Y2MUTVIN.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@
 Trento Web
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v3.1.5
+          v3.2.0
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@ Trento Web
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Trento.<wbr />Users</span> 
-      <small class="app-vsn" translate="no">(Trento Web v3.1.5)</small>
+      <small class="app-vsn" translate="no">(Trento Web v3.2.0)</small>
 
     </h1>
 
@@ -141,7 +141,7 @@ Trento Web
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:authenticate/1"><code class="inline">Pow.Context.authenticate/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:authenticate/1"><code class="inline">Pow.Context.authenticate/1</code></a>.</p></div>
 
     </div>
 
@@ -167,7 +167,7 @@ Trento Web
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:create/1"><code class="inline">Pow.Context.create/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:create/1"><code class="inline">Pow.Context.create/1</code></a>.</p></div>
 
     </div>
 
@@ -185,7 +185,7 @@ Trento Web
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:delete/1"><code class="inline">Pow.Context.delete/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:delete/1"><code class="inline">Pow.Context.delete/1</code></a>.</p></div>
 
     </div>
 
@@ -295,7 +295,7 @@ deleted and locked users</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:update/2"><code class="inline">Pow.Context.update/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:update/2"><code class="inline">Pow.Context.update/2</code></a>.</p></div>
 
     </div>
 
@@ -372,7 +372,7 @@ deleted and locked users</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:authenticate/1"><code class="inline">Pow.Context.authenticate/1</code></a>.</p>
+<p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:authenticate/1"><code class="inline">Pow.Context.authenticate/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="by_id/1">
@@ -385,7 +385,7 @@ deleted and locked users</p></div>
       <h1 class="signature" translate="no">by_id(id)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L30" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -396,7 +396,7 @@ deleted and locked users</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> by_id(id :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> by_id(id :: <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">non_neg_integer</a>()) ::
   {:ok, Trento.Users.User.t()} | {:error, :not_found}</pre>
 
       </div>
@@ -414,7 +414,7 @@ deleted and locked users</p></div>
       <h1 class="signature" translate="no">confirm_totp_enrollment(user, totp_code)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L234" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L227" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -445,7 +445,7 @@ deleted and locked users</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:create/1"><code class="inline">Pow.Context.create/1</code></a>.</p>
+<p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:create/1"><code class="inline">Pow.Context.create/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="create_user/1">
@@ -458,7 +458,7 @@ deleted and locked users</p></div>
       <h1 class="signature" translate="no">create_user(attrs)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L70" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L74" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -489,7 +489,7 @@ deleted and locked users</p></div>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:delete/1"><code class="inline">Pow.Context.delete/1</code></a>.</p>
+<p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:delete/1"><code class="inline">Pow.Context.delete/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="delete_user/1">
@@ -502,7 +502,7 @@ deleted and locked users</p></div>
       <h1 class="signature" translate="no">delete_user(user)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L168" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L161" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -524,7 +524,7 @@ deleted and locked users</p></div>
       <h1 class="signature" translate="no">get_by(clauses)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L39" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L43" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -548,7 +548,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">get_user(id)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L61" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -570,7 +570,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">initiate_totp_enrollment(user)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L202" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L195" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -592,7 +592,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">list_users()</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L47" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L51" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -614,7 +614,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">maybe_disable_totp(attrs)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L163" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L156" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -746,7 +746,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">reset_totp(user)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L194" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L187" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -777,7 +777,7 @@ deleted and locked users</p>
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/pow/1.0.39/Pow.Context.html#c:update/2"><code class="inline">Pow.Context.update/2</code></a>.</p>
+<p>Callback implementation for <a href="https://pow.hexdocs.pm/1.0.39/Pow.Context.html#c:update/2"><code class="inline">Pow.Context.update/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="update_last_login_at/1">
@@ -790,7 +790,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">update_last_login_at(user)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L265" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L258" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -812,7 +812,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">update_user(user, attrs)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L133" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L126" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -834,7 +834,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">update_user_profile(user, attrs)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L102" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L106" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -856,7 +856,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">update_user_profile_sso_enabled(user, attrs)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L118" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L116" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -878,7 +878,7 @@ deleted and locked users</p>
       <h1 class="signature" translate="no">validate_totp(user, totp_code)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L252" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/users.ex#L245" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -917,7 +917,7 @@ deleted and locked users</p>
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

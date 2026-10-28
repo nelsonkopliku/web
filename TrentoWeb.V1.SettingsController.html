@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.40.3">
-    <meta name="project" content="Trento Web v3.1.5">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="Trento Web v3.2.0">
 
 
-    <title>TrentoWeb.V1.SettingsController — Trento Web v3.1.5</title>
+    <title>TrentoWeb.V1.SettingsController — Trento Web v3.2.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
 
-    <script defer src="dist/sidebar_items-78651DF5.js"></script>
+    <script defer src="dist/sidebar_items-7680EBB5.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-Y2MUTVIN.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@
 Trento Web
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v3.1.5
+          v3.2.0
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@ Trento Web
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">TrentoWeb.<wbr />V1.<wbr />SettingsController</span> 
-      <small class="app-vsn" translate="no">(Trento Web v3.1.5)</small>
+      <small class="app-vsn" translate="no">(Trento Web v3.2.0)</small>
 
     </h1>
 
@@ -141,7 +141,15 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#delete_suse_manager_settings/2" data-no-tooltip="" translate="no">delete_suse_manager_settings(conn, _)</a>
+        <a href="#delete_smlm_settings/2" data-no-tooltip="" translate="no">delete_smlm_settings(conn, _)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_suse_manager_settings/2" data-no-tooltip="" translate="no">delete_suse_manager_settings(conn, params)</a>
 
       </div>
 
@@ -197,7 +205,15 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_suse_manager_settings/2" data-no-tooltip="" translate="no">get_suse_manager_settings(conn, _)</a>
+        <a href="#get_smlm_settings/2" data-no-tooltip="" translate="no">get_smlm_settings(conn, _)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_suse_manager_settings/2" data-no-tooltip="" translate="no">get_suse_manager_settings(conn, params)</a>
 
       </div>
 
@@ -213,7 +229,23 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#patch_smlm_settings/2" data-no-tooltip="" translate="no">patch_smlm_settings(conn, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#patch_suse_manager_settings/2" data-no-tooltip="" translate="no">patch_suse_manager_settings(conn, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_smlm_settings/2" data-no-tooltip="" translate="no">put_smlm_settings(conn, params)</a>
 
       </div>
 
@@ -229,7 +261,15 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#save_suse_manager_settings/2" data-no-tooltip="" translate="no">save_suse_manager_settings(conn, _)</a>
+        <a href="#save_smlm_settings/2" data-no-tooltip="" translate="no">save_smlm_settings(conn, _)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#save_suse_manager_settings/2" data-no-tooltip="" translate="no">save_suse_manager_settings(conn, params)</a>
 
       </div>
 
@@ -253,7 +293,23 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#test_suse_manager_settings/2" data-no-tooltip="" translate="no">test_suse_manager_settings(conn, _)</a>
+        <a href="#test_alerting_settings/2" data-no-tooltip="" translate="no">test_alerting_settings(conn, params)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#test_smlm_settings/2" data-no-tooltip="" translate="no">test_smlm_settings(conn, _)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#test_suse_manager_settings/2" data-no-tooltip="" translate="no">test_suse_manager_settings(conn, params)</a>
 
       </div>
 
@@ -307,7 +363,7 @@ Trento Web
       <h1 class="signature" translate="no">create_alerting_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L316" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L394" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -319,17 +375,17 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="delete_suse_manager_settings/2">
+<section class="detail" id="delete_smlm_settings/2">
 
   <div class="detail-header">
-    <a href="#delete_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#delete_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">delete_suse_manager_settings(conn, _)</h1>
+      <h1 class="signature" translate="no">delete_smlm_settings(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L227" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L303" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -340,7 +396,35 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> delete_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> delete_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="delete_suse_manager_settings/2">
+
+  <div class="detail-header">
+    <a href="#delete_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">delete_suse_manager_settings(conn, params)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L313" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -357,7 +441,7 @@ Trento Web
       <h1 class="signature" translate="no">get_action(map)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L355" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L458" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -379,7 +463,7 @@ Trento Web
       <h1 class="signature" translate="no">get_activity_log_settings(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L152" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L236" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -401,7 +485,7 @@ Trento Web
       <h1 class="signature" translate="no">get_alerting_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L290" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L368" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -423,7 +507,7 @@ Trento Web
       <h1 class="signature" translate="no">get_api_key_settings(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L57" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L141" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -445,7 +529,7 @@ Trento Web
       <h1 class="signature" translate="no">get_policy_resource(conn)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L364" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L484" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -467,7 +551,7 @@ Trento Web
       <h1 class="signature" translate="no">get_public_keys(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L270" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L348" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -478,7 +562,35 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_public_keys(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_public_keys(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="get_smlm_settings/2">
+
+  <div class="detail-header">
+    <a href="#get_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_smlm_settings(conn, _)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L248" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -492,10 +604,10 @@ Trento Web
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_suse_manager_settings(conn, _)</h1>
+      <h1 class="signature" translate="no">get_suse_manager_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L174" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L258" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -506,7 +618,7 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -523,7 +635,7 @@ Trento Web
       <h1 class="signature" translate="no">open_api_operation(action)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L43" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L127" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -534,7 +646,35 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> open_api_operation(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/open_api_spex/3.22.3/OpenApiSpex.Operation.html#t:t/0">OpenApiSpex.Operation.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> open_api_operation(<a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">atom</a>()) :: <a href="https://open-api-spex.hexdocs.pm/3.22.4/OpenApiSpex.Operation.html#t:t/0">OpenApiSpex.Operation.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="patch_smlm_settings/2">
+
+  <div class="detail-header">
+    <a href="#patch_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">patch_smlm_settings(conn, params)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L289" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> patch_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -551,7 +691,7 @@ Trento Web
       <h1 class="signature" translate="no">patch_suse_manager_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L211" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L295" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -562,7 +702,35 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> patch_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> patch_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="put_smlm_settings/2">
+
+  <div class="detail-header">
+    <a href="#put_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">put_smlm_settings(conn, params)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L292" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> put_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -579,7 +747,7 @@ Trento Web
       <h1 class="signature" translate="no">put_suse_manager_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L214" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L298" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -590,7 +758,35 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> put_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> put_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="save_smlm_settings/2">
+
+  <div class="detail-header">
+    <a href="#save_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">save_smlm_settings(conn, _)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L263" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> save_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -604,10 +800,10 @@ Trento Web
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">save_suse_manager_settings(conn, _)</h1>
+      <h1 class="signature" translate="no">save_suse_manager_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L196" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L278" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -618,7 +814,7 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> save_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> save_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -669,17 +865,17 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="test_suse_manager_settings/2">
+<section class="detail" id="test_alerting_settings/2">
 
   <div class="detail-header">
-    <a href="#test_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#test_alerting_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">test_suse_manager_settings(conn, _)</h1>
+      <h1 class="signature" translate="no">test_alerting_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L248" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L450" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -690,7 +886,63 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> test_suse_manager_settings(<a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/plug/1.19.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> test_alerting_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="test_smlm_settings/2">
+
+  <div class="detail-header">
+    <a href="#test_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">test_smlm_settings(conn, _)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L320" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> test_smlm_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="test_suse_manager_settings/2">
+
+  <div class="detail-header">
+    <a href="#test_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">test_suse_manager_settings(conn, params)</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L332" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> test_suse_manager_settings(<a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()) :: <a href="https://plug.hexdocs.pm/1.20.3/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
 
       </div>
 
@@ -707,7 +959,7 @@ Trento Web
       <h1 class="signature" translate="no">update_activity_log_settings(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L123" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L207" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -729,7 +981,7 @@ Trento Web
       <h1 class="signature" translate="no">update_alerting_settings(conn, params)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L345" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L423" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -751,7 +1003,7 @@ Trento Web
       <h1 class="signature" translate="no">update_api_key_settings(conn, _)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L89" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento_web/controllers/v1/settings_controller.ex#L173" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -790,7 +1042,7 @@ Trento Web
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

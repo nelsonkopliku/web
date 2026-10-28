@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.40.3">
-    <meta name="project" content="Trento Web v3.1.5">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="Trento Web v3.2.0">
 
 
-    <title>Trento.Settings — Trento Web v3.1.5</title>
+    <title>Trento.Settings — Trento Web v3.2.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
 
-    <script defer src="dist/sidebar_items-78651DF5.js"></script>
+    <script defer src="dist/sidebar_items-7680EBB5.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-Y2MUTVIN.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@
 Trento Web
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v3.1.5
+          v3.2.0
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@ Trento Web
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Trento.<wbr />Settings</span> 
-      <small class="app-vsn" translate="no">(Trento Web v3.1.5)</small>
+      <small class="app-vsn" translate="no">(Trento Web v3.2.0)</small>
 
     </h1>
 
@@ -153,7 +153,7 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:suse_manager_settings_change_submission/0" data-no-tooltip="" translate="no">suse_manager_settings_change_submission()</a>
+        <a href="#t:smlm_settings_change_submission/0" data-no-tooltip="" translate="no">smlm_settings_change_submission()</a>
 
       </div>
 
@@ -161,7 +161,7 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:suse_manager_settings_save_submission/0" data-no-tooltip="" translate="no">suse_manager_settings_save_submission()</a>
+        <a href="#t:smlm_settings_save_submission/0" data-no-tooltip="" translate="no">smlm_settings_save_submission()</a>
 
       </div>
 
@@ -183,7 +183,7 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#change_suse_manager_settings/2" data-no-tooltip="" translate="no">change_suse_manager_settings(settings_submission, date_service \\ DateService)</a>
+        <a href="#change_smlm_settings/2" data-no-tooltip="" translate="no">change_smlm_settings(settings_submission, date_service \\ DateService)</a>
 
       </div>
 
@@ -191,7 +191,7 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#clear_suse_manager_settings/0" data-no-tooltip="" translate="no">clear_suse_manager_settings()</a>
+        <a href="#clear_smlm_settings/0" data-no-tooltip="" translate="no">clear_smlm_settings()</a>
 
       </div>
 
@@ -247,6 +247,14 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_smlm_settings/0" data-no-tooltip="" translate="no">get_smlm_settings()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_sso_certificates/0" data-no-tooltip="" translate="no">get_sso_certificates()</a>
 
       </div>
@@ -255,15 +263,7 @@ Trento Web
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_suse_manager_settings/0" data-no-tooltip="" translate="no">get_suse_manager_settings()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#save_suse_manager_settings/2" data-no-tooltip="" translate="no">save_suse_manager_settings(settings_submission, date_service \\ DateService)</a>
+        <a href="#save_smlm_settings/2" data-no-tooltip="" translate="no">save_smlm_settings(settings_submission, date_service \\ DateService)</a>
 
       </div>
 
@@ -321,13 +321,13 @@ Trento Web
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> alerting_setting_set_t() :: %{
-  enabled: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
-  sender_email: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  recipient_email: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  smtp_server: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  smtp_port: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
-  smtp_username: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  smtp_password: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
+  enabled: <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">boolean</a>(),
+  sender_email: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  recipient_email: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  smtp_server: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  smtp_port: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">integer</a>(),
+  smtp_username: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  smtp_password: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()
 }</pre>
 
       </div>
@@ -357,13 +357,13 @@ Trento Web
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> alerting_setting_update_t() :: %{
-  optional(:enabled) =&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
-  optional(:sender_email) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  optional(:recipient_email) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  optional(:smtp_server) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  optional(:smtp_port) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
-  optional(:smtp_username) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  optional(:smtp_password) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
+  optional(:enabled) =&gt; <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">boolean</a>(),
+  optional(:sender_email) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  optional(:recipient_email) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  optional(:smtp_server) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  optional(:smtp_port) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">integer</a>(),
+  optional(:smtp_username) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  optional(:smtp_password) =&gt; <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()
 }</pre>
 
       </div>
@@ -371,14 +371,14 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="t:suse_manager_settings_change_submission/0">
+<section class="detail" id="t:smlm_settings_change_submission/0">
 
   <div class="detail-header">
-    <a href="#t:suse_manager_settings_change_submission/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+    <a href="#t:smlm_settings_change_submission/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">suse_manager_settings_change_submission()</h1>
+      <h1 class="signature" translate="no">smlm_settings_change_submission()</h1>
 
 
         <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L33" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -392,11 +392,11 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> suse_manager_settings_change_submission() :: %{
-  url: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
-  username: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
-  password: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
-  ca_cert: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil
+          <pre translate="no"><span class="attribute">@type</span> smlm_settings_change_submission() :: %{
+  url: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | nil,
+  username: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | nil,
+  password: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | nil,
+  ca_cert: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | nil
 }</pre>
 
       </div>
@@ -404,14 +404,14 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="t:suse_manager_settings_save_submission/0">
+<section class="detail" id="t:smlm_settings_save_submission/0">
 
   <div class="detail-header">
-    <a href="#t:suse_manager_settings_save_submission/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+    <a href="#t:smlm_settings_save_submission/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">suse_manager_settings_save_submission()</h1>
+      <h1 class="signature" translate="no">smlm_settings_save_submission()</h1>
 
 
         <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L26" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -425,11 +425,11 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> suse_manager_settings_save_submission() :: %{
-  url: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  username: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  password: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  ca_cert: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil
+          <pre translate="no"><span class="attribute">@type</span> smlm_settings_save_submission() :: %{
+  url: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  username: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  password: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>(),
+  ca_cert: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>() | nil
 }</pre>
 
       </div>
@@ -472,7 +472,7 @@ Trento Web
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> change_activity_log_retention_period(
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(),
+  <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">integer</a>(),
   <a href="Trento.ActivityLog.RetentionPeriodUnit.html#t:t/0">Trento.ActivityLog.RetentionPeriodUnit.t</a>()
 ) ::
   {:ok, <a href="Trento.Settings.ActivityLogSettings.html#t:t/0">Trento.Settings.ActivityLogSettings.t</a>()}
@@ -483,16 +483,16 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="change_suse_manager_settings/2">
+<section class="detail" id="change_smlm_settings/2">
 
-    <span id="change_suse_manager_settings/1"></span>
+    <span id="change_smlm_settings/1"></span>
 
   <div class="detail-header">
-    <a href="#change_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#change_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">change_suse_manager_settings(settings_submission, date_service \\ DateService)</h1>
+      <h1 class="signature" translate="no">change_smlm_settings(settings_submission, date_service \\ DateService)</h1>
 
 
         <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L141" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -506,27 +506,24 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> change_suse_manager_settings(
-  <a href="#t:suse_manager_settings_change_submission/0">suse_manager_settings_change_submission</a>(),
-  <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>()
-) ::
-  {:ok, <a href="Trento.Settings.SuseManagerSettings.html#t:t/0">Trento.Settings.SuseManagerSettings.t</a>()}
+          <pre translate="no"><span class="attribute">@spec</span> change_smlm_settings(<a href="#t:smlm_settings_change_submission/0">smlm_settings_change_submission</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">module</a>()) ::
+  {:ok, <a href="Trento.Settings.SmlmSettings.html#t:t/0">Trento.Settings.SmlmSettings.t</a>()}
   | {:error, :settings_not_configured}
-  | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+  | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
 
   </section>
 </section>
-<section class="detail" id="clear_suse_manager_settings/0">
+<section class="detail" id="clear_smlm_settings/0">
 
   <div class="detail-header">
-    <a href="#clear_suse_manager_settings/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#clear_smlm_settings/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">clear_suse_manager_settings()</h1>
+      <h1 class="signature" translate="no">clear_smlm_settings()</h1>
 
 
         <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L150" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -540,7 +537,7 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> clear_suse_manager_settings() :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> clear_smlm_settings() :: :ok</pre>
 
       </div>
 
@@ -571,7 +568,7 @@ Trento Web
           <pre translate="no"><span class="attribute">@spec</span> create_alerting_settings(<a href="#t:alerting_setting_set_t/0">alerting_setting_set_t</a>()) ::
   {:ok, <a href="Trento.Settings.AlertingSettings.html#t:t/0">Trento.Settings.AlertingSettings.t</a>()}
   | {:error, :alerting_settings_enforced}
-  | {:error, <a href="https://hexdocs.pm/ecto/3.14.0/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+  | {:error, <a href="https://ecto.hexdocs.pm/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
@@ -599,8 +596,8 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> create_api_key_settings(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
-  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> create_api_key_settings(<a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">map</a>()) ::
+  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -689,7 +686,7 @@ Trento Web
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> get_api_key_settings() ::
-  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -717,7 +714,36 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_installation_id() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_installation_id() :: <a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="get_smlm_settings/0">
+
+  <div class="detail-header">
+    <a href="#get_smlm_settings/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">get_smlm_settings()</h1>
+
+
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L115" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_smlm_settings() ::
+  {:ok, <a href="Trento.Settings.SmlmSettings.html#t:t/0">Trento.Settings.SmlmSettings.t</a>()} | {:error, :settings_not_configured}</pre>
 
       </div>
 
@@ -752,46 +778,16 @@ Trento Web
 
   </section>
 </section>
-<section class="detail" id="get_suse_manager_settings/0">
+<section class="detail" id="save_smlm_settings/2">
+
+    <span id="save_smlm_settings/1"></span>
 
   <div class="detail-header">
-    <a href="#get_suse_manager_settings/0" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+    <a href="#save_smlm_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
     </a>
     <div class="heading-with-actions">
-      <h1 class="signature" translate="no">get_suse_manager_settings()</h1>
-
-
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L115" class="icon-action" rel="help nofollow" aria-label="View Source">
-          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-        </a>
-
-    </div>
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_suse_manager_settings() ::
-  {:ok, <a href="Trento.Settings.SuseManagerSettings.html#t:t/0">Trento.Settings.SuseManagerSettings.t</a>()}
-  | {:error, :settings_not_configured}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="save_suse_manager_settings/2">
-
-    <span id="save_suse_manager_settings/1"></span>
-
-  <div class="detail-header">
-    <a href="#save_suse_manager_settings/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-    </a>
-    <div class="heading-with-actions">
-      <h1 class="signature" translate="no">save_suse_manager_settings(settings_submission, date_service \\ DateService)</h1>
+      <h1 class="signature" translate="no">save_smlm_settings(settings_submission, date_service \\ DateService)</h1>
 
 
         <a href="https://github.com/trento-project/web/blob/main/lib/trento/settings.ex#L129" class="icon-action" rel="help nofollow" aria-label="View Source">
@@ -805,10 +801,10 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> save_suse_manager_settings(<a href="#t:suse_manager_settings_save_submission/0">suse_manager_settings_save_submission</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>()) ::
-  {:ok, <a href="Trento.Settings.SuseManagerSettings.html#t:t/0">Trento.Settings.SuseManagerSettings.t</a>()}
+          <pre translate="no"><span class="attribute">@spec</span> save_smlm_settings(<a href="#t:smlm_settings_save_submission/0">smlm_settings_save_submission</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">module</a>()) ::
+  {:ok, <a href="Trento.Settings.SmlmSettings.html#t:t/0">Trento.Settings.SmlmSettings.t</a>()}
   | {:error, :settings_already_configured}
-  | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+  | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -840,7 +836,7 @@ Trento Web
   {:ok, <a href="Trento.Settings.AlertingSettings.html#t:t/0">Trento.Settings.AlertingSettings.t</a>()}
   | {:error, :alerting_settings_enforced}
   | {:error, :alerting_settings_not_configured}
-  | {:error, <a href="https://hexdocs.pm/ecto/3.14.0/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+  | {:error, <a href="https://ecto.hexdocs.pm/3.14.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
@@ -868,8 +864,8 @@ Trento Web
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> update_api_key_settings(<a href="https://hexdocs.pm/elixir/DateTime.html#t:t/0">DateTime.t</a>()) ::
-  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> update_api_key_settings(<a href="https://elixir.hexdocs.pm/DateTime.html#t:t/0">DateTime.t</a>()) ::
+  {:ok, <a href="Trento.Settings.ApiKeySettings.html#t:t/0">Trento.Settings.ApiKeySettings.t</a>()} | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -903,7 +899,7 @@ Trento Web
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

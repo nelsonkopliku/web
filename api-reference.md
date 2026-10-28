@@ -1,4 +1,4 @@
-# Trento Web v3.1.5 - API Reference
+# Trento Web v3.2.0 - API Reference
 
 ## Modules
 
@@ -19,6 +19,7 @@
 - [Trento.AI.Configurations.Events](Trento.AI.Configurations.Events.md): Behaviour + dispatcher for per-user AI configuration lifecycle events.
 - [Trento.AI.ControllerSpecs](Trento.AI.ControllerSpecs.md): Per-action AI-tool metadata macro. Sits next to `OpenApiSpex.ControllerSpecs.operation/2`
 in controllers and labels the immediately following public function as an AI tool.
+- [Trento.AI.FakeChatModel](Trento.AI.FakeChatModel.md): A `LangChain.ChatModels.ChatModel` that never talks to a provider.
 - [Trento.AI.LLMBuilder](Trento.AI.LLMBuilder.md): Builds a LangChain chat-model struct for a given User.
 
 - [Trento.AI.LLMRegistry](Trento.AI.LLMRegistry.md): This module is responsible for managing the registry of available LLM providers and their models.
@@ -27,6 +28,8 @@ in controllers and labels the immediately following public function as an AI too
 derives `LangChain.Function`s from `%OpenApiSpex.Operation{}` structs.
 - [Trento.AI.OperationEntry](Trento.AI.OperationEntry.md): Transport-agnostic catalog entry shared by every `Trento.AI.ToolSource`
 that derives AI tools from `%OpenApiSpex.Operation{}` structs.
+- [Trento.AI.Presence](Trento.AI.Presence.md): Viewers of AI agent conversations. sagents stops an idle agent once its last viewer is gone.
+
 - [Trento.AI.RemoteHttpTool](Trento.AI.RemoteHttpTool.md): Translates a `Trento.AI.OperationEntry` into a `%LangChain.Function{}`
 whose execution dispatches an authenticated HTTP request against a
 remote service described by its OpenAPI document.
@@ -222,7 +225,7 @@ installed.
 - [Trento.Settings.Policy](Trento.Settings.Policy.md): Policy for the Settings resource
 - [Trento.Settings.SSOCertificatesSettings](Trento.Settings.SSOCertificatesSettings.md): SSOCertificatesSettings is the STI projection containing SSL certificates
 
-- [Trento.Settings.SuseManagerSettings](Trento.Settings.SuseManagerSettings.md): Schema for SUSE Multi-Linux Manager settings.
+- [Trento.Settings.SmlmSettings](Trento.Settings.SmlmSettings.md): Schema for SUSE Multi-Linux Manager settings.
 
 - [Trento.SoftwareUpdates](Trento.SoftwareUpdates.md): Entry point for the software updates feature.
 
@@ -724,12 +727,11 @@ configuration lifecycle events carried over `Phoenix.PubSub`.
 
   - [Trento.Infrastructure.AI.SagentsAgentServer](Trento.Infrastructure.AI.SagentsAgentServer.md): Production implementation of `Trento.AI.Agent.Server` —
 delegates to `Sagents.AgentServer`.
-
   - [Trento.Infrastructure.AI.SagentsDynamicSupervisor](Trento.Infrastructure.AI.SagentsDynamicSupervisor.md): Production implementation of `Trento.AI.Agent.Supervisor` —
 delegates to `Sagents.AgentsDynamicSupervisor`.
-
   - [Trento.Infrastructure.Alerting.Alerting](Trento.Infrastructure.Alerting.Alerting.md): Provides a set of functions of Alerting related usecases.
 
+  - [Trento.Infrastructure.Alerting.Emails.EmailLayout](Trento.Infrastructure.Alerting.Emails.EmailLayout.md): Common layout of the Trento alerting emails.
   - [Trento.Infrastructure.Catalog.AMQP.Consumer](Trento.Infrastructure.Catalog.AMQP.Consumer.md): AMQP catalog consumer.
 
   - [Trento.Infrastructure.Catalog.AMQP.Processor](Trento.Infrastructure.Catalog.AMQP.Processor.md): AMQP processor for the operations events
@@ -788,17 +790,17 @@ Chart time series objects
 
   - [Trento.Infrastructure.SoftwareUpdates.Auth.Gen](Trento.Infrastructure.SoftwareUpdates.Auth.Gen.md): Behaviour of the SUSE Multi-Linux Manager authentication process.
 
+  - [Trento.Infrastructure.SoftwareUpdates.Auth.SmlmAuth](Trento.Infrastructure.SoftwareUpdates.Auth.SmlmAuth.md): GenServer module to authenticate with SUSE Multi-Linux Manager
+
   - [Trento.Infrastructure.SoftwareUpdates.Auth.State](Trento.Infrastructure.SoftwareUpdates.Auth.State.md): State for the SUSE Multi-Linux Manager Software Updates discovery adapter
 
-  - [Trento.Infrastructure.SoftwareUpdates.Auth.SumaAuth](Trento.Infrastructure.SoftwareUpdates.Auth.SumaAuth.md): GenServer module to authenticate with SUSE Multi-Linux Manager
+  - [Trento.Infrastructure.SoftwareUpdates.MockSmlm](Trento.Infrastructure.SoftwareUpdates.MockSmlm.md): Mocked SUSE Multi-Linux Manager Software updates discovery adapter
 
-  - [Trento.Infrastructure.SoftwareUpdates.MockSuma](Trento.Infrastructure.SoftwareUpdates.MockSuma.md): Mocked SUSE Multi-Linux Manager Software updates discovery adapter
+  - [Trento.Infrastructure.SoftwareUpdates.Smlm](Trento.Infrastructure.SoftwareUpdates.Smlm.md): SUSE Multi-Linux Manager Software updates discovery adapter
 
-  - [Trento.Infrastructure.SoftwareUpdates.Suma](Trento.Infrastructure.SoftwareUpdates.Suma.md): SUSE Multi-Linux Manager Software updates discovery adapter
+  - [Trento.Infrastructure.SoftwareUpdates.Smlm.HttpExecutor](Trento.Infrastructure.SoftwareUpdates.Smlm.HttpExecutor.md): SUSE Multi-Linux Manager Http requests executor
 
-  - [Trento.Infrastructure.SoftwareUpdates.Suma.HttpExecutor](Trento.Infrastructure.SoftwareUpdates.Suma.HttpExecutor.md): SUSE Multi-Linux Manager Http requests executor
-
-  - [Trento.Infrastructure.SoftwareUpdates.SumaApi](Trento.Infrastructure.SoftwareUpdates.SumaApi.md): SUSE Multi-Linux Manager API client supporting software updates discovery.
+  - [Trento.Infrastructure.SoftwareUpdates.SmlmApi](Trento.Infrastructure.SoftwareUpdates.SmlmApi.md): SUSE Multi-Linux Manager API client supporting software updates discovery.
 
   - [Trento.Infrastructure.Checks.AMQP.Consumer](Trento.Infrastructure.Checks.AMQP.Consumer.md): AMQP checks consumer.
 
@@ -833,6 +835,12 @@ check supported values and validate possible values
   - [Trento.Support.Helpers.AbilitiesTestHelper](Trento.Support.Helpers.AbilitiesTestHelper.md): Helper functions to setup abilities.
   - [Trento.Support.Helpers.AlertingSettingsHelper](Trento.Support.Helpers.AlertingSettingsHelper.md): Test helper functions for alerting settings.
 
+  - [Trento.Support.Helpers.TestCertificates](Trento.Support.Helpers.TestCertificates.md): Generates, with the `openssl` command, the certificate chains used to test
+`Trento.Support.HttpClient` against a real TLS server.
+  - [Trento.Support.Helpers.TlsTestServer](Trento.Support.Helpers.TlsTestServer.md): A minimal HTTPS server for tests: it listens on 127.0.0.1 on a random port,
+serves the given certificate chain and answers every request with
+`200 ok`. A client that rejects the chain fails the handshake, the server
+ignores that and accepts the next connection.
   - [Trento.Support.HttpClient](Trento.Support.HttpClient.md): Shared HTTP client behaviour wrapping `HTTPoison`. The default implementation
 forwards to HTTPoison and injects secure SSL defaults (`verify_peer` with the
 system CA bundle); callers can override individual SSL keys by passing their
@@ -993,12 +1001,12 @@ to receive personal broadcasts
   - [TrentoWeb.V1.ProfileJSON](TrentoWeb.V1.ProfileJSON.md)
   - [TrentoWeb.V1.PrometheusController](TrentoWeb.V1.PrometheusController.md)
   - [TrentoWeb.V1.PrometheusJSON](TrentoWeb.V1.PrometheusJSON.md)
-  - [TrentoWeb.V1.SUSEManagerController](TrentoWeb.V1.SUSEManagerController.md)
-  - [TrentoWeb.V1.SUSEManagerJSON](TrentoWeb.V1.SUSEManagerJSON.md)
   - [TrentoWeb.V1.SapSystemController](TrentoWeb.V1.SapSystemController.md)
   - [TrentoWeb.V1.SapSystemJSON](TrentoWeb.V1.SapSystemJSON.md)
   - [TrentoWeb.V1.SettingsController](TrentoWeb.V1.SettingsController.md)
   - [TrentoWeb.V1.SettingsJSON](TrentoWeb.V1.SettingsJSON.md)
+  - [TrentoWeb.V1.SmlmController](TrentoWeb.V1.SmlmController.md)
+  - [TrentoWeb.V1.SmlmJSON](TrentoWeb.V1.SmlmJSON.md)
   - [TrentoWeb.V1.TagsController](TrentoWeb.V1.TagsController.md)
   - [TrentoWeb.V1.UsersController](TrentoWeb.V1.UsersController.md)
   - [TrentoWeb.V1.UsersJSON](TrentoWeb.V1.UsersJSON.md)

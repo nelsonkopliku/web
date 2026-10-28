@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.40.3">
-    <meta name="project" content="Trento Web v3.1.5">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="Trento Web v3.2.0">
 
 
-    <title>Trento.Discovery — Trento Web v3.1.5</title>
+    <title>Trento.Discovery — Trento Web v3.2.0</title>
 
-    <link rel="stylesheet" href="dist/html-elixir-NHQLCD6Y.css" />
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
 
-    <script defer src="dist/sidebar_items-78651DF5.js"></script>
+    <script defer src="dist/sidebar_items-7680EBB5.js"></script>
     <script defer src="docs_config.js"></script>
-    <script defer src="dist/html-Y2MUTVIN.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
 
   </head>
   <body>
@@ -41,7 +41,7 @@
 Trento Web
         </a>
         <div class="sidebar-projectVersion" translate="no">
-          v3.1.5
+          v3.2.0
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@ Trento Web
   <div class="heading-with-actions top-heading">
     <h1>
       <span translate="no">Trento.<wbr />Discovery</span> 
-      <small class="app-vsn" translate="no">(Trento Web v3.1.5)</small>
+      <small class="app-vsn" translate="no">(Trento Web v3.2.0)</small>
 
     </h1>
 
@@ -255,7 +255,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> command() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>()</pre>
+          <pre translate="no"><span class="attribute">@type</span> command() :: <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">struct</a>()</pre>
 
       </div>
 
@@ -285,7 +285,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">get_current_discovery_events()</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L68" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L82" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -313,7 +313,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">get_discarded_discovery_events(event_number)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L85" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L99" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -324,7 +324,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_discarded_discovery_events(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">number</a>()) :: [
+          <pre translate="no"><span class="attribute">@spec</span> get_discarded_discovery_events(<a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()) :: [
   <a href="Trento.Discovery.DiscardedDiscoveryEvent.html#t:t/0">Trento.Discovery.DiscardedDiscoveryEvent.t</a>()
 ]</pre>
 
@@ -343,7 +343,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">handle(event)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L41" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L55" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -354,7 +354,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> handle(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> handle(<a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">map</a>()) :: :ok | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -372,7 +372,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">prune_discovery_events(days)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L98" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L112" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -383,7 +383,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> prune_discovery_events(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">number</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> prune_discovery_events(<a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()) :: :ok</pre>
 
       </div>
 
@@ -400,7 +400,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">request_cluster_discovery(cluster_id)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L138" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L199" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -411,7 +411,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> request_cluster_discovery(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> request_cluster_discovery(<a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -428,7 +428,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">request_cluster_hosts_discovery(cluster_id)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L151" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L212" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -439,7 +439,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> request_cluster_hosts_discovery(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> request_cluster_hosts_discovery(<a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -456,7 +456,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
       <h1 class="signature" translate="no">request_saptune_discovery(host_id)</h1>
 
 
-        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L132" class="icon-action" rel="help nofollow" aria-label="View Source">
+        <a href="https://github.com/trento-project/web/blob/main/lib/trento/discovery.ex#L193" class="icon-action" rel="help nofollow" aria-label="View Source">
           <i class="ri-code-s-slash-line" aria-hidden="true"></i>
         </a>
 
@@ -467,7 +467,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> request_saptune_discovery(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> request_saptune_discovery(<a href="https://elixir.hexdocs.pm/String.html#t:t/0">String.t</a>()) :: :ok | {:error, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">any</a>()}</pre>
 
       </div>
 
@@ -501,7 +501,7 @@ Store the event in the discovery events log for auditing purposes and dispatch t
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

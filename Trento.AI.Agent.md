@@ -3,15 +3,26 @@
 
 Factory + lifecycle entrypoint for the Trento AI Assistant agent.
 
-`run/1` is the single side-effecting entrypoint: it builds the agent,
+`run/3` is the single side-effecting entrypoint: it builds the agent,
 ensures the per-thread `Sagents.AgentServer` is running, subscribes the
-**calling process** to the agent's `{:agent, ...}` PubSub stream, and
+**calling process** to the agent's `{:agent, ...}` event stream, and
 sends the user prompt. Callers (the Phoenix channel) only deal with
 trento-domain arguments + the AG-UI events that arrive in their mailbox;
 `Sagents` and `LangChain` are implementation details of this module.
 
 `new!/1` is the pure factory (no side effects). Useful for tests that
 want to inspect the configured agent.
+
+# `cancel`
+
+```elixir
+@spec cancel(String.t()) :: :ok | {:error, term()}
+```
+
+Cancels the in-flight run for `agent_id`, keeping the agent process and its
+conversation state alive.
+
+Best-effort — returns `{:error, reason}` when nothing is running for the id.
 
 # `new!`
 
@@ -33,12 +44,21 @@ Accepted `opts`:
 # `run`
 
 ```elixir
-@spec run(Sagents.Agent.t(), String.t(), keyword()) :: :ok | {:error, term()}
+@spec run(Sagents.Agent.t(), String.t(), keyword()) :: {:ok, pid()} | {:error, term()}
 ```
 
 Ensure the agent for `:agent_id` is running, subscribe the calling
-process to its event stream, and send the user prompt. Returns `:ok`
-or the first `{:error, reason}` from the start/subscribe/send chain.
+process to its event stream, and send the user prompt. Returns
+`{:ok, server_pid}` or the first `{:error, reason}` from the start/subscribe/send chain.
+
+Returns `{:error, :agent_busy}` while a run is in flight: sagents would
+queue the prompt behind it, and its events would read as this run's.
+
+Pass `:agent_pid` to continue the conversation held by that agent
+server. When the thread's agent is gone, or is another process (sagents
+restarts a crashed server with an empty state), returns
+`{:error, :conversation_expired}` instead of sending the prompt to an agent
+that would answer without the conversation.
 
 # `stop`
 
@@ -48,8 +68,13 @@ or the first `{:error, reason}` from the start/subscribe/send chain.
 
 Stops the running agent for `agent_id`, terminating any in-flight run.
 
-Best-effort — returns the supervisor's result verbatim (`{:error, term()}`
-when no agent is running for the id).
+It cancels in-flight runs first, then stops the agent process.
+
+This is faster than only stopping the agent, because `Sagents.AgentServer.terminate/2`
+waits for the running task to finish (up to 25s) before the process exits.
+
+Best-effort — the cancel result is discarded and the supervisor's result is
+returned verbatim (`{:error, term()}` when no agent is running for the id).
 
 ---
 

@@ -31,10 +31,10 @@ Provides a set of functions of settings related usecases.
 }
 ```
 
-# `suse_manager_settings_change_submission`
+# `smlm_settings_change_submission`
 
 ```elixir
-@type suse_manager_settings_change_submission() :: %{
+@type smlm_settings_change_submission() :: %{
   url: String.t() | nil,
   username: String.t() | nil,
   password: String.t() | nil,
@@ -42,10 +42,10 @@ Provides a set of functions of settings related usecases.
 }
 ```
 
-# `suse_manager_settings_save_submission`
+# `smlm_settings_save_submission`
 
 ```elixir
-@type suse_manager_settings_save_submission() :: %{
+@type smlm_settings_save_submission() :: %{
   url: String.t(),
   username: String.t(),
   password: String.t(),
@@ -64,22 +64,19 @@ Provides a set of functions of settings related usecases.
   | {:error, :activity_log_settings_not_configured}
 ```
 
-# `change_suse_manager_settings`
+# `change_smlm_settings`
 
 ```elixir
-@spec change_suse_manager_settings(
-  suse_manager_settings_change_submission(),
-  module()
-) ::
-  {:ok, Trento.Settings.SuseManagerSettings.t()}
+@spec change_smlm_settings(smlm_settings_change_submission(), module()) ::
+  {:ok, Trento.Settings.SmlmSettings.t()}
   | {:error, :settings_not_configured}
   | {:error, any()}
 ```
 
-# `clear_suse_manager_settings`
+# `clear_smlm_settings`
 
 ```elixir
-@spec clear_suse_manager_settings() :: :ok
+@spec clear_smlm_settings() :: :ok
 ```
 
 # `create_alerting_settings`
@@ -127,25 +124,24 @@ Provides a set of functions of settings related usecases.
 @spec get_installation_id() :: String.t()
 ```
 
+# `get_smlm_settings`
+
+```elixir
+@spec get_smlm_settings() ::
+  {:ok, Trento.Settings.SmlmSettings.t()} | {:error, :settings_not_configured}
+```
+
 # `get_sso_certificates`
 
 ```elixir
 @spec get_sso_certificates() :: [Trento.Settings.SSOCertificatesSettings.t()]
 ```
 
-# `get_suse_manager_settings`
+# `save_smlm_settings`
 
 ```elixir
-@spec get_suse_manager_settings() ::
-  {:ok, Trento.Settings.SuseManagerSettings.t()}
-  | {:error, :settings_not_configured}
-```
-
-# `save_suse_manager_settings`
-
-```elixir
-@spec save_suse_manager_settings(suse_manager_settings_save_submission(), module()) ::
-  {:ok, Trento.Settings.SuseManagerSettings.t()}
+@spec save_smlm_settings(smlm_settings_save_submission(), module()) ::
+  {:ok, Trento.Settings.SmlmSettings.t()}
   | {:error, :settings_already_configured}
   | {:error, any()}
 ```
