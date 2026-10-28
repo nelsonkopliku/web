@@ -48,7 +48,7 @@ function ClusterSettingsPage() {
   const { clusterID } = useParams();
   const [selection, setSelection] = useState([]);
 
-  const { abilities } = useSelector(getUserProfile);
+  const { abilities, timezone } = useSelector(getUserProfile);
   const cluster = useSelector(getCluster(clusterID));
 
   const clusterHosts = useSelector((state) =>
@@ -150,6 +150,7 @@ function ClusterSettingsPage() {
       <TargetChecksExecutionSection
         targetType={TARGET_CLUSTER}
         targetID={clusterID}
+        timezone={timezone}
         userAbilities={abilities}
       />
       <ChecksSelection

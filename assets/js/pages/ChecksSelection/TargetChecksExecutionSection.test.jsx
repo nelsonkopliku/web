@@ -82,14 +82,16 @@ describe('TargetChecksExecutionSection', () => {
         global_interval: '15m',
       })
     );
-    axiosMock.onPut(scheduleURL, { interval: '1h' }).reply(
-      200,
-      checksScheduleFactory.build({
-        interval: '1h',
-        effective_interval: '1h',
-        global_interval: '15m',
-      })
-    );
+    axiosMock
+      .onPut(scheduleURL, { interval: '1h', exception_window: null })
+      .reply(
+        200,
+        checksScheduleFactory.build({
+          interval: '1h',
+          effective_interval: '1h',
+          global_interval: '15m',
+        })
+      );
 
     await renderSection(hostID);
     await user.click(screen.getByRole('button', { name: 'Edit Settings' }));
