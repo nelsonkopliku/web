@@ -106,6 +106,36 @@ defmodule Trento.MaintenanceWindows.CoverageTest do
              owners("host", t.app_host)
   end
 
+  defp covered(target_type, target_id),
+    do: target_type |> Coverage.covered(target_id) |> Enum.sort()
+
+  test "a window covers the targets below its target", t do
+    assert [{"host", t.app_host}] == covered("host", t.app_host)
+
+    assert Enum.sort([{"cluster", t.ascs_cluster}, {"host", t.ascs_host}]) ==
+             covered("cluster", t.ascs_cluster)
+
+    hana_hosts =
+      Trento.Hosts.Projections.HostReadModel
+      |> Repo.all()
+      |> Enum.filter(&(&1.cluster_id == t.hana_cluster))
+      |> Enum.map(&{"host", &1.id})
+
+    assert Enum.sort([{"database", t.database}, {"cluster", t.hana_cluster} | hana_hosts]) ==
+             covered("database", t.database)
+
+    assert Enum.sort(
+             [
+               {"sap_system", t.sap_system},
+               {"database", t.database},
+               {"cluster", t.hana_cluster},
+               {"cluster", t.ascs_cluster},
+               {"host", t.ascs_host},
+               {"host", t.app_host}
+             ] ++ hana_hosts
+           ) == covered("sap_system", t.sap_system)
+  end
+
   test "a cluster that manages no SAP resource covers its hosts only" do
     %{id: cluster_id} = insert(:cluster, sap_instances: [])
     %{id: host_id} = insert(:host, cluster_id: cluster_id)
