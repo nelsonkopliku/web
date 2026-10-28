@@ -151,7 +151,8 @@ config :trento, Oban,
     crontab: [
       {"0 */12 * * *", Trento.Infrastructure.Jobs.SoftwareUpdatesDiscoveryJob},
       {"@daily", Trento.Infrastructure.Jobs.ApiKeyExpirationAlertJob},
-      {"@daily", Trento.Infrastructure.Jobs.ActivityLogCleaningJob}
+      {"@daily", Trento.Infrastructure.Jobs.ActivityLogCleaningJob},
+      {"*/10 * * * *", Trento.Infrastructure.Jobs.ScheduleJobsReconciliationJob}
     ]
   ]
 
