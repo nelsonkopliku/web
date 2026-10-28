@@ -13,6 +13,7 @@ import {
   resetOperationDisclaimer,
   describeOperationParams,
   isSchedulable,
+  getOperationPermittedFor,
 } from '.';
 
 describe('operations', () => {
@@ -178,6 +179,26 @@ describe('schedulable operations', () => {
     'should tell whether $operation can be scheduled',
     ({ operation, schedulable }) => {
       expect(isSchedulable(operation)).toBe(schedulable);
+    }
+  );
+});
+
+describe('operation abilities', () => {
+  it.each`
+    operation                       | permitted
+    ${'reboot'}                     | ${['reboot:host', 'operation:all']}
+    ${'cluster_maintenance_change'} | ${['maintenance_change:cluster', 'operation:all']}
+    ${'sap_system_start'}           | ${['start:sap_system', 'operation:all']}
+    ${'sap_system_stop'}            | ${['stop:sap_system', 'operation:all']}
+    ${'sap_instance_start'}         | ${['start:application_instance', 'operation:all']}
+    ${'sap_instance_stop'}          | ${['stop:application_instance', 'operation:all']}
+    ${'database_start'}             | ${['start:database', 'operation:all']}
+    ${'database_stop'}              | ${['stop:database', 'operation:all']}
+    ${'unknown'}                    | ${['operation:all']}
+  `(
+    'should tell the abilities that permit $operation',
+    ({ operation, permitted }) => {
+      expect(getOperationPermittedFor(operation)).toEqual(permitted);
     }
   );
 });

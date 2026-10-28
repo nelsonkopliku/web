@@ -26,10 +26,12 @@ import {
   removeRunningOperation,
 } from '@state/runningOperations';
 import {
+  cancelOperationSchedule,
   fetchOperationSchedules,
   forgetOperationSchedules,
   resetOperationScheduleSubmission,
   scheduleOperation,
+  updateOperationSchedule,
 } from '@state/operationSchedules';
 
 import {
@@ -49,9 +51,8 @@ function DatabaseDetails() {
 
   const runningOperations = useSelector(getRunningOperationsList);
 
-  const { schedules: operationSchedules } = useSelector(
-    getOperationSchedules(id)
-  );
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(id));
   const scheduleSubmission = useSelector(getOperationScheduleSubmission);
 
   useEffect(() => {
@@ -92,6 +93,16 @@ function DatabaseDetails() {
         operationSchedules={operationSchedules}
         scheduleSubmission={scheduleSubmission}
         onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+        operationSchedulesError={operationSchedulesError}
+        onUpdateSchedule={(schedule, changes) =>
+          dispatch(updateOperationSchedule({ schedule, changes }))
+        }
+        onCancelSchedule={(schedule) =>
+          dispatch(cancelOperationSchedule({ schedule }))
+        }
+        onRetryOperationSchedules={() =>
+          dispatch(fetchOperationSchedules({ targetID: id }))
+        }
         onResetScheduleSubmission={() =>
           dispatch(resetOperationScheduleSubmission())
         }

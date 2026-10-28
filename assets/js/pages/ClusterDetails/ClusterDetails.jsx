@@ -50,6 +50,10 @@ import {
   SimpleAcceptanceOperationModal,
 } from '@common/OperationModals';
 
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
 import Resources from './Resources';
 import SBDDetails from './SBDDetails';
 import ClusterStatePill from './ClusterStatePill';
@@ -79,8 +83,12 @@ function ClusterDetails({
   onStartExecution = noop,
   onRequestOperation = noop,
   operationSchedules = [],
+  operationSchedulesError = false,
   scheduleSubmission = initialScheduleSubmission,
   onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
   onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
   onRequestHostOperation = noop,
@@ -91,6 +99,7 @@ function ClusterDetails({
     useState(operationModalState);
   const [currentOperationHost, setCurrentOperationHost] = useState(undefined);
   const [operationParams, setOperationParams] = useState(undefined);
+  const [editingSchedule, setEditingSchedule] = useState(null);
 
   const closeOperationModal = () =>
     setOperationModalOpen((prevState) => ({ ...prevState, open: false }));
@@ -103,7 +112,10 @@ function ClusterDetails({
   // A schedule closes its modal only once it is saved
   const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
   useEffect(() => {
-    if (scheduleSubmitted) closeOperationModal();
+    if (scheduleSubmitted) {
+      closeOperationModal();
+      setEditingSchedule(null);
+    }
   }, [scheduleSubmitted]);
 
   const executionLoading = get(lastExecution, 'loading', false);
@@ -229,6 +241,15 @@ function ClusterDetails({
             }}
             onCancel={closeOperationModal}
           />
+          <EditOperationScheduleModal
+            key={editingSchedule?.id}
+            schedule={editingSchedule}
+            isOpen={!!editingSchedule}
+            submission={scheduleSubmission}
+            onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+            onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+            onCancel={() => setEditingSchedule(null)}
+          />
           <ScheduleWarningsModal
             isOpen={hasScheduleWarnings(scheduleSubmission)}
             operation={getOperationLabel(scheduleSubmission.operation)}
@@ -324,6 +345,22 @@ function ClusterDetails({
         </Banner>
       )}
       {detailComponent}
+      {operationsEnabled && (
+        <OperationSchedules
+          schedules={operationSchedules}
+          error={operationSchedulesError}
+          timezone={userTimezone}
+          userAbilities={userAbilities}
+          submission={scheduleSubmission}
+          onEdit={(schedule) => {
+            onResetScheduleSubmission();
+            setEditingSchedule(schedule);
+          }}
+          onCancel={onCancelSchedule}
+          onRetry={onRetryOperationSchedules}
+          onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
       <Resources
         resources={details?.resources}
         hosts={hosts}

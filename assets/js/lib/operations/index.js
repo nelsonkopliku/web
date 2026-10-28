@@ -126,6 +126,24 @@ const SCHEDULABLE_OPERATIONS = [
 export const isSchedulable = (operation) =>
   SCHEDULABLE_OPERATIONS.includes(operation);
 
+// Abilities that permit to request an operation, and so to schedule it, as in
+// the operations menus
+const OPERATION_ABILITIES = {
+  [HOST_REBOOT]: ['reboot:host'],
+  [CLUSTER_MAINTENANCE_CHANGE]: ['maintenance_change:cluster'],
+  [SAP_SYSTEM_START]: ['start:sap_system'],
+  [SAP_SYSTEM_STOP]: ['stop:sap_system'],
+  [SAP_INSTANCE_START]: ['start:application_instance'],
+  [SAP_INSTANCE_STOP]: ['stop:application_instance'],
+  [DATABASE_START]: ['start:database'],
+  [DATABASE_STOP]: ['stop:database'],
+};
+
+export const getOperationPermittedFor = (operation) => [
+  ...get(OPERATION_ABILITIES, operation, []),
+  'operation:all',
+];
+
 export const getOperationLabel = (operation) =>
   get(OPERATION_LABELS, operation, 'unknown');
 
