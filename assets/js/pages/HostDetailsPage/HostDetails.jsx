@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState, useId } from 'react';
-import { get, startCase, some } from 'lodash';
+import React, { useEffect, useState, useId } from 'react';
+import { filter, get, noop, startCase, some } from 'lodash';
 import classNames from 'classnames';
 import {
   EOS_CLEAR_ALL,
@@ -18,6 +18,7 @@ import {
   HOST_REBOOT,
   OPERATION_NOT_ALLOWED_HOST,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 import { APPLICATION_TYPE, DATABASE_TYPE } from '@lib/model/sapSystems';
 import { formatBytes } from '@lib/charts';
@@ -38,6 +39,7 @@ import {
   SaptuneSolutionOperationModal,
   SimpleAcceptanceOperationModal,
   OperationForbiddenModal,
+  ScheduleWarningsModal,
 } from '@common/OperationModals';
 
 import { subHours } from 'date-fns';
@@ -47,6 +49,13 @@ import SuseLogo from '@static/suse_logo.svg';
 import CheckResultsOverview from '@pages/CheckResultsOverview';
 import { canStartExecution } from '@pages/ChecksSelection';
 import DeregistrationModal from '@pages/DeregistrationModal';
+
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
 
 import HostSummary from './HostSummary';
 import ProviderDetails from './ProviderDetails';
@@ -98,6 +107,10 @@ function HostDetails({
   requestHostChecksExecution,
   requestOperation,
   nextExecutionAt = undefined,
+  operationSchedules = [],
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onResetScheduleSubmission = noop,
   cleanForbiddenOperation,
   navigate,
   timezone,
@@ -159,6 +172,7 @@ function HostDetails({
   const timeNow = new Date();
 
   const openOperationModal = (operation) => () => {
+    onResetScheduleSubmission();
     setCurrentOperation(operation);
     switch (operation) {
       case SAPTUNE_SOLUTION_APPLY:
@@ -177,6 +191,12 @@ function HostDetails({
     setSaptuneSolutionOperationModalOpen(false);
     setSimpleOperationModalOpen(false);
   };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) closeOperationModal();
+  }, [scheduleSubmitted]);
 
   return (
     <>
@@ -212,14 +232,38 @@ function HostDetails({
             onCancel={closeOperationModal}
           />
           <SimpleAcceptanceOperationModal
+            key={`${currentOperation}-${!!simpleOperationModalOpen}`}
             operation={currentOperation}
             descriptionResolverArgs={{ hostName: hostname }}
             isOpen={!!simpleOperationModalOpen}
-            onRequest={() => {
+            schedulable={isSchedulable(currentOperation)}
+            timezone={timezone}
+            existingSchedules={filter(operationSchedules, {
+              operation: currentOperation,
+            })}
+            loading={isSubmittingSchedule(scheduleSubmission)}
+            errors={scheduleSubmission.errors}
+            onRequest={(params, schedule) => {
+              if (schedule) {
+                onScheduleOperation({
+                  target_type: 'host',
+                  target_id: hostID,
+                  operation: currentOperation,
+                  params,
+                  ...schedule,
+                });
+                return;
+              }
               requestOperation(currentOperation, {});
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
+          />
+          <ScheduleWarningsModal
+            isOpen={hasScheduleWarnings(scheduleSubmission)}
+            operation={getOperationLabel(scheduleSubmission.operation)}
+            warnings={scheduleSubmission.warnings}
+            onClose={onResetScheduleSubmission}
           />
         </>
       )}

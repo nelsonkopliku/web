@@ -8,7 +8,10 @@ import userEvent from '@testing-library/user-event';
 import { faker } from '@faker-js/faker';
 
 import { waiveOperationDisclaimer } from '@lib/operations';
-import { sapSystemFactory } from '@lib/test-utils/factories';
+import {
+  operationScheduleFactory,
+  sapSystemFactory,
+} from '@lib/test-utils/factories';
 import {
   DATABASE_START,
   DATABASE_STOP,
@@ -116,10 +119,13 @@ describe('SapStartStopOperationModal', () => {
       await user.click(screen.getByRole('option', { name: option }));
       await user.click(screen.getByText('Request'));
 
-      expect(onRequest).toHaveBeenCalledWith({
-        instance_type: instanceType,
-        timeout: 300,
-      });
+      expect(onRequest).toHaveBeenCalledWith(
+        {
+          instance_type: instanceType,
+          timeout: 300,
+        },
+        null
+      );
     }
   );
 
@@ -143,10 +149,13 @@ describe('SapStartStopOperationModal', () => {
     expect(screen.getByText('Request')).toBeEnabled();
     await user.click(screen.getByText('Request'));
 
-    expect(onRequest).toHaveBeenCalledWith({
-      timeout: 300,
-      site: systemReplicationSite,
-    });
+    expect(onRequest).toHaveBeenCalledWith(
+      {
+        timeout: 300,
+        site: systemReplicationSite,
+      },
+      null
+    );
   });
 
   it('should call onCancel callback', async () => {
@@ -167,5 +176,43 @@ describe('SapStartStopOperationModal', () => {
     await user.click(screen.getByText('Cancel'));
 
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('should change the schedule of an operation with its options', async () => {
+    const user = userEvent.setup();
+    const onRequest = jest.fn();
+    const schedule = operationScheduleFactory.build({
+      target_type: 'sap_system',
+      operation: SAP_SYSTEM_STOP,
+      params: { instance_type: 'abap', timeout: 600 },
+      starts_at: '2099-11-20T03:00:00Z',
+      timezone: 'Etc/UTC',
+    });
+
+    render(
+      <SapStartStopOperationModal
+        isOpen
+        operation={SAP_SYSTEM_STOP}
+        type={APPLICATION_TYPE}
+        sid={sid}
+        schedulable
+        initialSchedule={schedule}
+        onRequest={onRequest}
+      />
+    );
+
+    expect(screen.getByText('ABAP instances')).toBeVisible();
+    expect(screen.getByRole('spinbutton', { name: '' })).toHaveValue('10');
+
+    await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+    expect(onRequest).toHaveBeenCalledWith(
+      { instance_type: 'abap', timeout: 600 },
+      {
+        starts_at: '2099-11-20T03:00:00.000Z',
+        timezone: 'Etc/UTC',
+        recurrence: null,
+      }
+    );
   });
 });

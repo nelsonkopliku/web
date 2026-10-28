@@ -23,6 +23,10 @@ import {
   getSoftwareUpdatesErrors,
 } from '@state/selectors/softwareUpdates';
 import { getRunningOperation } from '@state/selectors/runningOperations';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 
 import { getHost, getHostSelectedChecks } from '@state/selectors/host';
 import { isSaving } from '@state/selectors/checksSelection';
@@ -36,6 +40,13 @@ import {
   updateRunningOperations,
   removeRunningOperation,
 } from '@state/runningOperations';
+
+import {
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+} from '@state/operationSchedules';
 
 import { deregisterHost } from '@state/hosts';
 import { fetchSoftwareUpdates } from '@state/softwareUpdates';
@@ -98,6 +109,10 @@ function HostDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(hostID));
+  const { schedules: operationSchedules } = useSelector(
+    getOperationSchedules(hostID)
+  );
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
 
   const getExportersStatus = async () => {
     const { data } = await networkClient.get(
@@ -122,6 +137,16 @@ function HostDetailsPage() {
     dispatch(updateLastExecution(hostID));
     operationsEnabled && dispatch(updateRunningOperations());
   }, []);
+
+  useEffect(() => {
+    operationsEnabled &&
+      dispatch(fetchOperationSchedules({ targetID: hostID }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: hostID }));
+    };
+  }, [dispatch, hostID]);
 
   if (!host) {
     return <div>Not Found</div>;
@@ -164,6 +189,12 @@ function HostDetailsPage() {
       operationsEnabled={operationsEnabled}
       nextExecutionAt={checksSchedule?.next_execution_at}
       runningOperation={runningOperation}
+      operationSchedules={operationSchedules}
+      scheduleSubmission={scheduleSubmission}
+      onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      onResetScheduleSubmission={() =>
+        dispatch(resetOperationScheduleSubmission())
+      }
       cleanUpHost={() => {
         dispatch(deregisterHost({ id: hostID, hostname: host.hostname }));
       }}
