@@ -95,6 +95,59 @@ describe('CheckResultsOverview component', () => {
     expect(screen.getByText('10 Jan 2024, 23:30:00')).toBeVisible();
   });
 
+  describe('next periodic execution', () => {
+    const data = {
+      completed_at: '2026-11-02T10:00:00Z',
+      passing_count: 1,
+      warning_count: 0,
+      critical_count: 0,
+      status: 'completed',
+    };
+
+    it('should display when the next periodic execution runs, in the user timezone', () => {
+      render(
+        <CheckResultsOverview
+          data={data}
+          timezone="Europe/Berlin"
+          nextExecutionAt="2026-11-02T16:00:00Z"
+        />
+      );
+
+      expect(
+        screen.getByText('Next execution: 02 Nov 2026, 17:00:00')
+      ).toBeVisible();
+    });
+
+    it('should tell that no execution is planned when periodic executions are disabled', () => {
+      render(<CheckResultsOverview data={data} nextExecutionAt={null} />);
+
+      expect(screen.getByText('No execution planned')).toBeVisible();
+    });
+
+    it('should display the next periodic execution without check results', () => {
+      render(
+        <CheckResultsOverview
+          data={null}
+          nextExecutionAt="2026-11-02T16:00:00Z"
+        />
+      );
+
+      expect(screen.getByText('No check results available.')).toBeVisible();
+      expect(
+        screen.getByText('Next execution: 02 Nov 2026, 16:00:00')
+      ).toBeVisible();
+    });
+
+    it('should display nothing about the next execution while it is unknown', () => {
+      render(<CheckResultsOverview data={data} />);
+
+      expect(screen.queryByText(/Next execution/)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('No execution planned')
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it('should display completion time using provided timezone', () => {
     const completedAt = '2024-01-10T23:30:00Z';
     const data = {
