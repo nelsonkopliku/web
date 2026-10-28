@@ -17,6 +17,8 @@ defmodule Trento.ProjectorsSupervisor do
 
   alias Trento.Databases.Projections.DatabaseProjector
 
+  alias Trento.MaintenanceWindows.Projections.MaintenanceWindowProjector
+
   alias Trento.Operations.Projections.{
     OperationScheduleProjector,
     ScheduledRunProjector
@@ -34,6 +36,7 @@ defmodule Trento.ProjectorsSupervisor do
       ClusterProjector,
       DatabaseProjector,
       HostProjector,
+      MaintenanceWindowProjector,
       OperationScheduleProjector,
       SapSystemProjector,
       ScheduledRunProjector,
