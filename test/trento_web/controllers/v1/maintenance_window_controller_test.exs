@@ -123,6 +123,30 @@ defmodule TrentoWeb.V1.MaintenanceWindowControllerTest do
     |> assert_schema("NotFoundV1", api_spec)
   end
 
+  test "should schedule a window on several targets", %{conn: conn, api_spec: api_spec} do
+    [%{id: first}, %{id: second}] = insert_list(2, :host)
+
+    request =
+      body("host", nil)
+      |> Map.delete(:target_id)
+      |> Map.put(:target_ids, [first, second])
+
+    assert %{bulk_id: bulk_id, maintenance_windows: [%{target_id: ^first}, %{target_id: ^second}]} =
+             conn
+             |> put_req_header("content-type", "application/json")
+             |> post("/api/v1/maintenance_windows/bulk", request)
+             |> json_response(201)
+             |> assert_schema("BulkMaintenanceWindowsV1", api_spec)
+
+    assert is_binary(bulk_id)
+
+    conn
+    |> put_req_header("content-type", "application/json")
+    |> post("/api/v1/maintenance_windows/bulk", Map.put(request, :target_ids, []))
+    |> json_response(422)
+    |> assert_schema("UnprocessableEntityV1", api_spec)
+  end
+
   test "should require the maintenance windows ability to change windows", %{
     conn: conn,
     api_spec: api_spec
