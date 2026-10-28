@@ -39,11 +39,14 @@ import {
 
 import AlertingSettingsConfig from '@common/AlertingSettingsConfig';
 import AlertingSettingsModal from '@common/AlertingSettingsModal';
+import ChecksExecutionSettingsConfig from '@common/ChecksExecutionSettingsConfig';
+import ChecksExecutionSettingsModal from '@common/ChecksExecutionSettingsModal';
 
 import {
   useApiKeySettings,
   useSuseMultiLinuxManagerSettings,
   useAlertingSettings,
+  useChecksExecutionSettings,
 } from '@pages/SettingsPage/hooks';
 
 const apiKeySettingsPermittedFor = ['all:api_key_settings'];
@@ -135,6 +138,23 @@ function SettingsPage() {
     sendTestEmail: sendAlertingTestEmail,
     clearSubmitErrors: clearAlertingSubmitErrors,
   } = useAlertingSettings();
+
+  const {
+    settings: checksExecutionSettings,
+    fetchLoading: checksExecutionFetchLoading,
+    fetchError: checksExecutionFetchError,
+    submitLoading: checksExecutionSubmitLoading,
+    submitErrors: checksExecutionSubmitErrors,
+    fetch: fetchChecksExecutionSettings,
+    submit: submitChecksExecutionSettings,
+    clearSubmitErrors: clearChecksExecutionSubmitErrors,
+  } = useChecksExecutionSettings();
+
+  const [checksExecutionModalOpen, setChecksExecutionModalOpen] =
+    useState(false);
+  useEffect(() => {
+    setChecksExecutionModalOpen(false);
+  }, [checksExecutionSettings]);
 
   const [alertingSettingsModalOpen, setAlertingSettingsModalOpen] =
     useState(false);
@@ -399,6 +419,37 @@ function SettingsPage() {
             loading={alertingSubmitLoading}
             onSave={submitAlertingSettings}
             onCancel={() => setAlertingSettingsModalOpen(false)}
+          />
+        </div>
+      </section>
+
+      <section>
+        <div className="pb-4">
+          <SettingsLoader
+            sectionName="Check Execution"
+            status={calculateSettingsLoaderStatus(
+              checksExecutionFetchLoading,
+              checksExecutionFetchError
+            )}
+            onRetry={() => fetchChecksExecutionSettings()}
+          >
+            <ChecksExecutionSettingsConfig
+              settings={checksExecutionSettings}
+              userAbilities={abilities}
+              onEditClick={() => {
+                clearChecksExecutionSubmitErrors();
+                setChecksExecutionModalOpen(true);
+              }}
+            />
+          </SettingsLoader>
+          <ChecksExecutionSettingsModal
+            key={`checksexecutionmodal-${checksExecutionSettings.interval}-${checksExecutionModalOpen}`}
+            open={checksExecutionModalOpen}
+            loading={checksExecutionSubmitLoading}
+            errors={checksExecutionSubmitErrors}
+            initialInterval={checksExecutionSettings.interval}
+            onSave={submitChecksExecutionSettings}
+            onCancel={() => setChecksExecutionModalOpen(false)}
           />
         </div>
       </section>

@@ -68,7 +68,7 @@ describe('OperationsButton', () => {
     expect(screen.getByText('Operation 2')).toBeEnabled();
   });
 
-  it('should show running operation with disabled entries', async () => {
+  it('should show a running operation and keep the entries available', async () => {
     const user = userEvent.setup();
     const runningOperations = Object.assign([], testOperations, {
       0: { ...testOperations[0], running: true },
@@ -81,10 +81,16 @@ describe('OperationsButton', () => {
       />
     );
 
+    expect(screen.getByRole('button', { name: 'Operations' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+
     await user.click(screen.getByText('Operations'));
 
-    expect(screen.getByText('Operation 1')).toBeDisabled();
-    expect(screen.getByText('Operation 2')).toBeDisabled();
+    // the operations stay available to schedule them, a request now is refused
+    expect(screen.getByText('Operation 1')).toBeEnabled();
+    expect(screen.getByText('Operation 2')).toBeEnabled();
 
     const svgEl = screen
       .getByRole('menuitem', { name: 'Operation 1' })

@@ -26,6 +26,18 @@ import {
   removeRunningOperation,
 } from '@state/runningOperations';
 import { getRunningOperation } from '@state/selectors/runningOperations';
+import {
+  cancelOperationSchedule,
+  fetchOperationSchedules,
+  forgetOperationSchedules,
+  resetOperationScheduleSubmission,
+  scheduleOperation,
+  updateOperationSchedule,
+} from '@state/operationSchedules';
+import {
+  getOperationScheduleSubmission,
+  getOperationSchedules,
+} from '@state/selectors/operationSchedules';
 
 import { buildEnv } from '@lib/checks';
 import { TARGET_CLUSTER } from '@lib/model';
@@ -36,6 +48,10 @@ import {
   getClusterSids,
   isValidClusterType,
 } from '@lib/model/clusters';
+
+import { useChecksSchedule } from '@pages/ChecksSelection';
+import { useMaintenanceWindows } from '@pages/MaintenanceWindows';
+import { checksExecutionBlockedReason } from '@lib/model/maintenanceWindows';
 
 import ClusterDetails from './ClusterDetails';
 import AscsErsClusterDetails from './AscsErsClusterDetails';
@@ -79,6 +95,10 @@ export function ClusterDetailsPage() {
   );
 
   const { abilities, timezone } = useSelector(getUserProfile);
+  const { schedule: checksSchedule } = useChecksSchedule(
+    TARGET_CLUSTER,
+    clusterID
+  );
 
   useEffect(() => {
     const env = buildEnv({
@@ -107,6 +127,20 @@ export function ClusterDetailsPage() {
   );
 
   const runningOperation = useSelector(getRunningOperation(clusterID));
+  const { schedules: operationSchedules, error: operationSchedulesError } =
+    useSelector(getOperationSchedules(clusterID));
+  const scheduleSubmission = useSelector(getOperationScheduleSubmission);
+  const maintenanceWindows = useMaintenanceWindows(TARGET_CLUSTER, clusterID);
+
+  useEffect(() => {
+    operationsEnabled &&
+      dispatch(fetchOperationSchedules({ targetID: clusterID }));
+
+    return () => {
+      dispatch(resetOperationScheduleSubmission());
+      dispatch(forgetOperationSchedules({ targetID: clusterID }));
+    };
+  }, [dispatch, clusterID]);
 
   if (!cluster) {
     return <div>Loading...</div>;
@@ -130,6 +164,26 @@ export function ClusterDetailsPage() {
       lastExecution={lastExecution}
       operationsEnabled={operationsEnabled}
       runningOperation={runningOperation}
+      operationSchedules={operationSchedules}
+      maintenanceWindows={maintenanceWindows}
+      checksExecutionBlockedReason={checksExecutionBlockedReason(
+        maintenanceWindows.windows
+      )}
+      scheduleSubmission={scheduleSubmission}
+      onScheduleOperation={(request) => dispatch(scheduleOperation(request))}
+      operationSchedulesError={operationSchedulesError}
+      onUpdateSchedule={(schedule, changes) =>
+        dispatch(updateOperationSchedule({ schedule, changes }))
+      }
+      onCancelSchedule={(schedule) =>
+        dispatch(cancelOperationSchedule({ schedule }))
+      }
+      onRetryOperationSchedules={() =>
+        dispatch(fetchOperationSchedules({ targetID: clusterID }))
+      }
+      onResetScheduleSubmission={() =>
+        dispatch(resetOperationScheduleSubmission())
+      }
       selectedChecks={cluster.selected_checks}
       userAbilities={abilities}
       userTimezone={timezone}
@@ -172,6 +226,7 @@ export function ClusterDetailsPage() {
         sapSystems={clusterSapSystems}
         userAbilities={abilities}
         timezone={timezone}
+        nextExecutionAt={checksSchedule?.next_execution_at}
         navigate={navigate}
         // the following props are specific to hana details
         clusterSids={getClusterSids(cluster)}

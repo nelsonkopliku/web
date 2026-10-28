@@ -62,7 +62,9 @@ import {
   updateLastExecution,
 } from '@state/lastExecutions';
 
-import { operationCompleted } from '@state/runningOperations';
+import { operationCompleted, operationStarted } from '@state/runningOperations';
+import { operationSchedulesChanged } from '@state/operationSchedules';
+import { maintenanceWindowsChanged } from '@state/maintenanceWindows';
 
 import { userUpdated, userLocked, userDeleted } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
@@ -254,6 +256,15 @@ const executionEvents = [
 
 const operationEvents = [
   {
+    name: 'operation_started',
+    action: operationStarted,
+    transform: ({
+      operation_id: operationID,
+      group_id: groupID,
+      operation_type: operation,
+    }) => ({ operationID, groupID, operation }),
+  },
+  {
     name: 'operation_completed',
     action: operationCompleted,
     transform: ({
@@ -262,6 +273,25 @@ const operationEvents = [
       operation_type: operation,
       result,
     }) => ({ operationID, groupID, operation, result }),
+  },
+];
+
+const operationScheduleEvents = [
+  {
+    name: 'operation_schedules_changed',
+    action: operationSchedulesChanged,
+    transform: ({ target_id: targetID }) => ({ targetID }),
+  },
+];
+
+const maintenanceWindowEvents = [
+  {
+    name: 'maintenance_windows_changed',
+    action: maintenanceWindowsChanged,
+    transform: ({ target_type: targetType, target_id: targetID }) => ({
+      targetType,
+      targetID,
+    }),
   },
 ];
 
@@ -332,6 +362,18 @@ export function* watchSocketEvents(socket) {
     fork(watchChannelEvents, socket, 'monitoring:databases', databaseEvents),
     fork(watchChannelEvents, socket, 'monitoring:executions', executionEvents),
     fork(watchChannelEvents, socket, 'monitoring:operations', operationEvents),
+    fork(
+      watchChannelEvents,
+      socket,
+      'monitoring:operation_schedules',
+      operationScheduleEvents
+    ),
+    fork(
+      watchChannelEvents,
+      socket,
+      'monitoring:maintenance_windows',
+      maintenanceWindowEvents
+    ),
     fork(watchChannelEvents, socket, `users:${userID}`, userEvents),
     fork(
       watchChannelEvents,

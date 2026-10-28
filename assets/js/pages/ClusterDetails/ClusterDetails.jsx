@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: SUSE LLC
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { get, noop } from 'lodash';
+import { filter, get, noop } from 'lodash';
 
 import classNames from 'classnames';
 import {
@@ -13,9 +13,13 @@ import {
 } from 'eos-icons-react';
 
 import { RUNNING_STATES } from '@state/lastExecutions';
-
-import { isSomeHostOnline } from '@lib/model/clusters';
-import { isSomeHostHeartbeatPassing } from '@lib/model/hosts';
+import {
+  hasScheduleWarnings,
+  initialScheduleSubmission,
+  isScheduleSubmitted,
+  isSubmittingSchedule,
+} from '@state/operationSchedules';
+import { isOperationInProgress } from '@state/selectors/runningOperations';
 
 import {
   CLUSTER_MAINTENANCE_CHANGE,
@@ -24,8 +28,8 @@ import {
   PACEMAKER_DISABLE,
   CLUSTER_HOST_START,
   CLUSTER_HOST_STOP,
-  OPERATION_NOT_ALLOWED_CLUSTER,
   getOperationLabel,
+  isSchedulable,
 } from '@lib/operations';
 
 import { formatDateTime } from '@lib/timezones';
@@ -38,9 +42,19 @@ import OperationsButton from '@common/OperationsButton';
 import { DetailsViewHeader } from '@common/PageHeader';
 import Tooltip from '@common/Tooltip';
 import {
+  OperationAlreadyRunningModal,
   OperationForbiddenModal,
+  ScheduleWarningsModal,
   SimpleAcceptanceOperationModal,
 } from '@common/OperationModals';
+
+import OperationSchedules, {
+  EditOperationScheduleModal,
+} from '@common/OperationSchedules';
+
+import MaintenanceWindowsSection, {
+  MaintenanceWindowBanner,
+} from '@pages/MaintenanceWindows';
 
 import Resources from './Resources';
 import SBDDetails from './SBDDetails';
@@ -58,6 +72,7 @@ function ClusterDetails({
   clusterName,
   details,
   hasSelectedChecks,
+  checksExecutionBlockedReason = null,
   hosts,
   health,
   state,
@@ -70,6 +85,15 @@ function ClusterDetails({
   userTimezone,
   onStartExecution = noop,
   onRequestOperation = noop,
+  operationSchedules = [],
+  maintenanceWindows = null,
+  operationSchedulesError = false,
+  scheduleSubmission = initialScheduleSubmission,
+  onScheduleOperation = noop,
+  onUpdateSchedule = noop,
+  onCancelSchedule = noop,
+  onRetryOperationSchedules = noop,
+  onResetScheduleSubmission = noop,
   onCleanForbiddenOperation = noop,
   onRequestHostOperation = noop,
   navigate = noop,
@@ -79,9 +103,25 @@ function ClusterDetails({
     useState(operationModalState);
   const [currentOperationHost, setCurrentOperationHost] = useState(undefined);
   const [operationParams, setOperationParams] = useState(undefined);
+  const [editingSchedule, setEditingSchedule] = useState(null);
+  const [alreadyRunning, setAlreadyRunning] = useState(null);
 
   const closeOperationModal = () =>
     setOperationModalOpen((prevState) => ({ ...prevState, open: false }));
+
+  const openOperationModal = (modalState) => {
+    onResetScheduleSubmission();
+    setOperationModalOpen(modalState);
+  };
+
+  // A schedule closes its modal only once it is saved
+  const scheduleSubmitted = isScheduleSubmitted(scheduleSubmission);
+  useEffect(() => {
+    if (scheduleSubmitted) {
+      closeOperationModal();
+      setEditingSchedule(null);
+    }
+  }, [scheduleSubmitted]);
 
   const executionLoading = get(lastExecution, 'loading', false);
   const executionStatus = get(lastExecution, 'data.status', null);
@@ -89,14 +129,12 @@ function ClusterDetails({
   const startExecutionDisabled =
     executionLoading ||
     !hasSelectedChecks ||
+    !!checksExecutionBlockedReason ||
     RUNNING_STATES.includes(executionStatus);
 
   const runningOperationName = get(runningOperation, 'operation', null);
   const operationForbidden = get(runningOperation, 'forbidden', false);
   const operationForbiddenErrors = get(runningOperation, 'errors', []);
-
-  const someHostOnline = isSomeHostOnline(hosts);
-  const someHostHeartbeatPassing = isSomeHostHeartbeatPassing(hosts);
 
   const clusterState = state || 'unknown';
 
@@ -104,17 +142,15 @@ function ClusterDetails({
     clusterID,
     runningOperation,
     setOperationParams,
-    setOperationModalOpen,
-    details,
-    someHostOnline
+    openOperationModal,
+    details
   );
 
   const curriedGetResourceOperations = getResourceOperations(
     clusterID,
     runningOperation,
     setOperationParams,
-    setOperationModalOpen,
-    someHostOnline
+    openOperationModal
   );
 
   const getOperationModalDescriptionArgs = (operation) => {
@@ -161,7 +197,7 @@ function ClusterDetails({
           runningOperation,
           setCurrentOperationHost,
           setOperationParams,
-          setOperationModalOpen
+          openOperationModal
         ),
       })
     : null;
@@ -176,17 +212,61 @@ function ClusterDetails({
             onCancel={onCleanForbiddenOperation}
             errors={operationForbiddenErrors}
           />
+          <OperationAlreadyRunningModal
+            isOpen={!!alreadyRunning}
+            operation={getOperationLabel(alreadyRunning)}
+            onClose={() => setAlreadyRunning(null)}
+          />
           <SimpleAcceptanceOperationModal
+            key={`${operationModalOpen.operation}-${operationModalOpen.open}`}
             operation={operationModalOpen.operation}
             descriptionResolverArgs={getOperationModalDescriptionArgs(
               operationModalOpen.operation
             )}
             isOpen={operationModalOpen.open}
-            onRequest={() => {
-              requestOperation(operationModalOpen.operation);
+            schedulable={isSchedulable(operationModalOpen.operation)}
+            timezone={userTimezone}
+            existingSchedules={filter(operationSchedules, {
+              operation: operationModalOpen.operation,
+            })}
+            loading={isSubmittingSchedule(scheduleSubmission)}
+            errors={scheduleSubmission.errors}
+            onRequest={(_params, schedule) => {
+              if (schedule) {
+                onScheduleOperation({
+                  target_type: 'cluster',
+                  target_id: clusterID,
+                  operation: operationModalOpen.operation,
+                  params: operationParams,
+                  ...schedule,
+                });
+                return;
+              }
+              // The menus stay open while an operation runs, to schedule: a
+              // request now is refused then
+              if (isOperationInProgress(runningOperation)) {
+                setAlreadyRunning(operationModalOpen.operation);
+              } else {
+                requestOperation(operationModalOpen.operation);
+              }
               closeOperationModal();
             }}
             onCancel={closeOperationModal}
+          />
+          <EditOperationScheduleModal
+            key={editingSchedule?.id}
+            schedule={editingSchedule}
+            isOpen={!!editingSchedule}
+            submission={scheduleSubmission}
+            onSave={(changes) => onUpdateSchedule(editingSchedule, changes)}
+            onCancelSchedule={() => onCancelSchedule(editingSchedule)}
+            onCancel={() => setEditingSchedule(null)}
+          />
+          <ScheduleWarningsModal
+            isOpen={hasScheduleWarnings(scheduleSubmission)}
+            operation={getOperationLabel(scheduleSubmission.operation)}
+            warnings={scheduleSubmission.warnings}
+            onClose={onResetScheduleSubmission}
           />
         </>
       )}
@@ -209,8 +289,6 @@ function ClusterDetails({
             {operationsEnabled && (
               <OperationsButton
                 userAbilities={userAbilities}
-                disabled={!someHostHeartbeatPassing}
-                disabledTooltip={OPERATION_NOT_ALLOWED_CLUSTER}
                 operations={clusterOperations}
               />
             )}
@@ -221,7 +299,7 @@ function ClusterDetails({
               onClick={() => navigate(`/clusters/${clusterID}/settings`)}
             >
               <EOS_PLAYLIST_ADD_CHECK_FILLED className="inline-block fill-jungle-green-500" />{' '}
-              Check Selection
+              Check Settings
             </Button>
 
             <Button
@@ -239,8 +317,10 @@ function ClusterDetails({
               permitted={['all:cluster_checks_execution']}
             >
               <Tooltip
-                isEnabled={!hasSelectedChecks}
-                content="Select some Checks first!"
+                isEnabled={!hasSelectedChecks || !!checksExecutionBlockedReason}
+                content={
+                  checksExecutionBlockedReason || 'Select some Checks first!'
+                }
                 place="bottom"
                 wrap={false}
               >
@@ -269,6 +349,12 @@ function ClusterDetails({
           <ClusterStatePill state={clusterState} />
         </div>
       </div>
+      {maintenanceWindows && (
+        <MaintenanceWindowBanner
+          windows={maintenanceWindows.windows}
+          timezone={userTimezone}
+        />
+      )}
       {staleAt && (
         <Banner type="warning" truncate={false}>
           An agent in one of the cluster hosts is not reporting since{' '}
@@ -277,11 +363,34 @@ function ClusterDetails({
         </Banner>
       )}
       {detailComponent}
+      {operationsEnabled && (
+        <OperationSchedules
+          schedules={operationSchedules}
+          error={operationSchedulesError}
+          timezone={userTimezone}
+          userAbilities={userAbilities}
+          submission={scheduleSubmission}
+          onEdit={(schedule) => {
+            onResetScheduleSubmission();
+            setEditingSchedule(schedule);
+          }}
+          onCancel={onCancelSchedule}
+          onRetry={onRetryOperationSchedules}
+          onResetSubmission={onResetScheduleSubmission}
+        />
+      )}
+      {maintenanceWindows && (
+        <MaintenanceWindowsSection
+          {...maintenanceWindows}
+          timezone={userTimezone}
+          targetLabel={`cluster ${clusterName}`}
+          userAbilities={userAbilities}
+        />
+      )}
       <Resources
         resources={details?.resources}
         hosts={hosts}
         userAbilities={userAbilities}
-        operationsDisabled={!someHostHeartbeatPassing}
         getResourceOperations={curriedGetResourceOperations}
       />
       <SBDDetails sbdDevices={details.sbd_devices} />

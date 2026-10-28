@@ -3,6 +3,7 @@
 
 import MockAdapter from 'axios-mock-adapter';
 import { faker } from '@faker-js/faker';
+import { runSaga, stdChannel } from 'redux-saga';
 
 import { recordSaga } from '@lib/test-utils';
 import { networkClient } from '@lib/network';
@@ -18,6 +19,7 @@ import {
   getOperationLabel,
 } from '@lib/operations';
 import {
+  operationCompleted,
   removeRunningOperation,
   setRunningOperation,
   setForbiddenOperation,
@@ -28,6 +30,7 @@ import {
   requestOperation,
   completeOperation,
   updateRunningOperations,
+  startedOperation,
 } from './operations';
 
 const axiosMock = new MockAdapter(networkClient);
@@ -516,6 +519,111 @@ describe('operations saga', () => {
       const dispatched = await recordSaga(updateRunningOperations, {
         payload: {},
       });
+
+      expect(dispatched).toEqual([]);
+    });
+  });
+
+  describe('operation started by the server', () => {
+    it('should load the running operations again, with their targets', async () => {
+      const groupID = faker.string.uuid();
+      const targets = [{ agent_id: groupID, arguments: {} }];
+
+      axiosMock.onGet(getOperationExecutionsURL()).reply(200, {
+        items: [
+          {
+            group_id: groupID,
+            operation: 'hostreboot@v1',
+            status: 'running',
+            targets,
+          },
+        ],
+      });
+
+      const dispatched = await recordSaga(startedOperation, {
+        payload: { groupID, operation: 'reboot' },
+      });
+
+      expect(dispatched).toEqual([
+        setRunningOperation({
+          groupID,
+          operation: 'reboot',
+          metadata: { targets },
+        }),
+      ]);
+    });
+
+    it('should leave the running operations of other groups as they are', async () => {
+      const groupID = faker.string.uuid();
+      const otherGroupID = faker.string.uuid();
+      const targets = [{ agent_id: groupID, arguments: {} }];
+
+      axiosMock.onGet(getOperationExecutionsURL()).reply(200, {
+        items: [
+          {
+            group_id: otherGroupID,
+            operation: 'clustermaintenancechange@v1',
+            status: 'running',
+            targets: [],
+          },
+          {
+            group_id: groupID,
+            operation: 'hostreboot@v1',
+            status: 'running',
+            targets,
+          },
+        ],
+      });
+
+      const dispatched = await recordSaga(startedOperation, {
+        payload: { groupID, operation: 'reboot' },
+      });
+
+      expect(dispatched).toEqual([
+        setRunningOperation({
+          groupID,
+          operation: 'reboot',
+          metadata: { targets },
+        }),
+      ]);
+    });
+
+    it('should not show as running an operation that completed while loading', async () => {
+      const groupID = faker.string.uuid();
+      const operationID = faker.string.uuid();
+
+      axiosMock.onGet(getOperationExecutionsURL()).reply(200, {
+        items: [
+          {
+            group_id: groupID,
+            operation: 'hostreboot@v1',
+            status: 'running',
+            targets: [],
+          },
+        ],
+      });
+
+      const channel = stdChannel();
+      const dispatched = [];
+      const task = runSaga(
+        {
+          channel,
+          dispatch: (action) => dispatched.push(action),
+          getState: () => ({}),
+        },
+        startedOperation,
+        { payload: { operationID, groupID, operation: 'reboot' } }
+      );
+
+      channel.put(
+        operationCompleted({
+          operationID,
+          groupID,
+          operation: 'reboot',
+          result: 'UPDATED',
+        })
+      );
+      await task.toPromise();
 
       expect(dispatched).toEqual([]);
     });

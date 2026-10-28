@@ -4,6 +4,7 @@
 import {
   useAlertingSettings,
   useApiKeySettings,
+  useChecksExecutionSettings,
   useSuseMultiLinuxManagerSettings,
 } from '@pages/SettingsPage/hooks';
 import { networkClient } from '@lib/network';
@@ -18,6 +19,7 @@ import {
   alertingSettingsSaveRequestFactory,
   alertingSettingsSaveRequestToApiData,
 } from '@lib/test-utils/factories/alertingSettings';
+import { checksExecutionSettingsFactory } from '@lib/test-utils/factories';
 
 const axiosMock = new MockAdapter(networkClient);
 
@@ -566,5 +568,108 @@ describe('useAlertingSettings', () => {
         },
       ]);
     });
+  });
+});
+
+describe('useChecksExecutionSettings', () => {
+  const settingsURL = '/api/v1/settings/checks_execution';
+
+  const renderSettingsHook = async () => {
+    const [hookWrapper] = hookWrapperWithState();
+    return act(() =>
+      renderHook(() => useChecksExecutionSettings(), { wrapper: hookWrapper })
+    );
+  };
+
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
+  it('should fetch the settings on mount', async () => {
+    const settings = checksExecutionSettingsFactory.build({ interval: '1h' });
+    axiosMock.onGet(settingsURL).reply(200, settings);
+
+    const { result } = await renderSettingsHook();
+
+    expect(result.current.settings).toEqual(settings);
+    expect(result.current.fetchLoading).toBe(false);
+    expect(result.current.fetchError).toBe(false);
+  });
+
+  it('should tell when the settings cannot be fetched', async () => {
+    axiosMock.onGet(settingsURL).reply(500);
+
+    const { result } = await renderSettingsHook();
+
+    expect(result.current.fetchLoading).toBe(false);
+    expect(result.current.fetchError).toBe(true);
+  });
+
+  it('should fetch the settings again', async () => {
+    const settings = checksExecutionSettingsFactory.build({ interval: '6h' });
+    axiosMock
+      .onGet(settingsURL)
+      .replyOnce(500)
+      .onGet(settingsURL)
+      .reply(200, settings);
+
+    const { result } = await renderSettingsHook();
+    await act(() => result.current.fetch());
+
+    expect(result.current.fetchError).toBe(false);
+    expect(result.current.settings).toEqual(settings);
+  });
+
+  it('should save the settings', async () => {
+    axiosMock
+      .onGet(settingsURL)
+      .reply(200, checksExecutionSettingsFactory.build({ interval: '5m' }));
+    const saved = checksExecutionSettingsFactory.build({ interval: '1w' });
+    axiosMock.onPut(settingsURL, { interval: '1w' }).reply(200, saved);
+
+    const { result } = await renderSettingsHook();
+    await act(() => result.current.submit({ interval: '1w' }));
+
+    expect(result.current.settings).toEqual(saved);
+    expect(result.current.submitErrors).toEqual([]);
+    expect(result.current.submitLoading).toBe(false);
+  });
+
+  it('should keep the settings and tell the errors of a refused change', async () => {
+    const settings = checksExecutionSettingsFactory.build({
+      interval: '5m',
+      enforced_from_env: true,
+    });
+    const errors = [
+      {
+        title: 'Conflict',
+        detail: 'The checks execution frequency is enforced by CHECKS_INTERVAL',
+      },
+    ];
+    axiosMock.onGet(settingsURL).reply(200, settings);
+    axiosMock.onPut(settingsURL).reply(409, { errors });
+
+    const { result } = await renderSettingsHook();
+    await act(() => result.current.submit({ interval: '1w' }));
+
+    expect(result.current.settings).toEqual(settings);
+    expect(result.current.submitErrors).toEqual(errors);
+
+    act(() => result.current.clearSubmitErrors());
+    expect(result.current.submitErrors).toEqual([]);
+  });
+
+  it('should tell an unexpected error when a change fails without details', async () => {
+    axiosMock
+      .onGet(settingsURL)
+      .reply(200, checksExecutionSettingsFactory.build());
+    axiosMock.onPut(settingsURL).networkError();
+
+    const { result } = await renderSettingsHook();
+    await act(() => result.current.submit({ interval: '1w' }));
+
+    expect(result.current.submitErrors).toEqual([
+      { title: 'Unexpected error', detail: 'Something went wrong.' },
+    ]);
   });
 });

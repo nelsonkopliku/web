@@ -11,6 +11,10 @@ import {
   STORAGE_OPERATION_DISCLAIMER_KEY,
   waiveOperationDisclaimer,
   resetOperationDisclaimer,
+  describeOperationParams,
+  isSchedulable,
+  getOperationPermittedFor,
+  countTargets,
 } from '.';
 
 describe('operations', () => {
@@ -133,4 +137,85 @@ describe('operations disclaimer', () => {
     waiveOperationDisclaimer();
     expect(shouldShowOperationDisclaimer()).toBe(false);
   });
+});
+
+describe('operation params', () => {
+  it.each`
+    params                                           | description
+    ${{}}                                            | ${''}
+    ${undefined}                                     | ${''}
+    ${{ maintenance: true }}                         | ${'Maintenance: on'}
+    ${{ maintenance: false, resource_id: 'rsc_ip' }} | ${'Maintenance: off, Resource: rsc_ip'}
+    ${{ maintenance: true, node_id: 'node01' }}      | ${'Maintenance: on, Node: node01'}
+    ${{ instance_type: 'abap', timeout: 300 }}       | ${'Instances: ABAP, Timeout: 5 minutes'}
+    ${{ instance_type: 'all', timeout: 60 }}         | ${'Instances: All, Timeout: 1 minute'}
+    ${{ host_id: 'host-id', instance_number: '00' }} | ${'Instance: 00'}
+    ${{ instance_number: '01', timeout: 90 }}        | ${'Instance: 01, Timeout: 90 seconds'}
+    ${{ site: 'NBG', timeout: 600 }}                 | ${'Site: NBG, Timeout: 10 minutes'}
+  `(
+    'should describe the operation params as "$description"',
+    ({ params, description }) => {
+      expect(describeOperationParams(params)).toBe(description);
+    }
+  );
+});
+
+describe('schedulable operations', () => {
+  it.each`
+    operation                       | schedulable
+    ${'reboot'}                     | ${true}
+    ${'cluster_maintenance_change'} | ${true}
+    ${'sap_system_start'}           | ${true}
+    ${'sap_system_stop'}            | ${true}
+    ${'sap_instance_start'}         | ${true}
+    ${'sap_instance_stop'}          | ${true}
+    ${'database_start'}             | ${true}
+    ${'database_stop'}              | ${true}
+    ${'saptune_solution_apply'}     | ${false}
+    ${'saptune_solution_change'}    | ${false}
+    ${'cluster_resource_refresh'}   | ${false}
+    ${'pacemaker_enable'}           | ${false}
+    ${'cluster_host_start'}         | ${false}
+  `(
+    'should tell whether $operation can be scheduled',
+    ({ operation, schedulable }) => {
+      expect(isSchedulable(operation)).toBe(schedulable);
+    }
+  );
+});
+
+describe('operation abilities', () => {
+  it.each`
+    operation                       | permitted
+    ${'reboot'}                     | ${['reboot:host', 'operation:all']}
+    ${'cluster_maintenance_change'} | ${['maintenance_change:cluster', 'operation:all']}
+    ${'sap_system_start'}           | ${['start:sap_system', 'operation:all']}
+    ${'sap_system_stop'}            | ${['stop:sap_system', 'operation:all']}
+    ${'sap_instance_start'}         | ${['start:application_instance', 'operation:all']}
+    ${'sap_instance_stop'}          | ${['stop:application_instance', 'operation:all']}
+    ${'database_start'}             | ${['start:database', 'operation:all']}
+    ${'database_stop'}              | ${['stop:database', 'operation:all']}
+    ${'unknown'}                    | ${['operation:all']}
+  `(
+    'should tell the abilities that permit $operation',
+    ({ operation, permitted }) => {
+      expect(getOperationPermittedFor(operation)).toEqual(permitted);
+    }
+  );
+});
+
+describe('targets count', () => {
+  it.each`
+    count | targetType      | label
+    ${1}  | ${'host'}       | ${'1 host'}
+    ${3}  | ${'host'}       | ${'3 hosts'}
+    ${2}  | ${'cluster'}    | ${'2 clusters'}
+    ${2}  | ${'sap_system'} | ${'2 SAP systems'}
+    ${1}  | ${'database'}   | ${'1 database'}
+  `(
+    'should count $count $targetType as "$label"',
+    ({ count, targetType, label }) => {
+      expect(countTargets(count, targetType)).toBe(label);
+    }
+  );
 });
