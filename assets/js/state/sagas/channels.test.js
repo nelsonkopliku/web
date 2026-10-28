@@ -10,7 +10,7 @@ import {
 } from '@state/lastExecutions';
 import { userUpdated } from '@state/user';
 import { activityLogUsersPushed } from '@state/activityLog';
-import { operationCompleted } from '@state/runningOperations';
+import { operationCompleted, operationStarted } from '@state/runningOperations';
 import { operationSchedulesChanged } from '@state/operationSchedules';
 
 import { watchSocketEvents } from './channels';
@@ -185,6 +185,27 @@ describe('Channels saga', () => {
 
     expect(dispatched).toEqual([
       operationSchedulesChanged({ targetID: 'target_id' }),
+    ]);
+  });
+
+  it('should listen and transform operation_started event', async () => {
+    const { saga, dispatched } = runWatchSocketEventsSaga(mockSocket);
+
+    channels['monitoring:operations'].emit('operation_started', {
+      operation_id: 'operation_id',
+      group_id: 'group_id',
+      operation_type: 'operation',
+    });
+
+    closeSocket();
+    await saga;
+
+    expect(dispatched).toEqual([
+      operationStarted({
+        operationID: 'operation_id',
+        groupID: 'group_id',
+        operation: 'operation',
+      }),
     ]);
   });
 });
