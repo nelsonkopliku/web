@@ -355,6 +355,91 @@ defmodule Trento.MaintenanceWindows do
   end
 
   @doc """
+  When the windows that cover a target stop forbidding an action, from `at`
+  on: the end of the last window of a chain of overlapping ones. Nil when no
+  window forbids the action at `at`.
+  """
+  @spec forbidden_until(String.t(), String.t(), atom(), DateTime.t()) :: DateTime.t() | nil
+  def forbidden_until(target_type, target_id, action, at) do
+    windows =
+      target_type
+      |> Coverage.owners(target_id)
+      |> windows_of()
+      |> Enum.filter(&MaintenanceWindowReadModel.forbids?(&1, action))
+
+    case chain_end(windows, at, 0) do
+      ^at -> nil
+      ends_at -> ends_at
+    end
+  end
+
+  @doc """
+  The ongoing window that forbids an action on a target, if any, with its end
+  and the name of the target it is set on.
+  """
+  @spec forbidding_window(String.t(), String.t(), atom(), module()) ::
+          {:ok, MaintenanceWindowReadModel.t(), String.t() | nil, DateTime.t()} | :none
+  def forbidding_window(target_type, target_id, action, date_service \\ DateService) do
+    now = date_service.utc_now()
+    owners = Coverage.owners(target_type, target_id)
+
+    owners
+    |> windows_of()
+    |> Enum.filter(&MaintenanceWindowReadModel.forbids?(&1, action))
+    |> Enum.flat_map(fn window ->
+      case occurrences(window, now) do
+        {%{ends_at: ends_at}, _} -> [{window, ends_at}]
+        _ -> []
+      end
+    end)
+    |> Enum.max_by(fn {_, ends_at} -> DateTime.to_unix(ends_at, :microsecond) end, fn -> nil end)
+    |> case do
+      nil ->
+        :none
+
+      {window, _} ->
+        names = target_names([{window.target_type, window.target_id}])
+
+        {:ok, window, Map.get(names, {window.target_type, window.target_id}),
+         forbidden_until(target_type, target_id, action, now)}
+    end
+  end
+
+  @doc """
+  The hosts and clusters whose checks executions an ongoing window forbids.
+  """
+  @spec forbidden_checks_targets(DateTime.t()) :: MapSet.t(Coverage.target())
+  def forbidden_checks_targets(now) do
+    from(w in MaintenanceWindowReadModel, where: w.forbid_checks_execution)
+    |> Repo.all()
+    |> Enum.filter(&match?({%{}, _}, occurrences(&1, now)))
+    |> Enum.flat_map(&Coverage.covered(&1.target_type, &1.target_id))
+    |> Enum.filter(fn {target_type, _} -> target_type in ["host", "cluster"] end)
+    |> MapSet.new()
+  end
+
+  # Windows can overlap or follow each other: the action stays forbidden
+  # until the last one of the chain ends.
+  @max_chain 100
+
+  defp chain_end(_windows, at, @max_chain), do: at
+
+  defp chain_end(windows, at, depth) do
+    windows
+    |> Enum.flat_map(fn window ->
+      case occurrences(window, at) do
+        {%{ends_at: ends_at}, _} -> [ends_at]
+        _ -> []
+      end
+    end)
+    |> Enum.max(DateTime, fn -> nil end)
+    |> case do
+      nil -> at
+      ends_at -> chain_end(windows, ends_at, depth + 1)
+    end
+  end
+
+  @doc """
   Tells whether a target is registered: a window can only be set on one.
   """
   @spec registered(String.t(), String.t()) :: :ok | {:error, :not_found}

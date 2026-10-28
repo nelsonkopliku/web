@@ -203,7 +203,8 @@ defmodule TrentoWeb.V1.HostController do
     display_text: "Request checks execution for a host"
 
   def request_checks_execution(conn, %{id: host_id}) do
-    with :ok <- Hosts.request_checks_execution(host_id) do
+    with :ok <- outside_maintenance_window(host_id),
+         :ok <- Hosts.request_checks_execution(host_id) do
       conn
       |> put_status(:accepted)
       |> json(%{})
@@ -368,6 +369,13 @@ defmodule TrentoWeb.V1.HostController do
   end
 
   def get_policy_resource(_), do: HostReadModel
+
+  defp outside_maintenance_window(host_id) do
+    case Trento.MaintenanceWindows.forbidding_window("host", host_id, :checks_execution) do
+      :none -> :ok
+      {:ok, _, _, _} -> {:error, :in_maintenance_window}
+    end
+  end
 
   def get_operation_host(%{params: %{id: id}}), do: Targets.host(id)
 

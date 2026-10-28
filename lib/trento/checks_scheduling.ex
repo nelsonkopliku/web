@@ -7,7 +7,8 @@ defmodule Trento.ChecksScheduling do
 
   A target uses its own interval, kept on the Host and Cluster aggregates and
   projected into the target_checks_intervals read model, or the global one of
-  `Trento.Settings.get_checks_execution_settings/0`.
+  `Trento.Settings.get_checks_execution_settings/0`. No periodic execution
+  runs while a maintenance window forbids checks executions on the target.
   """
 
   import Ecto.Query, only: [from: 2]
@@ -25,6 +26,7 @@ defmodule Trento.ChecksScheduling do
   alias Trento.Hosts
   alias Trento.Hosts.Commands.ChangeHostChecksInterval
   alias Trento.Hosts.Projections.HostReadModel
+  alias Trento.MaintenanceWindows
   alias Trento.Repo
   alias Trento.Settings
   alias Trento.Support.{CommandedUtils, DateService}
@@ -39,7 +41,7 @@ defmodule Trento.ChecksScheduling do
           {:ok, map()} | {:error, :not_found}
   def get_target_schedule(target_type, target_id, date_service \\ DateService) do
     with :ok <- target_exists(target_type, target_id) do
-      {:ok, view(interval(target_id), target_id, date_service.utc_now())}
+      {:ok, view(target_type, interval(target_id), target_id, date_service.utc_now())}
     end
   end
 
@@ -60,7 +62,7 @@ defmodule Trento.ChecksScheduling do
     with :ok <- target_exists(target_type, target_id),
          {:ok, command} <- command(target_type, target_id, interval),
          :ok <- dispatch(command, target_id) do
-      {:ok, view(interval, target_id, date_service.utc_now())}
+      {:ok, view(target_type, interval, target_id, date_service.utc_now())}
     end
   end
 
@@ -75,9 +77,10 @@ defmodule Trento.ChecksScheduling do
 
   @doc """
   Requests a checks execution for every host and checkable cluster with
-  selected checks whose interval elapsed. A Quantum job calls it every
-  minute. The settings, the intervals and the last requests are read once
-  per run.
+  selected checks whose interval elapsed, unless a maintenance window forbids
+  it. A Quantum job calls it every minute. The settings, the intervals, the
+  last requests and the targets the ongoing windows cover are read once per
+  run.
 
   When the previous execution of a target still runs, Wanda refuses the new
   request: executions do not pile up. A request that fails is logged and
@@ -89,8 +92,10 @@ defmodule Trento.ChecksScheduling do
     global_interval = Settings.get_checks_execution_settings().interval
     intervals = Map.new(Repo.all(TargetChecksIntervalReadModel), &{&1.target_id, &1.interval})
     last_requests = Map.new(Repo.all(ExecutionRequest), &{&1.target_id, &1.last_requested_at})
+    forbidden = MaintenanceWindows.forbidden_checks_targets(now)
 
     for {target_type, target_id} <- targets_with_checks(),
+        not MapSet.member?(forbidden, {Atom.to_string(target_type), target_id}),
         interval = effective_interval(Map.get(intervals, target_id), global_interval),
         due?(interval, Map.get(last_requests, target_id), now) do
       request(target_type, target_id, now)
@@ -175,7 +180,7 @@ defmodule Trento.ChecksScheduling do
     Enum.map(hosts, &{:host, &1}) ++ Enum.map(clusters, &{:cluster, &1})
   end
 
-  defp view(interval, target_id, now) do
+  defp view(target_type, interval, target_id, now) do
     global_interval = Settings.get_checks_execution_settings().interval
     effective_interval = effective_interval(interval, global_interval)
     last_requested_at = last_requested_at(target_id)
@@ -185,8 +190,23 @@ defmodule Trento.ChecksScheduling do
       effective_interval: effective_interval,
       global_interval: global_interval,
       last_requested_at: last_requested_at,
-      next_execution_at: next_execution_at(effective_interval, last_requested_at, now)
+      next_execution_at:
+        effective_interval
+        |> next_execution_at(last_requested_at, now)
+        |> after_maintenance(target_type, target_id)
     }
+  end
+
+  # The next execution falls after the maintenance windows that forbid it
+  defp after_maintenance(nil, _, _), do: nil
+
+  defp after_maintenance(due, target_type, target_id) do
+    MaintenanceWindows.forbidden_until(
+      Atom.to_string(target_type),
+      target_id,
+      :checks_execution,
+      due
+    ) || due
   end
 
   defp interval(target_id) do
