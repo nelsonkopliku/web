@@ -25,6 +25,7 @@ import {
   clusterFactory,
   hostFactory,
   operationScheduleFactory,
+  maintenanceWindowFactory,
   sapSystemApplicationInstanceFactory,
   sapSystemFactory,
   databaseInstanceFactory,
@@ -1962,4 +1963,52 @@ describe('GenericSystemDetails', () => {
       expect(onCancelSchedule).toHaveBeenCalledWith(schedule);
     });
   });
+
+  it.each([
+    { type: APPLICATION_TYPE, label: 'SAP system' },
+    { type: DATABASE_TYPE, label: 'HANA database' },
+  ])(
+    'should show the maintenance windows of the $label',
+    async ({ type, label }) => {
+      const user = userEvent.setup();
+      const hosts = hostFactory.buildList(1);
+      const system = (
+        type === DATABASE_TYPE ? databaseFactory : sapSystemFactory
+      ).build({
+        hosts,
+        instances: [
+          (type === DATABASE_TYPE
+            ? databaseInstanceFactory
+            : sapSystemApplicationInstanceFactory
+          ).build({ host: hosts[0] }),
+        ],
+      });
+
+      renderWithRouter(
+        <GenericSystemDetails
+          title={faker.string.uuid()}
+          system={system}
+          type={type}
+          userAbilities={[{ name: 'all', resource: 'all' }]}
+          userTimezone="Etc/UTC"
+          cleanUpPermittedFor={[]}
+          maintenanceWindows={{
+            windows: [maintenanceWindowFactory.build({ active: false })],
+            error: false,
+          }}
+        />
+      );
+
+      expect(screen.getByText('Maintenance Windows')).toBeVisible();
+
+      await user.click(
+        screen.getByRole('button', { name: /Schedule Maintenance/ })
+      );
+      expect(
+        screen.getByText(
+          new RegExp(`forbidden actions on ${label} ${system.sid}`)
+        )
+      ).toBeVisible();
+    }
+  );
 });

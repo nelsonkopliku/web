@@ -19,6 +19,7 @@ import {
   hostFactory,
 } from '@lib/test-utils/factories';
 
+import { fetchMaintenanceWindows } from '@state/maintenanceWindows';
 import { forgetOperationSchedules } from '@state/operationSchedules';
 
 import HostDetailsPage from '.';
@@ -295,5 +296,33 @@ describe('HostDetailsPage', () => {
     expect(store.getActions()).toContainEqual(
       forgetOperationSchedules({ targetID: host.id })
     );
+  });
+
+  it('fetches the maintenance windows that cover the host', async () => {
+    const host = hostFactory.build();
+
+    const [StatefulHostDetails, store] = withState(<HostDetailsPage />, {
+      ...defaultInitialState,
+      hostsList: { hosts: [host] },
+      lastExecutions: {
+        [host.id]: { data: null, loading: false, error: null },
+      },
+      softwareUpdates: {
+        settingsConfigured: false,
+        softwareUpdates: {},
+      },
+    });
+
+    await act(async () =>
+      renderWithRouterMatch(StatefulHostDetails, {
+        path: 'hosts/:hostID',
+        route: `/hosts/${host.id}`,
+      })
+    );
+
+    expect(store.getActions()).toContainEqual(
+      fetchMaintenanceWindows({ targetType: 'host', targetID: host.id })
+    );
+    expect(screen.getByText('Maintenance Windows')).toBeVisible();
   });
 });

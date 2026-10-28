@@ -15,6 +15,7 @@ import {
   databaseInstanceFactory,
   hostFactory,
   operationScheduleFactory,
+  maintenanceWindowFactory,
   sapSystemApplicationInstanceFactory,
 } from '@lib/test-utils/factories';
 import React from 'react';
@@ -234,6 +235,11 @@ export default {
       description: 'Callback to forget the last schedule submission',
       action: 'onResetScheduleSubmission',
     },
+    maintenanceWindows: {
+      description:
+        'Maintenance windows of the host, with the callbacks of useMaintenanceWindows',
+      control: { type: 'object' },
+    },
     nextExecutionAt: {
       description:
         'When the checks of the host are executed next: a date, null when periodic executions are disabled, undefined while unknown',
@@ -329,6 +335,25 @@ export const WithScheduleWarnings = {
           metadata: [],
         },
       ],
+    },
+  },
+};
+
+export const WithMaintenanceWindows = {
+  args: {
+    ...Default.args,
+    maintenanceWindows: {
+      windows: [
+        maintenanceWindowFactory.build({
+          active: true,
+          forbids: ['operations'],
+          current_occurrence: {
+            starts_at: faker.date.recent().toISOString(),
+            ends_at: faker.date.soon().toISOString(),
+          },
+        }),
+      ],
+      error: false,
     },
   },
 };
